@@ -80,3 +80,7 @@ img {
 footer {
     visibility: hidden !important;
 }
+
+[data-testid="stToolbarActionButtonLabel"] {
+    display: none !important;
+}
