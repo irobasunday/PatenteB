@@ -14,10 +14,25 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
     menu_items={
         "Get Help": None,
-        "Report a Bug": None,
-        "About": None
+        "Report a bug": None,
+        "About": None,
     }
 )
+st.markdown("""
+<style>
+    [data-testid="stToolbar"] {
+        display: none !important;
+    }
+
+    [data-testid="stDecoration"] {
+        display: none !important;
+    }
+
+    #MainMenu {
+        display: none !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 
 load_css()

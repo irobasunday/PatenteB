@@ -88,3 +88,21 @@ footer {
         padding-right: var(--space-md);
     }
 }
+/* =========================================
+   REMOVE STREAMLIT TOP HEADER SPACE
+   ========================================= */
+
+/* Hide Streamlit's built-in header container */
+[data-testid="stHeader"] {
+    display: none !important;
+}
+
+/* Remove Streamlit's top decoration */
+[data-testid="stDecoration"] {
+    display: none !important;
+}
+
+/* Remove reserved top spacing */
+[data-testid="stAppViewContainer"] > .stMain {
+    padding-top: 0 !important;
+}
