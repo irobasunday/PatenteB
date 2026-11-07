@@ -60,3 +60,23 @@ img {
         padding-right: var(--space-md);
     }
 }
+
+/* ========================================
+   HIDE DEFAULT STREAMLIT INTERFACE
+======================================== */
+
+[data-testid="stToolbar"] {
+    display: none !important;
+}
+
+[data-testid="stStatusWidget"] {
+    display: none !important;
+}
+
+#MainMenu {
+    visibility: hidden !important;
+}
+
+footer {
+    visibility: hidden !important;
+}
