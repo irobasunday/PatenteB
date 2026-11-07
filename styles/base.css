@@ -53,34 +53,38 @@ img {
     height: auto;
 }
 
-/* Responsive content spacing */
+/* =========================================
+   HIDE DEFAULT STREAMLIT INTERFACE
+   ========================================= */
+
+/* Hide Streamlit's application toolbar */
+[data-testid="stToolbar"] {
+    display: none !important;
+}
+
+/* Hide Streamlit's status widget */
+[data-testid="stStatusWidget"] {
+    display: none !important;
+}
+
+/* Hide Streamlit's main menu */
+#MainMenu {
+    display: none !important;
+}
+
+/* Hide Streamlit's default footer */
+footer {
+    visibility: hidden !important;
+}
+
+/* =========================================
+   RESPONSIVE DESIGN
+   ========================================= */
+
+/* Mobile content spacing */
 @media (max-width: 768px) {
     [data-testid="stMainBlockContainer"] {
         padding-left: var(--space-md);
         padding-right: var(--space-md);
     }
-}
-
-/* ========================================
-   HIDE DEFAULT STREAMLIT INTERFACE
-======================================== */
-
-[data-testid="stToolbar"] {
-    display: none !important;
-}
-
-[data-testid="stStatusWidget"] {
-    display: none !important;
-}
-
-#MainMenu {
-    visibility: hidden !important;
-}
-
-footer {
-    visibility: hidden !important;
-}
-
-[data-testid="stToolbarActionButtonLabel"] {
-    display: none !important;
 }
