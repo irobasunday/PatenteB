@@ -1,0 +1,48 @@
+
+/* =========================================
+   PATENTE B - GLOBAL DESIGN VARIABLES
+   Theme: Clean & Modern Dark
+   ========================================= */
+
+:root {
+    /* Background colors */
+    --color-bg: #0b1120;
+    --color-surface: #111827;
+    --color-card: #1e293b;
+    --color-hover: #334155;
+
+    /* Text colors */
+    --color-text: #f8fafc;
+    --color-text-muted: #94a3b8;
+
+    /* Brand colors */
+    --color-primary: #3b82f6;
+    --color-primary-hover: #2563eb;
+
+    /* Quiz answer colors */
+    --color-correct: #22c55e;
+    --color-incorrect: #ef4444;
+
+    /* Borders */
+    --color-border: #334155;
+
+    /* Typography */
+    --font-family: "Inter", Arial, sans-serif;
+
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+
+    /* Rounded corners */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+
+    /* Layout */
+    --header-height: 72px;
+    --footer-height: 72px;
+    --content-max-width: 1200px;
+}

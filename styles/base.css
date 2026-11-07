@@ -1,0 +1,62 @@
+
+/* =========================================
+   PATENTE B - GLOBAL BASE STYLES
+   Theme: Clean & Modern Dark
+   ========================================= */
+
+/* Global typography */
+html,
+body {
+    font-family: var(--font-family);
+    color: var(--color-text);
+}
+
+/* Streamlit application background */
+[data-testid="stAppViewContainer"] {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+}
+
+/* Main content area */
+[data-testid="stMainBlockContainer"] {
+    max-width: var(--content-max-width);
+    padding-top: var(--space-lg);
+    padding-bottom: var(--space-xl);
+}
+
+/* Global headings */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--color-text);
+    font-family: var(--font-family);
+    font-weight: 600;
+}
+
+/* Global paragraphs */
+p {
+    color: var(--color-text);
+    line-height: 1.6;
+}
+
+/* Links */
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--color-primary-hover);
+}
+
+/* Images */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Responsive content spacing */
+@media (max-width: 768px) {
+    [data-testid="stMainBlockContainer"] {
+        padding-left: var(--space-md);
+        padding-right: var(--space-md);
+    }
+}
