@@ -105,7 +105,7 @@
     padding: var(--space-lg);
 }
 
-/* Responsive components */
+/* Responsive shared components */
 @media (max-width: 768px) {
     .pb-card {
         padding: var(--space-md);
@@ -115,3 +115,354 @@
         padding: 10px 14px;
     }
 }
+
+
+/* =========================================
+   PATENTE B - DASHBOARD CARDS
+   ========================================= */
+
+.pb-dashboard-heading {
+    margin-bottom: 1.25rem;
+}
+
+.pb-dashboard-heading h2 {
+    color: #ffffff;
+    font-size: 1.55rem;
+    font-weight: 650;
+    margin: 0;
+}
+
+.pb-dashboard-heading p {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-top: 0.3rem;
+}
+
+.st-key-pb_quiz_card,
+.st-key-pb_translate_card,
+.st-key-pb_results_card,
+.st-key-pb_settings_card,
+.st-key-pb_progress_card {
+    background: #172337;
+    border: 1px solid #25364d;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+    transition: border-color 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+}
+
+.st-key-pb_quiz_card:hover,
+.st-key-pb_translate_card:hover,
+.st-key-pb_results_card:hover,
+.st-key-pb_settings_card:hover {
+    border-color: #38bdf8;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.pb-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    background: #26364d;
+    border-radius: 12px;
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+.st-key-pb_quiz_card h4,
+.st-key-pb_translate_card h4,
+.st-key-pb_results_card h4,
+.st-key-pb_settings_card h4 {
+    color: #ffffff;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.st-key-pb_quiz_card .stCaption,
+.st-key-pb_translate_card .stCaption,
+.st-key-pb_results_card .stCaption,
+.st-key-pb_settings_card .stCaption {
+    color: #94a3b8;
+}
+
+.st-key-pb_progress_card {
+    margin-top: 8px;
+}
+
+/* Dashboard card buttons */
+.st-key-pb_quiz_card .stButton button,
+.st-key-pb_translate_card .stButton button,
+.st-key-pb_results_card .stButton button,
+.st-key-pb_settings_card .stButton button {
+    background: #26364d;
+    color: #e2e8f0;
+    border: 1px solid #334155;
+    border-radius: 10px;
+}
+
+.st-key-pb_quiz_card .stButton button:hover,
+.st-key-pb_translate_card .stButton button:hover,
+.st-key-pb_results_card .stButton button:hover,
+.st-key-pb_settings_card .stButton button:hover {
+    background: #334b68;
+    color: #ffffff;
+    border-color: #38bdf8;
+}
+
+/* Dashboard mobile adjustments */
+@media (max-width: 768px) {
+    .st-key-pb_quiz_card,
+    .st-key-pb_translate_card,
+    .st-key-pb_results_card,
+    .st-key-pb_settings_card,
+    .st-key-pb_progress_card {
+        padding: 12px;
+    }
+
+    .pb-dashboard-heading h2 {
+        font-size: 1.3rem;
+    }
+}
+
+
+/* =========================================
+   PATENTE B - QUIZ ANSWER BUTTONS
+   ========================================= */
+
+/* Shared answer button styling */
+.st-key-quiz_vero button,
+.st-key-quiz_falso button {
+    min-height: 64px !important;
+    border-radius: 16px !important;
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    transition: background-color 0.2s ease,
+                border-color 0.2s ease;
+}
+
+/* VERO - Green */
+.st-key-quiz_vero button {
+    background: #13271f !important;
+    border: 2px solid #22c55e !important;
+    color: #4ade80 !important;
+}
+
+.st-key-quiz_vero button:hover {
+    background: #14532d !important;
+    color: #ffffff !important;
+}
+
+/* FALSO - Red */
+.st-key-quiz_falso button {
+    background: #2c191f !important;
+    border: 2px solid #ef4444 !important;
+    color: #f87171 !important;
+}
+
+.st-key-quiz_falso button:hover {
+    background: #7f1d1d !important;
+    color: #ffffff !important;
+}
+
+/* Mobile answer buttons */
+@media (max-width: 768px) {
+    .st-key-quiz_vero button,
+    .st-key-quiz_falso button {
+        min-height: 50px !important;
+        font-size: 1rem !important;
+        border-radius: 12px !important;
+    }
+}
+
+
+/* =========================================
+   PATENTE B - COMPACT QUIZ PAGINATION
+   ========================================= */
+
+/* Shared pagination buttons */
+[class*="st-key-pagination_"] button {
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    border-radius: 7px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    transition: background-color 0.2s ease,
+                border-color 0.2s ease;
+}
+
+/* Current question - Red */
+[class*="st-key-pagination_current_"] button {
+    background: #ef4444 !important;
+    border: 1px solid #f87171 !important;
+}
+
+/* Answered questions - Teal */
+[class*="st-key-pagination_answered_"] button {
+    background: #0f766e !important;
+    border: 1px solid #14b8a6 !important;
+}
+
+/* Unanswered questions - Dark */
+[class*="st-key-pagination_unanswered_"] button {
+    background: #172337 !important;
+    border: 1px solid #334155 !important;
+}
+
+/* Hover */
+[class*="st-key-pagination_"] button:hover {
+    filter: brightness(1.2);
+}
+
+/* Keyboard accessibility */
+[class*="st-key-pagination_"] button:focus-visible {
+    outline: 2px solid #93c5fd !important;
+    outline-offset: 2px;
+}
+
+
+/* =========================================
+   PATENTE B - MOBILE PAGINATION GRID
+   ========================================= */
+
+@media (max-width: 768px) {
+
+    /* Prevent pagination columns from stacking */
+    div[data-testid="stHorizontalBlock"]:has(
+        [class*="st-key-pagination_"]
+    ) {
+        flex-wrap: nowrap !important;
+        gap: 5px !important;
+        width: 100% !important;
+    }
+
+    /* Force six equal columns */
+    div[data-testid="stHorizontalBlock"]:has(
+        [class*="st-key-pagination_"]
+    ) > div[data-testid="stColumn"] {
+        min-width: 0 !important;
+        width: 16.666% !important;
+        flex: 1 1 0 !important;
+    }
+
+    /* Compact numbered buttons */
+    [class*="st-key-pagination_"] button {
+        height: 32px !important;
+        min-height: 32px !important;
+        padding: 0 !important;
+        font-size: 0.75rem !important;
+        border-radius: 6px !important;
+    }
+}
+
+/* =========================================
+   PATENTE B - COMPACT QUIZ CONTROLS
+   ========================================= */
+
+/* Compact VERO and FALSO */
+.st-key-quiz_vero button,
+.st-key-quiz_falso button {
+    height: 44px !important;
+    min-height: 44px !important;
+    padding: 6px 12px !important;
+    border-radius: 10px !important;
+    font-size: 0.9rem !important;
+}
+
+/* Compact Previous and Next */
+.st-key-quiz_previous button,
+.st-key-quiz_next button {
+    width: 100% !important;
+    max-width: 140px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 6px 10px !important;
+    border-radius: 9px !important;
+    font-size: 0.85rem !important;
+}
+
+/* Align Next to the right */
+.st-key-quiz_next {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Mobile sizes */
+@media (max-width: 768px) {
+    .st-key-quiz_vero button,
+    .st-key-quiz_falso button {
+        height: 40px !important;
+        min-height: 40px !important;
+    }
+
+    .st-key-quiz_previous button,
+    .st-key-quiz_next button {
+        max-width: 120px !important;
+        height: 36px !important;
+        min-height: 36px !important;
+    }
+}
+
+/* =========================================
+   QUIZ QUESTION IMAGE
+   ========================================= */
+
+.st-key-quiz_question_image img {
+    width: 100%;
+    max-width: 220px;
+    height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+
+    .st-key-quiz_question_image img {
+        max-width: 180px;
+    }
+
+}
+
+/* =========================================
+   QUIZ QUESTION CARD
+   ========================================= */
+
+/* Small traffic sign */
+.st-key-quiz_question_image img {
+    max-width: 150px;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+/* Larger, readable Italian question */
+.quiz-question-text {
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+    margin-bottom: 16px;
+    color: var(--text-primary, #f8fafc);
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+
+    .st-key-quiz_question_image img {
+        max-width: 120px;
+    }
+
+    .quiz-question-text {
+        font-size: 19px;
+        line-height: 1.6;
+    }
+}
+
