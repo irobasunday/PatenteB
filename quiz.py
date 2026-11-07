@@ -315,19 +315,18 @@ def show_question_card(question, question_number):
     )
 
     def display_question_text():
-        show_italian_audio(
-    question_text=italian_text,
-    question_id=question_id
-)
-        """Display Italian text and optional English translation."""
+        """Display Italian text, Google Italiano audio, and translation."""
 
+        # Original Italian question
         st.markdown(
-            (
-                '<div class="quiz-question-text">'
-                f'{safe_text}'
-                '</div>'
-            ),
+            f'<div class="quiz-question-text">{safe_text}</div>',
             unsafe_allow_html=True
+        )
+
+        # Italian-only audio player
+        show_italian_audio(
+            question_text=italian_text,
+            question_id=question_id
         )
 
         translations_visible = (
