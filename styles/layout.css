@@ -295,6 +295,23 @@
     border-radius: 10px;
 }
 
+/* Compact VERO / FALSO buttons */
+.st-key-quiz_vero button,
+.st-key-quiz_falso button {
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 4px 10px !important;
+}
+
+/* Compact Previous / Next buttons */
+.st-key-quiz_previous button,
+.st-key-quiz_next button {
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 4px 10px !important;
+}
+
+
 .st-key-quiz_pagination_scroll::-webkit-scrollbar-thumb:hover {
     background: #cbd5e1 !important;
 }
