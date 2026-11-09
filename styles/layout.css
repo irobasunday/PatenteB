@@ -1,74 +1,96 @@
-
 /* =========================================
-   PATENTE B — QUIZ MOBILE BUTTON LAYOUT
-   Scoped to quiz only.
-   Shared header/footer unchanged.
+   PATENTE B - SHARED LAYOUT
+   Design 1: Clean & Modern Dark
    ========================================= */
 
-/* Two equal-width children, no wrapping */
-.st-key-quiz_answer_row,
-.st-key-quiz_navigation_row {
+/* =========================================
+   SHARED HEADER AND FOOTER
+   ========================================= */
+
+.st-key-pb_header,
+.st-key-pb_footer {
+    width: 100%;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+}
+
+/* Desktop header */
+.st-key-pb_desktop_header {
+    display: flex !important;
+    flex-direction: column;
+}
+
+/* Mobile header hidden on desktop */
+.st-key-pb_mobile_header {
+    display: none !important;
+}
+
+/* Main content */
+.pb-main {
+    width: 100%;
+    min-height: 60vh;
+    padding: var(--space-lg) 0;
+}
+
+/* =========================================
+   SHARED APP BRAND
+   ========================================= */
+
+.st-key-pb_brand_desktop,
+.st-key-pb_brand_mobile {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    align-items: stretch !important;
-    gap: 10px !important;
-    width: 100% !important;
-    min-width: 0 !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
 }
 
-/* Streamlit horizontal layout */
-.st-key-quiz_answer_row [data-testid="stHorizontalBlock"],
-.st-key-quiz_navigation_row [data-testid="stHorizontalBlock"] {
-    flex-wrap: nowrap !important;
-    gap: 10px !important;
-    width: 100% !important;
-    min-width: 0 !important;
+.st-key-pb_brand_desktop [data-testid="stImage"],
+.st-key-pb_brand_mobile [data-testid="stImage"] {
+    flex-shrink: 0 !important;
 }
 
-/* Equal-width button containers */
-.st-key-quiz_answer_row .st-key-quiz_vero,
-.st-key-quiz_answer_row .st-key-quiz_falso,
-.st-key-quiz_navigation_row .st-key-quiz_previous,
-.st-key-quiz_navigation_row .st-key-quiz_next {
-    box-sizing: border-box !important;
-    flex: 1 1 0 !important;
-    width: 0 !important;
-    min-width: 0 !important;
+.st-key-pb_brand_desktop img {
+    width: 120px !important;
     max-width: none !important;
 }
 
-/* Button wrappers */
-.st-key-quiz_answer_row .st-key-quiz_vero [data-testid="stButton"],
-.st-key-quiz_answer_row .st-key-quiz_falso [data-testid="stButton"],
-.st-key-quiz_navigation_row .st-key-quiz_previous [data-testid="stButton"],
-.st-key-quiz_navigation_row .st-key-quiz_next [data-testid="stButton"] {
-    width: 100% !important;
+.st-key-pb_brand_mobile img {
+    width: 65px !important;
+    max-width: none !important;
 }
 
-/* Compact answer and navigation buttons */
-.st-key-quiz_answer_row button,
-.st-key-quiz_navigation_row button {
-    box-sizing: border-box !important;
-    width: 100% !important;
-    min-height: 42px !important;
-    height: 42px !important;
-    padding: 6px 8px !important;
-    font-size: 14px !important;
-    line-height: 1.2 !important;
-    white-space: nowrap !important;
+.st-key-pb_brand_desktop p,
+.st-key-pb_brand_mobile p {
+    margin: 0 !important;
+    white-space: nowrap;
 }
 
-/* Mobile adjustments */
-@media (max-width: 768px) {
+/* =========================================
+   LARGE HEADER BRAND
+   ========================================= */
 
-    .st-key-quiz_answer_row,
-    .st-key-quiz_navigation_row {
-        gap: 8px !important;
-    }
-
-    .st-key-quiz_answer_row button,
-    .st-key-quiz_navigation_row button {
-        font-size: 13px !important;
-    }
+.pb-brand {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+    width: 100%;
+    min-width: 0;
 }
+
+.pb-brand-logo {
+    width: 124px;
+    height: 96px;
+    flex: 0 0 124px;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--color-bg);
+}
+
+.pb-brand-logo img {
+    display: block;
+    width: 100%;
+    height: 100%;
