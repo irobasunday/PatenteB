@@ -466,3 +466,24 @@
     }
 }
 
+/* Prevent quiz buttons from overlapping on mobile */
+@media (max-width: 767px) {
+    .st-key-quiz_controls_row [data-testid="stHorizontalBlock"] {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        gap: 6px !important;
+    }
+
+    .st-key-quiz_controls_row [data-testid="stColumn"] {
+        min-width: 80px !important;
+        flex: 1 0 80px !important;
+    }
+
+    .st-key-quiz_controls_row button {
+        width: 100% !important;
+        max-width: none !important;
+        padding: 6px 3px !important;
+        font-size: 12px !important;
+        white-space: nowrap !important;
+    }
+}
