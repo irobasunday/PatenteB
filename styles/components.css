@@ -466,3 +466,16 @@
     }
 }
 
+/* Reduce spacing between audio player and Translate button */
+.st-key-quiz_question_image {
+    margin-bottom: 0 !important;
+}
+
+.quiz-question-text {
+    margin-bottom: 8px !important;
+}
+
+/* Tighten vertical spacing inside the question card */
+[data-testid="stVerticalBlock"]:has(.quiz-question-text) {
+    gap: 0.4rem !important;
+}
