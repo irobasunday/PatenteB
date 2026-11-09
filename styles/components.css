@@ -479,3 +479,12 @@
 [data-testid="stVerticalBlock"]:has(.quiz-question-text) {
     gap: 0.4rem !important;
 }
+/* Remove extra space between audio and Translate */
+[data-testid="stVerticalBlock"]:has(.quiz-question-text) {
+    gap: 0 !important;
+}
+
+[data-testid="stVerticalBlock"]:has(.quiz-question-text)
+[data-testid="stElementContainer"] {
+    margin-bottom: 0 !important;
+}
