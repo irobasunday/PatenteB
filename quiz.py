@@ -517,16 +517,18 @@ def show_quiz():
     )
 
     # =====================================
-    # FOUR BUTTONS ON ONE HORIZONTAL ROW
+    # ANSWER BUTTONS: VERO / FALSO
     # =====================================
 
-    selected = st.session_state.quiz_answers.get(question_id)
+    show_answer_buttons(question_id)
 
-    with st.container(
-        key="quiz_controls_row",
-        horizontal=True,
-        gap="small"
-    ):
+    # =====================================
+    # NAVIGATION: PREVIOUS / NEXT
+    # =====================================
+
+    previous_col, next_col = st.columns(2, gap="small")
+
+    with previous_col:
         with st.container(key="quiz_previous"):
             if st.button(
                 "← Previous",
@@ -536,26 +538,7 @@ def show_quiz():
             ):
                 go_to_question(index - 1)
 
-        with st.container(key="quiz_vero"):
-            label = "✓ VERO" if selected is True else "VERO"
-
-            if st.button(
-                label,
-                key=f"vero_{question_id}",
-                use_container_width=True,
-            ):
-                select_answer(question_id, True)
-
-        with st.container(key="quiz_falso"):
-            label = "✕ FALSO" if selected is False else "FALSO"
-
-            if st.button(
-                label,
-                key=f"falso_{question_id}",
-                use_container_width=True,
-            ):
-                select_answer(question_id, False)
-
+    with next_col:
         with st.container(key="quiz_next"):
             if st.button(
                 "Next →",
