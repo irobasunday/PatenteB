@@ -214,8 +214,7 @@ def show_answer_buttons(question_id):
 def show_pagination():
     """Display all 30 questions in one scrollable row."""
 
-    st.markdown("#### Question Navigation")
-
+   
     current = st.session_state.quiz_question_index
     answers = st.session_state.quiz_answers
     questions = st.session_state.quiz_questions
