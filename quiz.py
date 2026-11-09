@@ -176,17 +176,13 @@ def go_to_question(index):
 # =========================================
 
 def show_answer_buttons(question_id):
-    """Display VERO and FALSO answer buttons."""
+    """Compact, side-by-side VERO and FALSO buttons."""
 
     selected = st.session_state.quiz_answers.get(question_id)
 
-    col1, col2 = st.columns(2, gap="small")
-
-    with col1:
+    with st.container(key="quiz_answer_row", horizontal=True, gap="small"):
         with st.container(key="quiz_vero"):
-
             label = "✓ VERO" if selected is True else "VERO"
-
             if st.button(
                 label,
                 key=f"vero_{question_id}",
@@ -194,11 +190,8 @@ def show_answer_buttons(question_id):
             ):
                 select_answer(question_id, True)
 
-    with col2:
         with st.container(key="quiz_falso"):
-
             label = "✕ FALSO" if selected is False else "FALSO"
-
             if st.button(
                 label,
                 key=f"falso_{question_id}",
@@ -242,6 +235,7 @@ def show_pagination():
             ):
                 go_to_question(index)
 
+
 # =========================================
 # QUESTION IMAGE HELPER
 # =========================================
@@ -265,6 +259,7 @@ def get_question_image(image_path):
         return image_file
 
     return None
+
 
 # =========================================
 # QUESTION CARD WITH TRANSLATION
@@ -553,32 +548,18 @@ def show_quiz():
     # ANSWER BUTTONS
     # =====================================
 
-   
-
     show_answer_buttons(question_id)
-
-
-    # =====================================
-    # HORIZONTAL QUESTION PAGINATION
-    # =====================================
-
-    show_pagination()
-
-  
 
     # =====================================
     # PREVIOUS / NEXT
     # =====================================
 
-    previous_col, next_col = st.columns(
-        2,
-        gap="small"
-    )
-
-    with previous_col:
-
+    with st.container(
+        key="quiz_navigation_row",
+        horizontal=True,
+        gap="small",
+    ):
         with st.container(key="quiz_previous"):
-
             if st.button(
                 "← Previous",
                 disabled=index == 0,
@@ -586,16 +567,19 @@ def show_quiz():
             ):
                 go_to_question(index - 1)
 
-    with next_col:
-
         with st.container(key="quiz_next"):
-
             if st.button(
                 "Next →",
                 disabled=index == TOTAL_QUESTIONS - 1,
                 use_container_width=True,
             ):
                 go_to_question(index + 1)
+
+    # =====================================
+    # HORIZONTAL QUESTION PAGINATION
+    # =====================================
+
+    show_pagination()
 
     # =====================================
     # SUBMIT QUIZ
