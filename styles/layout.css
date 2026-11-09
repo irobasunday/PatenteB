@@ -186,11 +186,13 @@
 }
 
 /* =========================================
-   QUIZ QUESTION PAGINATION
-   One row, fixed-size buttons, scrollbar
+   QUIZ PAGINATION
+   45px buttons, 8px gap, horizontal scroll
    ========================================= */
 
+/* Scrollable outer container */
 .st-key-quiz_pagination_scroll {
+    box-sizing: border-box !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -198,52 +200,48 @@
     overflow-x: auto !important;
     overflow-y: hidden !important;
 
-    padding-bottom: 12px !important;
+    padding: 2px 0 12px !important;
 
     scrollbar-width: auto !important;
     scrollbar-color: #94a3b8 #172033 !important;
 }
 
-/* The row must grow to fit all 30 buttons */
+/* Keep the button row on one line */
 .st-key-quiz_pagination_scroll
 [data-testid="stHorizontalBlock"] {
     display: flex !important;
+    flex-direction: row !important;
     flex-wrap: nowrap !important;
 
     width: max-content !important;
     min-width: max-content !important;
 
     gap: 8px !important;
+    align-items: center !important;
 }
 
-/* Direct children must not shrink */
+/* Each direct item gets its own space */
 .st-key-quiz_pagination_scroll
 [data-testid="stHorizontalBlock"] > div {
+    box-sizing: border-box !important;
+
     flex: 0 0 45px !important;
     width: 45px !important;
     min-width: 45px !important;
     max-width: 45px !important;
 }
 
-/* Each question's Streamlit container */
-.st-key-quiz_pagination_scroll
-[class*="st-key-pagination_"] {
-    flex: 0 0 45px !important;
-    width: 45px !important;
-    min-width: 45px !important;
-    max-width: 45px !important;
-}
-
-/* Streamlit button wrapper */
+/* Prevent the Streamlit button wrapper from shrinking */
 .st-key-quiz_pagination_scroll
 [data-testid="stButton"] {
+    box-sizing: border-box !important;
     width: 45px !important;
     min-width: 45px !important;
     max-width: 45px !important;
-    flex-shrink: 0 !important;
+    flex: 0 0 45px !important;
 }
 
-/* Numbered question buttons */
+/* Numbered buttons */
 .st-key-quiz_pagination_scroll button {
     box-sizing: border-box !important;
 
@@ -256,20 +254,16 @@
     max-width: 45px !important;
     height: 38px !important;
 
-    padding: 0 4px !important;
     margin: 0 !important;
+    padding: 0 4px !important;
 
     font-size: 14px !important;
     font-weight: 700 !important;
     line-height: 1 !important;
-
-    color: #ffffff !important;
-    opacity: 1 !important;
     white-space: nowrap !important;
-    flex-shrink: 0 !important;
 }
 
-/* Number text */
+/* Center the number inside each button */
 .st-key-quiz_pagination_scroll button p {
     margin: 0 !important;
     padding: 0 !important;
@@ -284,7 +278,7 @@
 }
 
 /* =========================================
-   HORIZONTAL SCROLLBAR
+   VISIBLE HORIZONTAL SCROLLBAR
    ========================================= */
 
 .st-key-quiz_pagination_scroll::-webkit-scrollbar {
