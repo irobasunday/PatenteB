@@ -42,7 +42,9 @@ if "quiz_mode" not in st.session_state:
 
 
 # Shared header
-show_header()
+# Shared header - hidden on quiz page
+if st.session_state.page != "quiz":
+    show_header()
 
 
 # Page navigation
@@ -60,8 +62,12 @@ elif st.session_state.page == "dashboard":
 
     show_dashboard()
 
-
 elif st.session_state.page == "quiz":
+
+    if st.button("❮❮ Quiz Practice Mode", key="quiz_back"):
+        st.session_state.page = "dashboard"
+        st.rerun()
+
     show_quiz()
 
 
