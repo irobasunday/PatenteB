@@ -563,7 +563,6 @@ def show_quiz():
 
     show_answer_buttons(question_id)
 
-    st.divider()
 
     # =====================================
     # HORIZONTAL QUESTION PAGINATION
@@ -571,7 +570,7 @@ def show_quiz():
 
     show_pagination()
 
-    st.divider()
+  
 
     # =====================================
     # PREVIOUS / NEXT
