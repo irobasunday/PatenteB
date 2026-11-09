@@ -4,31 +4,11 @@
    Design 1: Clean & Modern Dark
    ========================================= */
 
-/* SHARED HEADER */
+/* =========================================
+   SHARED HEADER AND FOOTER
+   ========================================= */
 
-.st-key-pb_header {
-    width: 100%;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-md);
-}
-
-/* DESKTOP HEADER - SHOW ON LAPTOP */
-
-.st-key-pb_desktop_header {
-    display: flex !important;
-    flex-direction: column;
-}
-
-/* MOBILE HEADER - HIDE ON LAPTOP */
-
-.st-key-pb_mobile_header {
-    display: none !important;
-}
-
-/* SHARED FOOTER */
-
+.st-key-pb_header,
 .st-key-pb_footer {
     width: 100%;
     background: var(--color-surface);
@@ -37,8 +17,18 @@
     padding: var(--space-md);
 }
 
-/* MAIN CONTENT */
+/* Desktop header */
+.st-key-pb_desktop_header {
+    display: flex !important;
+    flex-direction: column;
+}
 
+/* Mobile header hidden on desktop */
+.st-key-pb_mobile_header {
+    display: none !important;
+}
+
+/* Main content */
 .pb-main {
     width: 100%;
     min-height: 60vh;
@@ -46,96 +36,7 @@
 }
 
 /* =========================================
-   MOBILE SCREEN
-   ========================================= */
-
-@media screen and (max-width: 768px) {
-
-    /* Hide desktop header */
-    .st-key-pb_desktop_header {
-        display: none !important;
-    }
-
-    /* Show mobile header */
-    .st-key-pb_mobile_header {
-        display: flex !important;
-        flex-direction: column;
-    }
-
-    /* Keep mobile header in one row */
-    .st-key-pb_mobile_header
-    [data-testid="stHorizontalBlock"] {
-        flex-wrap: nowrap !important;
-        gap: 0.35rem;
-        align-items: center;
-    }
-
-    .st-key-pb_mobile_header
-    [data-testid="stColumn"] {
-        min-width: 0 !important;
-    }
-
-    /* Compact header and footer */
-    .st-key-pb_header,
-    .st-key-pb_footer {
-        padding: var(--space-sm);
-    }
-
-    /* Keep footer buttons horizontal */
-    .st-key-pb_footer
-    [data-testid="stHorizontalBlock"] {
-        flex-wrap: nowrap !important;
-        gap: 0.25rem;
-    }
-
-    .st-key-pb_footer
-    [data-testid="stColumn"] {
-        min-width: 0 !important;
-        flex: 1 1 0 !important;
-    }
-
-    .st-key-pb_footer button {
-        width: 100%;
-        padding: 0.4rem 0.15rem;
-        font-size: 0.7rem;
-    }
-}
-
-/* =========================================
    SHARED APP BRAND
-   ========================================= */
-
-.st-key-pb_brand_desktop,
-.st-key-pb_brand_mobile {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 10px;
-}
-
-/* Keep the logo from shrinking */
-.st-key-pb_brand_desktop [data-testid="stImage"],
-.st-key-pb_brand_mobile [data-testid="stImage"] {
-    flex-shrink: 0;
-}
-
-/* App name */
-.st-key-pb_brand_desktop p,
-.st-key-pb_brand_mobile p {
-    margin: 0;
-    white-space: nowrap;
-}
-
-/* Mobile brand spacing */
-@media screen and (max-width: 768px) {
-    .st-key-pb_brand_mobile {
-        gap: 5px;
-    }
-}
-
-/* =========================================
-   LARGE LOGO AND APP NAME
    ========================================= */
 
 .st-key-pb_brand_desktop,
@@ -168,9 +69,8 @@
     white-space: nowrap;
 }
 
-
 /* =========================================
-   PATENTE B - LARGE HEADER BRAND
+   LARGE HEADER BRAND
    ========================================= */
 
 .pb-brand {
@@ -182,7 +82,6 @@
     min-width: 0;
 }
 
-/* Large logo area */
 .pb-brand-logo {
     width: 124px;
     height: 96px;
@@ -192,7 +91,6 @@
     background: var(--color-bg);
 }
 
-/* Image fills the entire logo area */
 .pb-brand-logo img {
     display: block;
     width: 100%;
@@ -201,7 +99,6 @@
     object-position: center;
 }
 
-/* App name */
 .pb-brand-name {
     color: var(--color-text);
     font-size: 1.25rem;
@@ -209,7 +106,6 @@
     white-space: nowrap;
 }
 
-/* Fallback if logo file is missing */
 .pb-brand-fallback {
     display: flex;
     align-items: center;
@@ -220,10 +116,58 @@
 }
 
 /* =========================================
-   MOBILE HEADER BRAND
+   MOBILE LAYOUT
    ========================================= */
 
 @media screen and (max-width: 768px) {
+
+    .st-key-pb_desktop_header {
+        display: none !important;
+    }
+
+    .st-key-pb_mobile_header {
+        display: flex !important;
+        flex-direction: column;
+    }
+
+    .st-key-pb_mobile_header
+    [data-testid="stHorizontalBlock"] {
+        flex-wrap: nowrap !important;
+        gap: 0.35rem;
+        align-items: center;
+    }
+
+    .st-key-pb_mobile_header
+    [data-testid="stColumn"] {
+        min-width: 0 !important;
+    }
+
+    .st-key-pb_header,
+    .st-key-pb_footer {
+        padding: var(--space-sm);
+    }
+
+    .st-key-pb_footer
+    [data-testid="stHorizontalBlock"] {
+        flex-wrap: nowrap !important;
+        gap: 0.25rem;
+    }
+
+    .st-key-pb_footer
+    [data-testid="stColumn"] {
+        min-width: 0 !important;
+        flex: 1 1 0 !important;
+    }
+
+    .st-key-pb_footer button {
+        width: 100%;
+        padding: 0.4rem 0.15rem;
+        font-size: 0.7rem;
+    }
+
+    .st-key-pb_brand_mobile {
+        gap: 5px !important;
+    }
 
     .pb-brand {
         gap: 5px;
@@ -242,49 +186,107 @@
 }
 
 /* =========================================
-   QUESTION NAVIGATION SCROLLBAR
-   ========================================= */
-/* =========================================
-   PATENTE B - QUIZ PAGINATION FIX
+   QUIZ QUESTION PAGINATION
+   One row, fixed-size buttons, scrollbar
    ========================================= */
 
 .st-key-quiz_pagination_scroll {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
+
     overflow-x: auto !important;
     overflow-y: hidden !important;
-    padding-bottom: 14px !important;
+
+    padding-bottom: 12px !important;
+
     scrollbar-width: auto !important;
     scrollbar-color: #94a3b8 #172033 !important;
 }
 
-/* Keep the horizontal row wider than the screen */
-.st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"] {
+/* The row must grow to fit all 30 buttons */
+.st-key-quiz_pagination_scroll
+[data-testid="stHorizontalBlock"] {
     display: flex !important;
     flex-wrap: nowrap !important;
+
     width: max-content !important;
     min-width: max-content !important;
+
     gap: 8px !important;
 }
 
-/* Prevent individual pagination containers from shrinking */
-.st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"] > div {
-    flex: 0 0 75px !important;
-    width: 75px !important;
-    min-width: 75px !important;
-    max-width: 75px !important;
+/* Direct children must not shrink */
+.st-key-quiz_pagination_scroll
+[data-testid="stHorizontalBlock"] > div {
+    flex: 0 0 45px !important;
+    width: 45px !important;
+    min-width: 45px !important;
+    max-width: 45px !important;
 }
 
-/* Preserve readable numbered buttons */
+/* Each question's Streamlit container */
+.st-key-quiz_pagination_scroll
+[class*="st-key-pagination_"] {
+    flex: 0 0 45px !important;
+    width: 45px !important;
+    min-width: 45px !important;
+    max-width: 45px !important;
+}
+
+/* Streamlit button wrapper */
+.st-key-quiz_pagination_scroll
+[data-testid="stButton"] {
+    width: 45px !important;
+    min-width: 45px !important;
+    max-width: 45px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Numbered question buttons */
 .st-key-quiz_pagination_scroll button {
-    width: 75px !important;
-    min-width: 75px !important;
+    box-sizing: border-box !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    width: 45px !important;
+    min-width: 45px !important;
+    max-width: 45px !important;
+    height: 38px !important;
+
+    padding: 0 4px !important;
+    margin: 0 !important;
+
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+
+    color: #ffffff !important;
+    opacity: 1 !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
 }
 
-/* Visible scrollbar */
+/* Number text */
+.st-key-quiz_pagination_scroll button p {
+    margin: 0 !important;
+    padding: 0 !important;
+
+    color: inherit !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+
+    text-align: center !important;
+    white-space: nowrap !important;
+}
+
+/* =========================================
+   HORIZONTAL SCROLLBAR
+   ========================================= */
+
 .st-key-quiz_pagination_scroll::-webkit-scrollbar {
     height: 12px !important;
 }
@@ -300,78 +302,6 @@
     border-radius: 10px;
 }
 
-/* =========================================
-   FIX QUIZ PAGINATION BUTTON NUMBERS
-   ========================================= */
-
-/* Keep each numbered container at full width */
-.st-key-quiz_pagination_scroll
-[class*="st-key-pagination_"] {
-    flex: 0 0 75px !important;
-    width: 75px !important;
-    min-width: 75px !important;
-    max-width: 75px !important;
-}
-
-/* Ensure Streamlit's button wrapper does not shrink */
-.st-key-quiz_pagination_scroll
-[class*="st-key-pagination_"] [data-testid="stButton"] {
-    width: 75px !important;
-    min-width: 75px !important;
-    flex-shrink: 0 !important;
-}
-
-/* Make question numbers readable */
-.st-key-quiz_pagination_scroll button {
-    width: 75px !important;
-    min-width: 75px !important;
-    height: 40px !important;
-    padding: 0 8px !important;
-    font-size: 14px !important;
-    font-weight: 700 !important;
-    color: #ffffff !important;
-    opacity: 1 !important;
-    white-space: nowrap !important;
-}
-
-/* Keep the number centered */
-.st-key-quiz_pagination_scroll button p {
-    color: #ffffff !important;
-    font-size: 14px !important;
-    font-weight: 700 !important;
-    text-align: center !important;
-    white-space: nowrap !important;
-}
-
-/* =========================================
-   COMPACT QUIZ PAGINATION BUTTONS
-   ========================================= */
-
-.st-key-quiz_pagination_scroll
-[class*="st-key-pagination_"] {
-    flex: 0 0 45px !important;
-    width: 45px !important;
-    min-width: 45px !important;
-    max-width: 45px !important;
-}
-
-.st-key-quiz_pagination_scroll
-[class*="st-key-pagination_"] [data-testid="stButton"] {
-    width: 45px !important;
-    min-width: 45px !important;
-}
-
-.st-key-quiz_pagination_scroll button {
-    width: 45px !important;
-    min-width: 45px !important;
-    height: 38px !important;
-    padding: 0 4px !important;
-    font-size: 14px !important;
-}
-
-.st-key-quiz_pagination_scroll button p {
-    color: #ffffff !important;
-    font-size: 14px !important;
-    font-weight: 700 !important;
-    white-space: nowrap !important;
+.st-key-quiz_pagination_scroll::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1 !important;
 }
