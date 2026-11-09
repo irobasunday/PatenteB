@@ -580,14 +580,24 @@ def show_quiz():
         [class*="st-key-quiz_controls_row"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(2) { order: 1; }
         [class*="st-key-quiz_controls_row"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(3) { order: 2; }
         [class*="st-key-quiz_controls_row"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(4) { order: 4; }
+            [class*="st-key-quiz_controls_row"] .stButton button {
+        width: 100% !important;
+        min-height: 48px !important;
+        padding: 0.5rem 0.25rem !important;
+        box-sizing: border-box !important;
     }
+    }
+    
     </style>
     """, unsafe_allow_html=True)
 
     selected = st.session_state.quiz_answers.get(question_id)
 
     with st.container(key="quiz_controls_row"):
-        previous_col, vero_col, falso_col, next_col = st.columns(4, gap="small")
+        previous_col, vero_col, falso_col, next_col = st.columns(
+    [1, 1, 1, 1],
+    gap="small"
+)
 
         with previous_col:
             with st.container(key="quiz_previous"):
