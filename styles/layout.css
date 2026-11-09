@@ -1,3 +1,4 @@
+
 /* =========================================
    PATENTE B - SHARED LAYOUT
    Design 1: Clean & Modern Dark
@@ -316,11 +317,4 @@
     background: #cbd5e1 !important;
 }
 
-/* Reduce VERO / FALSO button width only */
-
-.st-key-quiz_vero button,
-.st-key-quiz_falso button {
-    width: 130px !important;
-    max-width: 100% !important;
-}
 
