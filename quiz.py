@@ -212,10 +212,7 @@ def show_answer_buttons(question_id):
 # =========================================
 
 def show_pagination():
-    """
-    Display all 30 question buttons in one
-    horizontally scrollable row.
-    """
+    """Display all 30 questions in one scrollable row."""
 
     st.markdown("#### Question Navigation")
 
@@ -223,41 +220,33 @@ def show_pagination():
     answers = st.session_state.quiz_answers
     questions = st.session_state.quiz_questions
 
-    # One horizontal scrolling container
     with st.container(
         key="quiz_pagination_scroll",
         horizontal=True,
         horizontal_alignment="left",
         gap="small",
+        width="stretch",
     ):
-
         for index in range(TOTAL_QUESTIONS):
-
             number = index + 1
             question_id = questions[index]["id"]
 
-            # Determine question status
             if index == current:
                 status = "current"
-
             elif question_id in answers:
                 status = "answered"
-
             else:
                 status = "unanswered"
 
-            # Preserve existing CSS color selectors
             with st.container(
                 key=f"pagination_{status}_{number}"
             ):
-
                 if st.button(
                     str(number),
                     key=f"pagination_button_{number}",
                     width=75,
                 ):
                     go_to_question(index)
-
 
 # =========================================
 # QUESTION IMAGE HELPER
