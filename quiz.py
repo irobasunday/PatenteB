@@ -212,9 +212,8 @@ def show_answer_buttons(question_id):
 # =========================================
 
 def show_pagination():
-    """Display all 30 questions in one scrollable row."""
+    """Display 30 numbered buttons in one scrollable row."""
 
-   
     current = st.session_state.quiz_question_index
     answers = st.session_state.quiz_answers
     questions = st.session_state.quiz_questions
@@ -224,7 +223,6 @@ def show_pagination():
         horizontal=True,
         horizontal_alignment="left",
         gap="small",
-        width="stretch",
     ):
         for index in range(TOTAL_QUESTIONS):
             number = index + 1
@@ -237,40 +235,12 @@ def show_pagination():
             else:
                 status = "unanswered"
 
-            with st.container(
-                key=f"pagination_{status}_{number}"
+            if st.button(
+                str(number),
+                key=f"pagination_{status}_{number}",
+                width=45,
             ):
-                if st.button(
-                    str(number),
-                    key=f"pagination_button_{number}",
-                    width=75,
-                ):
-                    go_to_question(index)
-
-# =========================================
-# QUESTION IMAGE HELPER
-# =========================================
-
-def get_question_image(image_path):
-    """Find an image safely inside the project folder."""
-
-    if not image_path:
-        return None
-
-    relative_path = str(image_path).lstrip("/\\")
-
-    image_file = (
-        PROJECT_FOLDER / relative_path
-    ).resolve()
-
-    if not image_file.is_relative_to(PROJECT_FOLDER):
-        return None
-
-    if image_file.is_file():
-        return image_file
-
-    return None
-
+                go_to_question(index)
 
 # =========================================
 # QUESTION CARD WITH TRANSLATION
