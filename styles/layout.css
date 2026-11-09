@@ -244,37 +244,66 @@
 /* =========================================
    QUESTION NAVIGATION SCROLLBAR
    ========================================= */
+/* =========================================
+   PATENTE B - HORIZONTAL QUIZ PAGINATION
+   ========================================= */
 
+/* Main pagination container */
 .st-key-quiz_pagination_scroll {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+/* Actual scrollable question row */
+.st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"] {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+
     overflow-x: auto !important;
     overflow-y: hidden !important;
-    max-width: 100%;
-    padding-bottom: 12px !important;
-    scrollbar-width: auto;
-    scrollbar-color: #64748b #172033;
+
+    gap: 8px !important;
+    padding-bottom: 14px !important;
+
+    scrollbar-width: auto !important;
+    scrollbar-color: #64748b #172033 !important;
 }
 
-/* Chrome, Edge and Safari */
-.st-key-quiz_pagination_scroll::-webkit-scrollbar {
-    height: 12px;
+/* Keep all 30 question buttons on one line */
+.st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"] > div {
+    flex: 0 0 65px !important;
+    min-width: 65px !important;
+    max-width: 65px !important;
 }
 
-.st-key-quiz_pagination_scroll::-webkit-scrollbar-track {
-    background: #172033;
+/* Question buttons */
+.st-key-quiz_pagination_scroll button {
+    min-width: 60px !important;
+    width: 60px !important;
+    white-space: nowrap !important;
+}
+
+/* Visible scrollbar - Chrome, Edge, Safari */
+.st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"]::-webkit-scrollbar {
+    height: 12px !important;
+}
+
+.st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"]::-webkit-scrollbar-track {
+    background: #172033 !important;
     border-radius: 10px;
 }
 
-.st-key-quiz_pagination_scroll::-webkit-scrollbar-thumb {
-    background: #64748b;
+.st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"]::-webkit-scrollbar-thumb {
+    background: #64748b !important;
     border-radius: 10px;
     border: 2px solid #172033;
 }
 
-.st-key-quiz_pagination_scroll::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-/* Keep the 30 buttons on one line */
-.st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"] {
-    flex-wrap: nowrap !important;
+.st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"]::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
 }
