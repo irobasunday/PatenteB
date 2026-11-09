@@ -122,4 +122,4 @@ def show_italian_audio(question_text, question_id):
 </script>
 """
     html_code = html_code.replace("__QUESTION_TEXT__", text_json)
-    components.html(html_code, height=155, scrolling=False)
+    components.html(html_code, height=125, scrolling=False)
