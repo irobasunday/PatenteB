@@ -1,3 +1,4 @@
+
 import streamlit as st
 
 from dashboard import show_dashboard
@@ -6,7 +7,6 @@ from components.header import show_header
 from components.footer import show_footer
 from components.quiz_modal import show_quiz_modal
 from quiz import show_quiz
-
 
 
 st.set_page_config(
@@ -24,7 +24,10 @@ st.set_page_config(
 load_css()
 
 
-# Initialize session state
+# =========================================
+# INITIALIZE SESSION STATE
+# =========================================
+
 if "page" not in st.session_state:
     st.session_state.page = "welcome"
 
@@ -41,11 +44,50 @@ if "quiz_mode" not in st.session_state:
     st.session_state.quiz_mode = None
 
 
-# Shared header
-show_header()
+# =========================================
+# HEADER
+# =========================================
+
+if st.session_state.page == "quiz":
+
+    # Compact quiz header
+    with st.container(key="quiz_compact_header"):
+
+        back_col, title_col, mode_col = st.columns(
+            [0.8, 2, 3],
+            vertical_alignment="center",
+            gap="small"
+        )
+
+        with back_col:
+            if st.button(
+                "←",
+                key="quiz_back_dashboard",
+                help="Back to Dashboard",
+            ):
+                st.session_state.page = "dashboard"
+                st.rerun()
+
+        with title_col:
+            st.markdown("### Quiz")
+
+        with mode_col:
+            st.markdown(
+                "<div style='text-align:right;'>"
+                "<strong>Translation Mode</strong>"
+                "</div>",
+                unsafe_allow_html=True
+            )
+
+else:
+    # Keep the normal shared header on all other pages
+    show_header()
 
 
-# Page navigation
+# =========================================
+# PAGE NAVIGATION
+# =========================================
+
 if st.session_state.page == "welcome":
 
     st.title("Welcome to Patente B")
@@ -62,6 +104,7 @@ elif st.session_state.page == "dashboard":
 
 
 elif st.session_state.page == "quiz":
+
     show_quiz()
 
 
@@ -87,11 +130,17 @@ elif st.session_state.page == "settings":
     st.info("Settings page coming soon.")
 
 
-# Shared footer
+# =========================================
+# SHARED FOOTER
+# =========================================
+
 show_footer()
 
 
-# Quiz modal
+# =========================================
+# QUIZ MODAL
+# =========================================
+
 if st.session_state.open_quiz_modal:
 
     st.session_state.open_quiz_modal = False
