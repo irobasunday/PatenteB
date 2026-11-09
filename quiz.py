@@ -559,7 +559,7 @@ def show_quiz():
     # ANSWER BUTTONS
     # =====================================
 
-    st.markdown("### Select your answer")
+   
 
     show_answer_buttons(question_id)
 
