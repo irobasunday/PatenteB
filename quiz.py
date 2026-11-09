@@ -472,7 +472,7 @@ def show_quiz():
     ):
         finish_quiz("time_expired")
 
-    st.title("Translate Mode")
+    #st.title("Translate Mode")
 
     # =====================================
     # FINISHED QUIZ
