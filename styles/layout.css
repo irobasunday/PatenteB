@@ -342,3 +342,36 @@
     text-align: center !important;
     white-space: nowrap !important;
 }
+
+/* =========================================
+   COMPACT QUIZ PAGINATION BUTTONS
+   ========================================= */
+
+.st-key-quiz_pagination_scroll
+[class*="st-key-pagination_"] {
+    flex: 0 0 45px !important;
+    width: 45px !important;
+    min-width: 45px !important;
+    max-width: 45px !important;
+}
+
+.st-key-quiz_pagination_scroll
+[class*="st-key-pagination_"] [data-testid="stButton"] {
+    width: 45px !important;
+    min-width: 45px !important;
+}
+
+.st-key-quiz_pagination_scroll button {
+    width: 45px !important;
+    min-width: 45px !important;
+    height: 38px !important;
+    padding: 0 4px !important;
+    font-size: 14px !important;
+}
+
+.st-key-quiz_pagination_scroll button p {
+    color: #ffffff !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+}
