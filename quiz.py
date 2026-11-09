@@ -28,7 +28,6 @@ def initialize_quiz():
     """Load 30 questions once and initialize quiz state."""
 
     if "quiz_questions" not in st.session_state:
-
         questions = fetch_quiz_questions()
 
         if len(questions) != TOTAL_QUESTIONS:
@@ -69,7 +68,7 @@ def initialize_quiz():
 
 
 def get_remaining_seconds():
-    """Calculate the remaining quiz time."""
+    """Calculate remaining quiz time."""
 
     elapsed = (
         datetime.now(timezone.utc)
@@ -139,7 +138,7 @@ def select_answer(question_id, answer):
     # Save using the real PostgreSQL question ID
     answers[question_id] = answer
 
-    # Open completion modal after the final answer
+    # Open completion modal after final answer
     if (
         len(answers) == TOTAL_QUESTIONS
         and not was_complete
@@ -213,7 +212,10 @@ def show_answer_buttons(question_id):
 # =========================================
 
 def show_pagination():
-    """Display one grid of 30 question buttons."""
+    """
+    Display all 30 question buttons in one
+    horizontally scrollable row.
+    """
 
     st.markdown("#### Question Navigation")
 
@@ -221,25 +223,20 @@ def show_pagination():
     answers = st.session_state.quiz_answers
     questions = st.session_state.quiz_questions
 
-    for start in range(0, TOTAL_QUESTIONS, 6):
+    # One horizontal scrolling container
+    with st.container(
+        key="quiz_pagination_scroll",
+        horizontal=True,
+        horizontal_alignment="left",
+        gap="small",
+    ):
 
-        columns = st.columns(
-            6,
-            gap="small",
-            vertical_alignment="center",
-            border=False
-        )
-
-        for position, column in enumerate(columns):
-
-            index = start + position
-
-            if index >= TOTAL_QUESTIONS:
-                continue
+        for index in range(TOTAL_QUESTIONS):
 
             number = index + 1
             question_id = questions[index]["id"]
 
+            # Determine question status
             if index == current:
                 status = "current"
 
@@ -249,16 +246,17 @@ def show_pagination():
             else:
                 status = "unanswered"
 
-            with column:
-                with st.container(
-                    key=f"pagination_{status}_{number}"
+            # Preserve existing CSS color selectors
+            with st.container(
+                key=f"pagination_{status}_{number}"
+            ):
+
+                if st.button(
+                    str(number),
+                    key=f"pagination_button_{number}",
+                    width=75,
                 ):
-                    if st.button(
-                        str(number),
-                        key=f"pagination_button_{number}",
-                        use_container_width=True,
-                    ):
-                        go_to_question(index)
+                    go_to_question(index)
 
 
 # =========================================
@@ -315,7 +313,7 @@ def show_question_card(question, question_number):
     )
 
     def display_question_text():
-        """Display Italian text, Google Italiano audio, and translation."""
+        """Display Italian text, audio and translation."""
 
         # Original Italian question
         st.markdown(
@@ -387,14 +385,13 @@ def show_question_card(question, question_number):
 
         if image_file:
 
-            # Image first for mobile stacking
             image_col, text_col = st.columns(
                 [1, 3],
                 gap="medium",
                 vertical_alignment="center"
             )
 
-            # LEFT - SMALL IMAGE
+            # LEFT - QUESTION IMAGE
             with image_col:
 
                 with st.container(key="quiz_question_image"):
@@ -581,7 +578,7 @@ def show_quiz():
     st.divider()
 
     # =====================================
-    # PAGINATION
+    # HORIZONTAL QUESTION PAGINATION
     # =====================================
 
     show_pagination()

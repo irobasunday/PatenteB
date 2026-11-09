@@ -3,6 +3,9 @@ import os
 import psycopg
 import streamlit as st
 from dotenv import load_dotenv
+import os
+
+database_url = os.getenv("DATABASE_URL")
 
 load_dotenv()
 
