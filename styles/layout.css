@@ -318,3 +318,45 @@
 }
 
 
+/* =========================================
+   FIX PREVIOUS / NEXT ON MOBILE ONLY
+   ========================================= */
+
+@media screen and (max-width: 768px) {
+
+    /* Keep both navigation columns on one line */
+    div[data-testid="stHorizontalBlock"]:has(
+        .st-key-quiz_previous
+    ):has(
+        .st-key-quiz_next
+    ) {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
+
+    /* Give each button half the available space */
+    div[data-testid="stColumn"]:has(
+        .st-key-quiz_previous
+    ),
+    div[data-testid="stColumn"]:has(
+        .st-key-quiz_next
+    ) {
+        flex: 1 1 0 !important;
+        width: 0 !important;
+        min-width: 0 !important;
+    }
+
+    /* Keep buttons inside their columns */
+    .st-key-quiz_previous button,
+    .st-key-quiz_next button {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 42px !important;
+        white-space: nowrap !important;
+    }
+}
+
+
