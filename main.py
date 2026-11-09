@@ -475,7 +475,7 @@ def show_quiz():
     ):
         finish_quiz("time_expired")
 
-    #st.title("Translate Mode")
+    # st.title("Translate Mode")
 
     # =====================================
     # FINISHED QUIZ
@@ -552,47 +552,60 @@ def show_quiz():
     )
 
     # =====================================
-    # ANSWER BUTTONS
+    # FOUR BUTTONS IN ONE ROW
+    # Previous | VERO | FALSO | Next
     # =====================================
 
-    show_answer_buttons(question_id)
+    selected = st.session_state.quiz_answers.get(question_id)
 
-    # =====================================
-    # HORIZONTAL QUESTION PAGINATION
-    # =====================================
+    with st.container(key="quiz_controls_row"):
+        previous_col, vero_col, falso_col, next_col = st.columns(
+            [1.15, 1, 1, 1.15],
+            gap="small"
+        )
 
+        with previous_col:
+            with st.container(key="quiz_previous"):
+                if st.button(
+                    "← Prev",
+                    key="quiz_previous_button",
+                    disabled=index == 0,
+                    use_container_width=True,
+                ):
+                    go_to_question(index - 1)
+
+        with vero_col:
+            with st.container(key="quiz_vero"):
+                label = "✓ VERO" if selected is True else "VERO"
+                if st.button(
+                    label,
+                    key=f"vero_{question_id}",
+                    use_container_width=True,
+                ):
+                    select_answer(question_id, True)
+
+        with falso_col:
+            with st.container(key="quiz_falso"):
+                label = "✕ FALSO" if selected is False else "FALSO"
+                if st.button(
+                    label,
+                    key=f"falso_{question_id}",
+                    use_container_width=True,
+                ):
+                    select_answer(question_id, False)
+
+        with next_col:
+            with st.container(key="quiz_next"):
+                if st.button(
+                    "Next →",
+                    key="quiz_next_button",
+                    disabled=index == TOTAL_QUESTIONS - 1,
+                    use_container_width=True,
+                ):
+                    go_to_question(index + 1)
+
+    # Keep the existing 30-question scrollable pagination
     show_pagination()
-
-    # =====================================
-    # PREVIOUS / NEXT
-    # =====================================
-
-    previous_col, next_col = st.columns(
-        2,
-        gap="small"
-    )
-
-    with previous_col:
-
-        with st.container(key="quiz_previous"):
-
-            if st.button(
-                "← Previous",
-                disabled=index == 0,
-                use_container_width=True,
-            ):
-                go_to_question(index - 1)
-
-    with next_col:
-
-        with st.container(key="quiz_next"):
-
-            if st.button(
-                "Next →",
-                disabled=index == TOTAL_QUESTIONS - 1,
-                use_container_width=True,
-            ):
-                go_to_question(index + 1)
 
     # =====================================
     # SUBMIT QUIZ
