@@ -6,6 +6,25 @@ from pathlib import Path
 
 import streamlit as st
 
+from dashboard import show_dashboard
+from styles_loader import load_css
+from components.header import show_header
+from components.footer import show_footer
+from components.quiz_modal import show_quiz_modal
+from quiz import show_quiz
+
+
+st.set_page_config(
+    page_title="Patente B",
+    page_icon="🚗",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+    menu_items={
+        "Get Help": None,
+        "Report a bug": None,
+        "About": None,
+    }
+)
 from database import fetch_quiz_questions
 from translator import translate_to_english
 from audio_player import show_italian_audio
@@ -15,15 +34,19 @@ from audio_player import show_italian_audio
 # QUIZ SETTINGS
 # =========================================
 
+load_css()
 TOTAL_QUESTIONS = 30
 QUIZ_DURATION_MINUTES = 20
 PROJECT_FOLDER = Path(__file__).resolve().parent
 
 
 # =========================================
+# INITIALIZE SESSION STATE
 # QUIZ STATE
 # =========================================
 
+if "page" not in st.session_state:
+    st.session_state.page = "welcome"
 def initialize_quiz():
     """Load 30 questions once and initialize quiz state."""
 
@@ -70,17 +93,25 @@ def initialize_quiz():
 def get_remaining_seconds():
     """Calculate remaining quiz time."""
 
+if "open_quiz_modal" not in st.session_state:
+    st.session_state.open_quiz_modal = False
     elapsed = (
         datetime.now(timezone.utc)
         - st.session_state.quiz_started_at
     ).total_seconds()
 
+if "quiz_translation" not in st.session_state:
+    st.session_state.quiz_translation = False
     return max(
         0,
         math.ceil(QUIZ_DURATION_MINUTES * 60 - elapsed)
     )
 
+if "quiz_auto_correction" not in st.session_state:
+    st.session_state.quiz_auto_correction = False
 
+if "quiz_mode" not in st.session_state:
+    st.session_state.quiz_mode = None
 def finish_quiz(reason="time_expired"):
     """Finish the quiz without deleting saved answers."""
 
@@ -90,16 +121,24 @@ def finish_quiz(reason="time_expired"):
 
 
 # =========================================
+# HEADER
 # LIVE COUNTDOWN
 # =========================================
 
+if st.session_state.page == "quiz":
 @st.fragment(run_every="1s")
 def show_live_timer():
     """Update the timer every second."""
 
+    # Compact quiz header
+    with st.container(key="quiz_compact_header"):
     if st.session_state.quiz_finished:
         return
 
+        back_col, title_col, mode_col = st.columns(
+            [1, 2, 4],
+            vertical_alignment="center",
+            gap="small"
     remaining = get_remaining_seconds()
     minutes, seconds = divmod(remaining, 60)
 
@@ -115,8 +154,9 @@ def show_live_timer():
     else:
         st.info(
             f"⏱ Time Remaining: {minutes:02d}:{seconds:02d}"
-        )
+)
 
+        with back_col:
 
 # =========================================
 # ANSWERS AND NAVIGATION
@@ -187,16 +227,36 @@ def show_answer_buttons(question_id):
 
             label = "✓ VERO" if selected is True else "VERO"
 
-            if st.button(
+if st.button(
+                "←",
+                key="quiz_back_dashboard",
+                help="Back to Dashboard",
                 label,
                 key=f"vero_{question_id}",
                 use_container_width=True,
-            ):
+):
+                st.session_state.page = "dashboard"
+                st.rerun()
+
+        with title_col:
+            st.markdown("**Quiz**")
+
+        with mode_col:
+            st.markdown(
+                "<div style='text-align:right; "
+                "white-space:nowrap; font-size:14px;'>"
+                "<strong>Practice Mode</strong>"
+                "</div>",
+                unsafe_allow_html=True
+            )
                 select_answer(question_id, True)
 
     with col2:
         with st.container(key="quiz_falso"):
 
+else:
+    # Normal shared header on all other pages
+    show_header()
             label = "✕ FALSO" if selected is False else "FALSO"
 
             if st.button(
@@ -208,9 +268,11 @@ def show_answer_buttons(question_id):
 
 
 # =========================================
+# PAGE NAVIGATION
 # QUESTION PAGINATION
 # =========================================
 
+if st.session_state.page == "welcome":
 def show_pagination():
     """Display 30 numbered buttons in one scrollable row."""
 
@@ -235,6 +297,8 @@ def show_pagination():
             else:
                 status = "unanswered"
 
+    st.title("Welcome to Patente B")
+    st.write("Prepare for your Italian driving theory exam.")
             if st.button(
                 str(number),
                 key=f"pagination_{status}_{number}",
@@ -242,32 +306,45 @@ def show_pagination():
             ):
                 go_to_question(index)
 
+    if st.button("OK"):
+        st.session_state.page = "dashboard"
+        st.rerun()
 
 # =========================================
 # QUESTION IMAGE HELPER
 # =========================================
 
+elif st.session_state.page == "dashboard":
 def get_question_image(image_path):
     """Find an image safely inside the project folder."""
 
+    show_dashboard()
     if not image_path:
         return None
 
     relative_path = str(image_path).lstrip("/\\")
 
+elif st.session_state.page == "quiz":
     image_file = (
         PROJECT_FOLDER / relative_path
     ).resolve()
 
+    show_quiz()
     if not image_file.is_relative_to(PROJECT_FOLDER):
         return None
 
     if image_file.is_file():
         return image_file
 
+elif st.session_state.page == "coming_soon":
     return None
 
+    st.title("🚧 Coming Soon")
+    st.info("Auto Correction will be available in a future update.")
 
+    if st.button("Back to Dashboard"):
+        st.session_state.page = "dashboard"
+        st.rerun()
 # =========================================
 # QUESTION CARD WITH TRANSLATION
 # =========================================
@@ -357,16 +434,22 @@ def show_question_card(question, question_number):
 
             except Exception as e:
 
+elif st.session_state.page == "results":
                 st.error("Translation failed.")
 
+    st.title("My Results")
+    st.info("Results page coming soon.")
                 st.code(
                     f"{type(e).__name__}: {e}"
                 )
 
     with st.container(border=True):
 
+elif st.session_state.page == "settings":
         st.markdown(f"### DOMANDA {question_number}")
 
+    st.title("Settings")
+    st.info("Settings page coming soon.")
         if image_file:
 
             image_col, text_col = st.columns(
@@ -397,9 +480,11 @@ def show_question_card(question, question_number):
 
 
 # =========================================
+# SHARED FOOTER
 # SUBMIT / REVIEW MODAL
 # =========================================
 
+show_footer()
 @st.dialog("Quiz Completed!")
 def show_completion_dialog():
     """Show the Submit / Review modal."""
@@ -450,9 +535,11 @@ def show_completion_dialog():
 
 
 # =========================================
+# QUIZ MODAL
 # MAIN QUIZ PAGE
 # =========================================
 
+if st.session_state.open_quiz_modal:
 def show_quiz():
     """Display the Translate Mode quiz page."""
 
@@ -530,6 +617,7 @@ def show_quiz():
 
     answered = len(st.session_state.quiz_answers)
 
+    st.session_state.open_quiz_modal = False
     st.write(
         f"Question {question_number} of {TOTAL_QUESTIONS}"
     )
@@ -564,6 +652,7 @@ def show_quiz():
             gap="small"
         )
 
+    show_quiz_modal()
         with previous_col:
             with st.container(key="quiz_previous"):
                 if st.button(
