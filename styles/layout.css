@@ -245,65 +245,57 @@
    QUESTION NAVIGATION SCROLLBAR
    ========================================= */
 /* =========================================
-   PATENTE B - HORIZONTAL QUIZ PAGINATION
+   PATENTE B - QUIZ PAGINATION FIX
    ========================================= */
 
-/* Main pagination container */
 .st-key-quiz_pagination_scroll {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 14px !important;
+    scrollbar-width: auto !important;
+    scrollbar-color: #94a3b8 #172033 !important;
 }
 
-/* Actual scrollable question row */
+/* Keep the horizontal row wider than the screen */
 .st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"] {
     display: flex !important;
     flex-wrap: nowrap !important;
-
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-
+    width: max-content !important;
+    min-width: max-content !important;
     gap: 8px !important;
-    padding-bottom: 14px !important;
-
-    scrollbar-width: auto !important;
-    scrollbar-color: #64748b #172033 !important;
 }
 
-/* Keep all 30 question buttons on one line */
+/* Prevent individual pagination containers from shrinking */
 .st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"] > div {
-    flex: 0 0 65px !important;
-    min-width: 65px !important;
-    max-width: 65px !important;
+    flex: 0 0 75px !important;
+    width: 75px !important;
+    min-width: 75px !important;
+    max-width: 75px !important;
 }
 
-/* Question buttons */
+/* Preserve readable numbered buttons */
 .st-key-quiz_pagination_scroll button {
-    min-width: 60px !important;
-    width: 60px !important;
+    width: 75px !important;
+    min-width: 75px !important;
     white-space: nowrap !important;
+    flex-shrink: 0 !important;
 }
 
-/* Visible scrollbar - Chrome, Edge, Safari */
-.st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"]::-webkit-scrollbar {
+/* Visible scrollbar */
+.st-key-quiz_pagination_scroll::-webkit-scrollbar {
     height: 12px !important;
 }
 
-.st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"]::-webkit-scrollbar-track {
+.st-key-quiz_pagination_scroll::-webkit-scrollbar-track {
     background: #172033 !important;
     border-radius: 10px;
 }
 
-.st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"]::-webkit-scrollbar-thumb {
-    background: #64748b !important;
-    border-radius: 10px;
-    border: 2px solid #172033;
-}
-
-.st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"]::-webkit-scrollbar-thumb:hover {
+.st-key-quiz_pagination_scroll::-webkit-scrollbar-thumb {
     background: #94a3b8 !important;
+    border: 2px solid #172033;
+    border-radius: 10px;
 }
