@@ -54,7 +54,7 @@ if st.session_state.page == "quiz":
     with st.container(key="quiz_compact_header"):
 
         back_col, title_col, mode_col = st.columns(
-            [0.8, 2, 3],
+            [1, 2, 4],
             vertical_alignment="center",
             gap="small"
         )
@@ -69,18 +69,19 @@ if st.session_state.page == "quiz":
                 st.rerun()
 
         with title_col:
-            st.markdown("### Quiz")
+            st.markdown("**Quiz**")
 
         with mode_col:
             st.markdown(
-                "<div style='text-align:right;'>"
-                "<strong>Translation Mode</strong>"
+                "<div style='text-align:right; "
+                "white-space:nowrap; font-size:14px;'>"
+                "<strong>Practice Mode</strong>"
                 "</div>",
                 unsafe_allow_html=True
             )
 
 else:
-    # Keep the normal shared header on all other pages
+    # Normal shared header on all other pages
     show_header()
 
 
