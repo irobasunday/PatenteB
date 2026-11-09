@@ -315,3 +315,12 @@
 .st-key-quiz_pagination_scroll::-webkit-scrollbar-thumb:hover {
     background: #cbd5e1 !important;
 }
+
+/* Reduce VERO / FALSO button width only */
+
+.st-key-quiz_vero button,
+.st-key-quiz_falso button {
+    width: 130px !important;
+    max-width: 100% !important;
+}
+
