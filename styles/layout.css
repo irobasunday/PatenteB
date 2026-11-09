@@ -360,13 +360,4 @@
 }
 
 
-/* Reduce space above the Translate button */
-
-.st-key-quiz_question_image {
-    margin-bottom: 0 !important;
-}
-
-.st-key-quiz_question_image ~ div {
-    margin-top: 0 !important;
-}
 
