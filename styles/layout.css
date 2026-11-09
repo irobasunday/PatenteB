@@ -299,3 +299,46 @@
     border: 2px solid #172033;
     border-radius: 10px;
 }
+
+/* =========================================
+   FIX QUIZ PAGINATION BUTTON NUMBERS
+   ========================================= */
+
+/* Keep each numbered container at full width */
+.st-key-quiz_pagination_scroll
+[class*="st-key-pagination_"] {
+    flex: 0 0 75px !important;
+    width: 75px !important;
+    min-width: 75px !important;
+    max-width: 75px !important;
+}
+
+/* Ensure Streamlit's button wrapper does not shrink */
+.st-key-quiz_pagination_scroll
+[class*="st-key-pagination_"] [data-testid="stButton"] {
+    width: 75px !important;
+    min-width: 75px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Make question numbers readable */
+.st-key-quiz_pagination_scroll button {
+    width: 75px !important;
+    min-width: 75px !important;
+    height: 40px !important;
+    padding: 0 8px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+    white-space: nowrap !important;
+}
+
+/* Keep the number centered */
+.st-key-quiz_pagination_scroll button p {
+    color: #ffffff !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+}
