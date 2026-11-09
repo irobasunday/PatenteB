@@ -1,3 +1,4 @@
+
 import streamlit as st
 
 from dashboard import show_dashboard
@@ -6,7 +7,6 @@ from components.header import show_header
 from components.footer import show_footer
 from components.quiz_modal import show_quiz_modal
 from quiz import show_quiz
-
 
 
 st.set_page_config(
@@ -41,7 +41,6 @@ if "quiz_mode" not in st.session_state:
     st.session_state.quiz_mode = None
 
 
-# Shared header
 # Shared header - hidden on quiz page
 if st.session_state.page != "quiz":
     show_header()
@@ -62,9 +61,11 @@ elif st.session_state.page == "dashboard":
 
     show_dashboard()
 
+
 elif st.session_state.page == "quiz":
 
-    if st.button("❮❮ Quiz Practice Mode", key="quiz_back"):
+    # Single-line quiz header with back navigation
+    if st.button("‹‹ Quiz Translate Mode", key="quiz_back"):
         st.session_state.page = "dashboard"
         st.rerun()
 
