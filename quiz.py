@@ -57,6 +57,7 @@ def initialize_quiz():
         "quiz_submit_pending": False,
         "quiz_finish_reason": None,
         "quiz_translations_visible": {},
+        "quiz_translation_cache": {},
     }
 
     for key, value in defaults.items():
@@ -339,34 +340,30 @@ def show_question_card(question, question_number):
 
         # Show translation only when requested
         if translations_visible.get(question_id, False):
-
             try:
-                with st.spinner("Translating into English..."):
+                translation_cache = st.session_state.quiz_translation_cache
 
-                    english_text = get_or_create_translation(
-    question_id,
-    italian_text
-)
+                if question_id in translation_cache:
+                    english_text = translation_cache[question_id]
+                else:
+                    with st.spinner("Translating into English..."):
+                        english_text = get_or_create_translation(
+                            question_id,
+                            italian_text
+                        )
+
+                    if english_text:
+                        translation_cache[question_id] = english_text
 
                 if english_text:
-
                     st.markdown("**English Translation**")
-
                     st.info(english_text)
-
                 else:
-
-                    st.warning(
-                        "No translation was returned."
-                    )
+                    st.warning("No translation was returned.")
 
             except Exception as e:
-
                 st.error("Translation failed.")
-
-                st.code(
-                    f"{type(e).__name__}: {e}"
-                )
+                st.code(f"{type(e).__name__}: {e}")
 
     with st.container(border=True):
 
