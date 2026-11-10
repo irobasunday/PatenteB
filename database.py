@@ -7,7 +7,8 @@ import os
 import time
 import logging
 database_url = os.getenv("DATABASE_URL")
-
+from psycopg_pool import ConnectionPool
+from contextlib import contextmanager
 load_dotenv()
 
 
@@ -28,7 +29,36 @@ def get_database_url():
     return os.getenv("DATABASE_URL")
 
 
+
+@st.cache_resource
+def get_connection_pool(database_url):
+    """Create one reusable PostgreSQL connection pool."""
+    return ConnectionPool(
+        conninfo=database_url,
+        min_size=0,
+        max_size=5,
+        open=True,
+        kwargs={"autocommit": False},
+    )
+
+
+@contextmanager
 def get_connection():
+    """Borrow a PostgreSQL connection and return it to the pool."""
+
+    database_url = get_database_url()
+
+    if not database_url:
+        raise RuntimeError(
+            "DATABASE_URL is missing. "
+            "Check your .env or Streamlit secrets."
+        )
+
+    pool = get_connection_pool(database_url)
+
+    with pool.connection() as conn:
+        yield conn
+
     """Connect to the existing Neon PostgreSQL database."""
 
     database_url = get_database_url()
