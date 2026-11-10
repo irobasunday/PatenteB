@@ -4,7 +4,8 @@ import psycopg
 import streamlit as st
 from dotenv import load_dotenv
 import os
-
+import time
+import logging
 database_url = os.getenv("DATABASE_URL")
 
 load_dotenv()
@@ -191,23 +192,60 @@ def save_translation(question_id, english_text):
                 (question_id, english_text.strip())
             )
 
+
 def get_or_create_translation(question_id, italian_text):
     """
     Retrieve a saved translation, or translate and save it.
-    All database operations happen silently.
+    Measure the time taken by each operation.
     """
+
     from translator import translate_to_english
+
+    total_start = time.perf_counter()
+
+    # STEP 1: Check PostgreSQL
+    start = time.perf_counter()
 
     saved_text = get_saved_translation(question_id)
 
+    logging.warning(
+        "TRANSLATION SPEED | PostgreSQL lookup: %.2f seconds",
+        time.perf_counter() - start
+    )
+
     if saved_text:
+        logging.warning(
+            "TRANSLATION SPEED | Total (saved): %.2f seconds",
+            time.perf_counter() - total_start
+        )
         return saved_text
 
+    # STEP 2: Translate with MyMemory
+    start = time.perf_counter()
+
     english_text = translate_to_english(italian_text)
+
+    logging.warning(
+        "TRANSLATION SPEED | MyMemory: %.2f seconds",
+        time.perf_counter() - start
+    )
 
     if not english_text or not english_text.strip():
         return ""
 
+    # STEP 3: Save to PostgreSQL
+    start = time.perf_counter()
+
     save_translation(question_id, english_text)
+
+    logging.warning(
+        "TRANSLATION SPEED | PostgreSQL save: %.2f seconds",
+        time.perf_counter() - start
+    )
+
+    logging.warning(
+        "TRANSLATION SPEED | Total (new): %.2f seconds",
+        time.perf_counter() - total_start
+    )
 
     return english_text
