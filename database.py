@@ -12,6 +12,7 @@ from contextlib import contextmanager
 load_dotenv()
 
 
+
 # =========================================
 # DATABASE CONNECTION
 # =========================================
@@ -42,9 +43,10 @@ def get_connection_pool(database_url):
     )
 
 
+
 @contextmanager
 def get_connection():
-    """Borrow a PostgreSQL connection and return it to the pool."""
+    """Borrow a PostgreSQL connection from the pool."""
 
     database_url = get_database_url()
 
@@ -58,19 +60,6 @@ def get_connection():
 
     with pool.connection() as conn:
         yield conn
-
-    """Connect to the existing Neon PostgreSQL database."""
-
-    database_url = get_database_url()
-
-    if not database_url:
-        raise RuntimeError(
-            "DATABASE_URL is missing. "
-            "Check your .env or Streamlit secrets."
-        )
-
-    return psycopg.connect(database_url)
-
 
 # =========================================
 # FETCH 30 RANDOM QUESTIONS
