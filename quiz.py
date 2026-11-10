@@ -898,7 +898,7 @@ def show_completion_dialog():
         and get_remaining_seconds() == 0
     ):
         finish_quiz("time_expired")
-        st.rerun()
+        st.rerun(scope="app")
 
 
     st.success(
