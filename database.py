@@ -38,7 +38,7 @@ def get_connection_pool(database_url):
         min_size=0,
         max_size=5,
         open=True,
-        kwargs={"autocommit": False},
+        kwargs={"autocommit": True},
     )
 
 
