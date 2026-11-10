@@ -942,9 +942,13 @@ def show_completion_dialog():
             ):
                 finish_quiz("time_expired")
 
+            
             else:
                 st.session_state.quiz_submit_pending = True
                 finish_quiz("submitted")
+
+            st.rerun()
+
 
 
 
