@@ -376,48 +376,61 @@ def show_results():
             "Unanswered questions count as errors."
         )
 
+    
     # =====================================
-    # REVIEW FAILED QUESTIONS
+    # REVIEW ALL QUIZ QUESTIONS
     # =====================================
 
-    if st.session_state.quiz_results_view == "failed":
+    if st.session_state.quiz_results_view == "all_questions":
 
         if st.button("← Back to Results"):
             st.session_state.quiz_results_view = "summary"
             st.rerun()
 
-        for number, question in enumerate(
-            result["failed"],
-            1
-        ):
+        st.subheader("Review Quiz Questions")
+
+        questions = st.session_state.quiz_questions
+        answers = result["answers"]
+
+        for number, question in enumerate(questions, 1):
+
             question_id = question["id"]
-
-            selected = result["answers"].get(
-                question_id
-            )
-
+            selected = answers.get(question_id)
             expected = normalize_correct_answer(
                 question["correct_answer"]
             )
 
-            with st.container(border=True):
+            is_correct = (
+                question_id in answers
+                and selected == expected
+            )
 
-                if selected is None:
-                    st.error("Unanswered")
-                else:
-                    st.error("Incorrect")
+            border_color = "#22c55e" if is_correct else "#ef4444"
+            status = "✓ Correct" if is_correct else "✕ Incorrect"
 
-                show_question_card(
-                    question,
-                    number
+            with st.container(
+                key=f"quiz_review_question_{question_id}"
+            ):
+                st.markdown(
+                    f"""
+                    <div style="
+                        border-top: 3px solid {border_color};
+                        padding-top: 8px;
+                        font-weight: 700;
+                        color: {border_color};
+                    ">{status} — Question {number}</div>
+                    """,
+                    unsafe_allow_html=True,
                 )
 
-                if selected is None:
+                show_question_card(question, number)
+
+                if question_id not in answers:
                     selected_text = "Not answered"
-                elif selected:
-                    selected_text = "VERO"
                 else:
-                    selected_text = "FALSO"
+                    selected_text = (
+                        "VERO" if selected else "FALSO"
+                    )
 
                 correct_text = (
                     "VERO" if expected else "FALSO"
@@ -427,28 +440,34 @@ def show_results():
                     f"Your answer: **{selected_text}**"
                 )
 
-                st.write(
-                    f"Correct answer: **{correct_text}**"
+                st.markdown(
+                    f"Correct answer: :green[**{correct_text}**]"
                 )
 
                 st.caption(
-                    "Chapter: "
+                    "Related topic: "
                     + str(
                         question.get(
+                            "subtopic_name"
+                        )
+                        or question.get(
                             "chapter_name",
                             "Unknown"
                         )
                     )
                 )
 
-    elif result["failed"]:
+                st.divider()
 
+    else:
         if st.button(
-            f"View Failed Questions ({result['errors']})",
+            f"View Quiz Questions ({len(st.session_state.quiz_questions)})",
             use_container_width=True,
         ):
-            st.session_state.quiz_results_view = "failed"
+            st.session_state.quiz_results_view = "all_questions"
             st.rerun()
+
+
 
     # =====================================
     # RETRY FAILED QUESTIONS
