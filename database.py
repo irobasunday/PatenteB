@@ -185,7 +185,41 @@ def fetch_quiz_questions():
 # SAVED ENGLISH TRANSLATIONS
 # =========================================
 
+
 def get_saved_translation(question_id):
+    """Retrieve an existing English translation."""
+
+    start = time.perf_counter()
+
+    with get_connection() as conn:
+        connection_time = time.perf_counter()
+
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT english_text
+                FROM question_translations
+                WHERE question_id = %s
+                """,
+                (question_id,)
+            )
+
+            row = cur.fetchone()
+
+        query_time = time.perf_counter()
+
+    logging.warning(
+        "DB DIAGNOSTIC | Lookup connection: %.3f seconds",
+        connection_time - start
+    )
+
+    logging.warning(
+        "DB DIAGNOSTIC | Lookup SQL: %.3f seconds",
+        query_time - connection_time
+    )
+
+    return row[0] if row else None
+
     """Retrieve an existing English translation."""
 
     with get_connection() as conn:
