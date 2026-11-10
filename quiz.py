@@ -365,21 +365,12 @@ def show_results():
                         "😢 **FAILED — Keep Practicing!**"
                     )
                     st.caption(
-                        st.caption(
-                    "Maximum allowed: 3 errors"
-)
+                        "Maximum allowed: 3 errors"
                     )
 
 
-        else:
 
-            with st.container(key="result_status_fail"):
-                st.markdown(
-                    "😢 **FAILED — Keep Practicing!**"
-                )
-                st.caption(
-                    "Maximum allowed: 3 errors"
-                )
+        
 
         st.caption(
             "Unanswered questions count as errors."
