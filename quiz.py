@@ -405,23 +405,33 @@ def show_results():
                 and selected == expected
             )
 
+            
             border_color = "#22c55e" if is_correct else "#ef4444"
             status = "✓ Correct" if is_correct else "✕ Incorrect"
+
+            # Apply the border to the entire review container.
+            st.markdown(
+                f"""
+                <style>
+                [class*="st-key-quiz_review_question_{question_id}"] {{
+                    border: 3px solid {border_color} !important;
+                    border-radius: 18px !important;
+                    padding: 20px !important;
+                    margin-bottom: 24px !important;
+                    background: #101827 !important;
+                }}
+                </style>
+                """,
+                unsafe_allow_html=True,
+            )
 
             with st.container(
                 key=f"quiz_review_question_{question_id}"
             ):
                 st.markdown(
-                    f"""
-                    <div style="
-                        border-top: 3px solid {border_color};
-                        padding-top: 8px;
-                        font-weight: 700;
-                        color: {border_color};
-                    ">{status} — Question {number}</div>
-                    """,
-                    unsafe_allow_html=True,
+                    f"**{status} — Question {number}**"
                 )
+
 
                 show_question_card(question, number)
 
