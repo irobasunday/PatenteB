@@ -350,15 +350,24 @@ def show_results():
                 f"{minutes}m {seconds:02d}s"
             )
 
-        if result["errors"] <= 3:
+       
+        # Normal exam only: show PASS or FAIL.
+        # Retry mode is practice, so it has no PASS/FAIL card.
+        if not st.session_state.quiz_retry_mode:
+            if result["errors"] <= 3:
+                with st.container(key="result_status_pass"):
+                    st.markdown(
+                        "🎉 **PASSED — Congratulations!**"
+                    )
+            else:
+                with st.container(key="result_status_fail"):
+                    st.markdown(
+                        "😢 **FAILED — Keep Practicing!**"
+                    )
+                    st.caption(
+                        f"You made {result['errors']} errors."
+                    )
 
-            with st.container(key="result_status_pass"):
-                st.markdown(
-                    "🎉 **PASSED — Congratulations!**"
-                )
-                st.caption(
-                    "Maximum allowed: 3 errors"
-                )
 
         else:
 
@@ -551,11 +560,16 @@ def finish_quiz(reason="time_expired"):
     st.session_state.quiz_show_completion_dialog = False
 
 
+
 @st.fragment(run_every="1s")
 def show_live_timer():
     """Update the timer every second."""
 
     if st.session_state.quiz_finished:
+        return
+
+    # Disable timer during Retry Failed Questions
+    if st.session_state.quiz_retry_mode:
         return
 
     remaining = get_remaining_seconds()
@@ -564,6 +578,7 @@ def show_live_timer():
         remaining,
         60
     )
+
 
     if remaining == 0:
         finish_quiz("time_expired")
