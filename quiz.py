@@ -854,7 +854,7 @@ def show_question_card(question, question_number):
             with image_col:
 
                 with st.container(
-                    key="quiz_question_image"
+                     key=f"quiz_question_image_{question_id}"
                 ):
                     st.image(
                         str(image_file),
