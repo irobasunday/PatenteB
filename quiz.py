@@ -6,7 +6,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from database import fetch_quiz_questions
+from database import fetch_quiz_questions, get_or_create_translation
 from translator import translate_to_english
 from audio_player import show_italian_audio
 
@@ -343,9 +343,10 @@ def show_question_card(question, question_number):
             try:
                 with st.spinner("Translating into English..."):
 
-                    english_text = translate_to_english(
-                        italian_text
-                    )
+                    english_text = get_or_create_translation(
+    question_id,
+    italian_text
+)
 
                 if english_text:
 

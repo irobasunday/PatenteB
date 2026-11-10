@@ -149,3 +149,64 @@ def fetch_quiz_questions():
         )
 
     return questions
+
+# =========================================
+# SAVED ENGLISH TRANSLATIONS
+# =========================================
+
+def get_saved_translation(question_id):
+    """Retrieve an existing English translation."""
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT english_text
+                FROM question_translations
+                WHERE question_id = %s
+                """,
+                (question_id,)
+            )
+
+            row = cur.fetchone()
+
+    return row[0] if row else None
+
+
+def save_translation(question_id, english_text):
+    """Permanently save a successful translation."""
+
+    if not english_text or not english_text.strip():
+        return
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO question_translations
+                    (question_id, english_text)
+                VALUES (%s, %s)
+                ON CONFLICT (question_id) DO NOTHING
+                """,
+                (question_id, english_text.strip())
+            )
+def get_or_create_translation(question_id, italian_text):
+    """
+    Retrieve a saved translation, or translate and save it.
+    All database operations happen silently.
+    """
+    from translator import translate_to_english
+
+    saved_text = get_saved_translation(question_id)
+
+    if saved_text:
+        return saved_text
+
+    english_text = translate_to_english(italian_text)
+
+    if not english_text or not english_text.strip():
+        return ""
+
+    save_translation(question_id, english_text)
+
+    return get_saved_translation(question_id) or english_text
