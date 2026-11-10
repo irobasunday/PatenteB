@@ -190,6 +190,7 @@ def save_translation(question_id, english_text):
                 """,
                 (question_id, english_text.strip())
             )
+
 def get_or_create_translation(question_id, italian_text):
     """
     Retrieve a saved translation, or translate and save it.
@@ -209,4 +210,4 @@ def get_or_create_translation(question_id, italian_text):
 
     save_translation(question_id, english_text)
 
-    return get_saved_translation(question_id) or english_text
+    return english_text
