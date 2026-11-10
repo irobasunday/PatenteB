@@ -13,6 +13,7 @@ load_dotenv()
 
 
 
+
 # =========================================
 # DATABASE CONNECTION
 # =========================================
@@ -33,13 +34,15 @@ def get_database_url():
 
 @st.cache_resource
 def get_connection_pool(database_url):
-    """Create one reusable PostgreSQL connection pool."""
+    """Create a reusable PostgreSQL connection pool."""
+
     return ConnectionPool(
         conninfo=database_url,
         min_size=0,
         max_size=5,
         open=True,
         kwargs={"autocommit": True},
+        check=ConnectionPool.check_connection,
     )
 
 
