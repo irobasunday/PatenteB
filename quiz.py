@@ -59,6 +59,7 @@ def initialize_quiz():
         "quiz_translation_cache": {},
         "quiz_results_view": "summary",
         "quiz_retry_mode": False,
+        "quiz_finished_at": None,
     }
 
     for key, value in defaults.items():
@@ -164,6 +165,7 @@ def reset_quiz(questions):
     st.session_state.quiz_translation_cache = {}
     st.session_state.quiz_results_view = "summary"
     st.session_state.quiz_started_at = datetime.now(timezone.utc)
+    st.session_state.quiz_finished_at = None
 
 
 # =========================================
@@ -180,29 +182,197 @@ def show_results():
             "Time expired. Your quiz was graded automatically."
         )
 
-    heading = "Quiz Results"
+    # Style only the results dashboard.
+    # Leave quiz controls and shared CSS intact.
+    st.markdown("""
+    <style>
+    [class*="st-key-results_dashboard"] {
+        background: #0f192b;
+        border: 1px solid #334155;
+        border-radius: 18px;
+        padding: clamp(14px, 3vw, 28px);
+        margin-bottom: 16px;
+    }
 
-    if st.session_state.quiz_retry_mode:
-        heading += " — Retry"
+    [class*="st-key-results_dashboard"] h2 {
+        margin-top: 0;
+    }
 
-    st.subheader(heading)
+    [class*="st-key-result_answered"],
+    [class*="st-key-result_unanswered"],
+    [class*="st-key-result_correct"],
+    [class*="st-key-result_errors"],
+    [class*="st-key-result_duration"] {
+        background: #17253a;
+        border: 2px solid #475569;
+        border-radius: 14px;
+        padding: 14px 18px;
+        min-width: 0;
+    }
 
-    left, right = st.columns(2)
+    [class*="st-key-result_correct"] {
+        border-color: #22c55e;
+        background: #10271f;
+    }
 
-    with left:
-        st.metric("Answered", result["answered"])
-        st.metric("Correct", result["correct"])
+    [class*="st-key-result_errors"] {
+        border-color: #ef4444;
+        background: #301b25;
+    }
 
-    with right:
-        st.metric("Unanswered", result["unanswered"])
-        st.metric("Errors", result["errors"])
+    [class*="st-key-result_correct"] [data-testid="stMetricValue"] {
+        color: #4ade80;
+    }
 
-    if result["errors"] <= 3:
-        st.success("🎉 PASSED — Maximum 3 errors")
-    else:
-        st.error("😢 FAILED — More than 3 errors")
+    [class*="st-key-result_errors"] [data-testid="stMetricValue"] {
+        color: #f87171;
+    }
 
-    st.caption("Unanswered questions count as errors.")
+    [class*="st-key-result_duration"] {
+        border-color: #3b82f6;
+    }
+
+    [class*="st-key-result_status_pass"] {
+        background: #123326;
+        border: 1px solid #22c55e;
+        border-radius: 12px;
+        padding: 14px 18px;
+    }
+
+    [class*="st-key-result_status_fail"] {
+        background: #381e29;
+        border: 1px solid #ef4444;
+        border-radius: 12px;
+        padding: 14px 18px;
+    }
+
+    [class*="st-key-result_status_pass"] p,
+    [class*="st-key-result_status_fail"] p {
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    @media (max-width: 640px) {
+        [class*="st-key-results_dashboard"] {
+            padding: 12px;
+        }
+
+        [class*="st-key-result_answered"],
+        [class*="st-key-result_unanswered"],
+        [class*="st-key-result_correct"],
+        [class*="st-key-result_errors"] {
+            padding: 10px;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # =====================================
+    # CALCULATE COMPLETION TIME
+    # =====================================
+
+    finish_time = st.session_state.quiz_finished_at
+
+    if finish_time is None:
+        finish_time = datetime.now(timezone.utc)
+        st.session_state.quiz_finished_at = finish_time
+
+    elapsed_seconds = max(
+        0,
+        int(
+            (
+                finish_time
+                - st.session_state.quiz_started_at
+            ).total_seconds()
+        )
+    )
+
+    if st.session_state.quiz_finish_reason == "time_expired":
+        elapsed_seconds = min(
+            elapsed_seconds,
+            QUIZ_DURATION_MINUTES * 60
+        )
+
+    minutes, seconds = divmod(elapsed_seconds, 60)
+
+    # =====================================
+    # RESULTS DASHBOARD
+    # =====================================
+
+    with st.container(key="results_dashboard"):
+
+        heading = "Quiz Results"
+
+        if st.session_state.quiz_retry_mode:
+            heading += " — Retry"
+
+        st.subheader(heading)
+        st.caption("PATENTE B · TRANSLATE MODE")
+
+        top_left, top_right = st.columns(2, gap="small")
+
+        with top_left:
+            with st.container(key="result_answered"):
+                st.metric(
+                    "Answered",
+                    result["answered"]
+                )
+
+        with top_right:
+            with st.container(key="result_unanswered"):
+                st.metric(
+                    "Unanswered",
+                    result["unanswered"]
+                )
+
+        bottom_left, bottom_right = st.columns(
+            2,
+            gap="small"
+        )
+
+        with bottom_left:
+            with st.container(key="result_correct"):
+                st.metric(
+                    "Correct",
+                    result["correct"]
+                )
+
+        with bottom_right:
+            with st.container(key="result_errors"):
+                st.metric(
+                    "Errors",
+                    result["errors"]
+                )
+
+        with st.container(key="result_duration"):
+            st.metric(
+                "⏱ Time Taken",
+                f"{minutes}m {seconds:02d}s"
+            )
+
+        if result["errors"] <= 3:
+
+            with st.container(key="result_status_pass"):
+                st.markdown(
+                    "🎉 **PASSED — Congratulations!**"
+                )
+                st.caption(
+                    "Maximum allowed: 3 errors"
+                )
+
+        else:
+
+            with st.container(key="result_status_fail"):
+                st.markdown(
+                    "😢 **FAILED — Keep Practicing!**"
+                )
+                st.caption(
+                    "Maximum allowed: 3 errors"
+                )
+
+        st.caption(
+            "Unanswered questions count as errors."
+        )
 
     # =====================================
     # REVIEW FAILED QUESTIONS
@@ -214,10 +384,15 @@ def show_results():
             st.session_state.quiz_results_view = "summary"
             st.rerun()
 
-        for number, question in enumerate(result["failed"], 1):
+        for number, question in enumerate(
+            result["failed"],
+            1
+        ):
             question_id = question["id"]
 
-            selected = result["answers"].get(question_id)
+            selected = result["answers"].get(
+                question_id
+            )
 
             expected = normalize_correct_answer(
                 question["correct_answer"]
@@ -230,7 +405,10 @@ def show_results():
                 else:
                     st.error("Incorrect")
 
-                show_question_card(question, number)
+                show_question_card(
+                    question,
+                    number
+                )
 
                 if selected is None:
                     selected_text = "Not answered"
@@ -239,7 +417,9 @@ def show_results():
                 else:
                     selected_text = "FALSO"
 
-                correct_text = "VERO" if expected else "FALSO"
+                correct_text = (
+                    "VERO" if expected else "FALSO"
+                )
 
                 st.write(
                     f"Your answer: **{selected_text}**"
@@ -251,7 +431,12 @@ def show_results():
 
                 st.caption(
                     "Chapter: "
-                    + str(question.get("chapter_name", "Unknown"))
+                    + str(
+                        question.get(
+                            "chapter_name",
+                            "Unknown"
+                        )
+                    )
                 )
 
     elif result["failed"]:
@@ -273,7 +458,10 @@ def show_results():
             f"Retry Failed Questions ({result['errors']})",
             use_container_width=True,
         ):
-            failed_questions = list(result["failed"])
+
+            failed_questions = list(
+                result["failed"]
+            )
 
             reset_quiz(failed_questions)
 
@@ -295,15 +483,20 @@ def show_results():
 
             if (
                 len(questions) != TOTAL_QUESTIONS
-                or len({q["id"] for q in questions}) != TOTAL_QUESTIONS
-                or len({q["chapter_id"] for q in questions}) != 25
+                or len({q["id"] for q in questions})
+                != TOTAL_QUESTIONS
+                or len({q["chapter_id"] for q in questions})
+                != 25
             ):
                 raise ValueError(
-                    "Expected 30 unique questions covering 25 chapters."
+                    "Expected 30 unique questions "
+                    "covering 25 chapters."
                 )
 
         except Exception as exc:
-            st.error(f"Unable to load a new quiz: {exc}")
+            st.error(
+                f"Unable to load a new quiz: {exc}"
+            )
 
         else:
             reset_quiz(questions)
@@ -327,13 +520,32 @@ def get_remaining_seconds():
 
     return max(
         0,
-        math.ceil(QUIZ_DURATION_MINUTES * 60 - elapsed)
+        math.ceil(
+            QUIZ_DURATION_MINUTES * 60 - elapsed
+        )
     )
 
 
 def finish_quiz(reason="time_expired"):
-    """Finish the quiz without deleting saved answers."""
+    """Finish quiz without deleting saved answers."""
 
+    if st.session_state.quiz_finished:
+        return
+
+    finished_at = datetime.now(timezone.utc)
+
+    if reason == "time_expired":
+        deadline = (
+            st.session_state.quiz_started_at.timestamp()
+            + QUIZ_DURATION_MINUTES * 60
+        )
+
+        finished_at = datetime.fromtimestamp(
+            deadline,
+            tz=timezone.utc
+        )
+
+    st.session_state.quiz_finished_at = finished_at
     st.session_state.quiz_finished = True
     st.session_state.quiz_finish_reason = reason
     st.session_state.quiz_show_completion_dialog = False
@@ -347,7 +559,11 @@ def show_live_timer():
         return
 
     remaining = get_remaining_seconds()
-    minutes, seconds = divmod(remaining, 60)
+
+    minutes, seconds = divmod(
+        remaining,
+        60
+    )
 
     if remaining == 0:
         finish_quiz("time_expired")
@@ -355,12 +571,14 @@ def show_live_timer():
 
     elif remaining <= 300:
         st.error(
-            f"⏱ Time Remaining: {minutes:02d}:{seconds:02d}"
+            f"⏱ Time Remaining: "
+            f"{minutes:02d}:{seconds:02d}"
         )
 
     else:
         st.info(
-            f"⏱ Time Remaining: {minutes:02d}:{seconds:02d}"
+            f"⏱ Time Remaining: "
+            f"{minutes:02d}:{seconds:02d}"
         )
 
 
@@ -398,10 +616,13 @@ def select_answer(question_id, answer):
         st.session_state.quiz_show_completion_dialog = True
 
     else:
+
         current = st.session_state.quiz_question_index
 
         if current < active_question_count() - 1:
-            st.session_state.quiz_question_index = current + 1
+            st.session_state.quiz_question_index = (
+                current + 1
+            )
 
     st.rerun()
 
@@ -440,7 +661,9 @@ def show_pagination():
         width="stretch",
     ):
 
-        for index in range(active_question_count()):
+        for index in range(
+            active_question_count()
+        ):
 
             number = index + 1
             question_id = questions[index]["id"]
@@ -476,13 +699,17 @@ def get_question_image(image_path):
     if not image_path:
         return None
 
-    relative_path = str(image_path).lstrip("/\\")
+    relative_path = str(
+        image_path
+    ).lstrip("/\\")
 
     image_file = (
         PROJECT_FOLDER / relative_path
     ).resolve()
 
-    if not image_file.is_relative_to(PROJECT_FOLDER):
+    if not image_file.is_relative_to(
+        PROJECT_FOLDER
+    ):
         return None
 
     if image_file.is_file():
@@ -497,7 +724,7 @@ def get_question_image(image_path):
 
 def show_question_card(question, question_number):
     """
-    Display Italian question, image and English translation.
+    Display Italian question, image and translation.
 
     Desktop:
         Small image left, question text right.
@@ -510,9 +737,14 @@ def show_question_card(question, question_number):
     """
 
     question_id = question["id"]
-    italian_text = str(question["question"])
 
-    safe_text = html.escape(italian_text)
+    italian_text = str(
+        question["question"]
+    )
+
+    safe_text = html.escape(
+        italian_text
+    )
 
     image_file = get_question_image(
         question.get("image_path")
@@ -522,7 +754,8 @@ def show_question_card(question, question_number):
         """Display Italian text, audio and translation."""
 
         st.markdown(
-            f'<div class="quiz-question-text">{safe_text}</div>',
+            f'<div class="quiz-question-text">'
+            f'{safe_text}</div>',
             unsafe_allow_html=True,
         )
 
@@ -551,10 +784,15 @@ def show_question_card(question, question_number):
             button_label,
             key=f"translate_{question_id}",
         ):
-            translations_visible[question_id] = not is_visible
+            translations_visible[question_id] = (
+                not is_visible
+            )
             st.rerun()
 
-        if translations_visible.get(question_id, False):
+        if translations_visible.get(
+            question_id,
+            False
+        ):
 
             try:
                 translation_cache = (
@@ -562,22 +800,30 @@ def show_question_card(question, question_number):
                 )
 
                 if question_id in translation_cache:
-                    english_text = translation_cache[question_id]
+                    english_text = (
+                        translation_cache[question_id]
+                    )
 
                 else:
                     with st.spinner(
                         "Translating into English..."
                     ):
-                        english_text = get_or_create_translation(
-                            question_id,
-                            italian_text,
+                        english_text = (
+                            get_or_create_translation(
+                                question_id,
+                                italian_text,
+                            )
                         )
 
                     if english_text:
-                        translation_cache[question_id] = english_text
+                        translation_cache[question_id] = (
+                            english_text
+                        )
 
                 if english_text:
-                    st.markdown("**English Translation**")
+                    st.markdown(
+                        "**English Translation**"
+                    )
                     st.info(english_text)
 
                 else:
@@ -587,11 +833,15 @@ def show_question_card(question, question_number):
 
             except Exception as e:
                 st.error("Translation failed.")
-                st.code(f"{type(e).__name__}: {e}")
+                st.code(
+                    f"{type(e).__name__}: {e}"
+                )
 
     with st.container(border=True):
 
-        st.markdown(f"### DOMANDA {question_number}")
+        st.markdown(
+            f"### DOMANDA {question_number}"
+        )
 
         if image_file:
 
@@ -631,7 +881,8 @@ def show_completion_dialog():
         st.rerun()
 
     st.success(
-        f"All {active_question_count()} questions have been answered."
+        f"All {active_question_count()} "
+        "questions have been answered."
     )
 
     st.write(
@@ -686,10 +937,13 @@ def show_quiz():
     except Exception as exc:
 
         st.error(
-            "Unable to load quiz questions from PostgreSQL."
+            "Unable to load quiz questions "
+            "from PostgreSQL."
         )
 
-        st.caption(f"Database error: {exc}")
+        st.caption(
+            f"Database error: {exc}"
+        )
         return
 
     # Check time expiration.
@@ -715,7 +969,10 @@ def show_quiz():
     index = st.session_state.quiz_question_index
     question_number = index + 1
 
-    question = st.session_state.quiz_questions[index]
+    question = (
+        st.session_state.quiz_questions[index]
+    )
+
     question_id = question["id"]
 
     # Live timer.
@@ -725,10 +982,13 @@ def show_quiz():
     # PROGRESS
     # =====================================
 
-    answered = len(st.session_state.quiz_answers)
+    answered = len(
+        st.session_state.quiz_answers
+    )
 
     st.write(
-        f"Question {question_number} of {active_question_count()}"
+        f"Question {question_number} "
+        f"of {active_question_count()}"
     )
 
     st.progress(
@@ -736,7 +996,9 @@ def show_quiz():
     )
 
     st.caption(
-        f"{answered} of {active_question_count()} questions answered"
+        f"{answered} of "
+        f"{active_question_count()} "
+        "questions answered"
     )
 
     # =====================================
@@ -800,29 +1062,43 @@ def show_quiz():
     </style>
     """, unsafe_allow_html=True)
 
-    selected = st.session_state.quiz_answers.get(question_id)
+    selected = (
+        st.session_state.quiz_answers.get(
+            question_id
+        )
+    )
 
-    with st.container(key="quiz_controls_row"):
+    with st.container(
+        key="quiz_controls_row"
+    ):
 
-        previous_col, vero_col, falso_col, next_col = st.columns(
-            [1, 1, 1, 1],
-            gap="small",
+        previous_col, vero_col, falso_col, next_col = (
+            st.columns(
+                [1, 1, 1, 1],
+                gap="small",
+            )
         )
 
         with previous_col:
 
-            with st.container(key="quiz_previous"):
+            with st.container(
+                key="quiz_previous"
+            ):
 
                 if st.button(
                     "← Previous",
                     disabled=index == 0,
                     use_container_width=True,
                 ):
-                    go_to_question(index - 1)
+                    go_to_question(
+                        index - 1
+                    )
 
         with vero_col:
 
-            with st.container(key="quiz_vero"):
+            with st.container(
+                key="quiz_vero"
+            ):
 
                 label = (
                     "✓ VERO"
@@ -835,11 +1111,16 @@ def show_quiz():
                     key=f"vero_{question_id}",
                     use_container_width=True,
                 ):
-                    select_answer(question_id, True)
+                    select_answer(
+                        question_id,
+                        True
+                    )
 
         with falso_col:
 
-            with st.container(key="quiz_falso"):
+            with st.container(
+                key="quiz_falso"
+            ):
 
                 label = (
                     "✕ FALSO"
@@ -852,11 +1133,16 @@ def show_quiz():
                     key=f"falso_{question_id}",
                     use_container_width=True,
                 ):
-                    select_answer(question_id, False)
+                    select_answer(
+                        question_id,
+                        False
+                    )
 
         with next_col:
 
-            with st.container(key="quiz_next"):
+            with st.container(
+                key="quiz_next"
+            ):
 
                 if st.button(
                     "Next →",
@@ -865,7 +1151,9 @@ def show_quiz():
                     ),
                     use_container_width=True,
                 ):
-                    go_to_question(index + 1)
+                    go_to_question(
+                        index + 1
+                    )
 
     # Existing pagination remains unchanged.
     show_pagination()
@@ -877,7 +1165,8 @@ def show_quiz():
     if answered == active_question_count():
 
         st.success(
-            f"All {active_question_count()} questions answered."
+            f"All {active_question_count()} "
+            "questions answered."
         )
 
         if st.button(
