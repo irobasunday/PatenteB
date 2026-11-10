@@ -365,7 +365,9 @@ def show_results():
                         "😢 **FAILED — Keep Practicing!**"
                     )
                     st.caption(
-                        f"You made {result['errors']} errors."
+                        st.caption(
+                    "Maximum allowed: 3 errors"
+)
                     )
 
 
