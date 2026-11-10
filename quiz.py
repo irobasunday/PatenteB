@@ -600,7 +600,10 @@ def select_answer(question_id, answer):
     if st.session_state.quiz_finished:
         return
 
-    if get_remaining_seconds() == 0:
+    if (
+        not st.session_state.quiz_retry_mode
+        and get_remaining_seconds() == 0
+    ):
         finish_quiz("time_expired")
         st.rerun()
 
@@ -641,9 +644,14 @@ def go_to_question(index):
     if st.session_state.quiz_finished:
         return
 
-    if get_remaining_seconds() == 0:
+    
+    if (
+        not st.session_state.quiz_retry_mode
+        and get_remaining_seconds() == 0
+    ):
         finish_quiz("time_expired")
         st.rerun()
+
 
     if 0 <= index < active_question_count():
         st.session_state.quiz_question_index = index
@@ -884,9 +892,14 @@ def show_question_card(question, question_number):
 def show_completion_dialog():
     """Show the Submit / Review modal."""
 
-    if get_remaining_seconds() == 0:
+   
+    if (
+        not st.session_state.quiz_retry_mode
+        and get_remaining_seconds() == 0
+    ):
         finish_quiz("time_expired")
         st.rerun()
+
 
     st.success(
         f"All {active_question_count()} "
@@ -922,14 +935,17 @@ def show_completion_dialog():
             use_container_width=True,
         ):
 
-            if get_remaining_seconds() == 0:
+            
+            if (
+                not st.session_state.quiz_retry_mode
+                and get_remaining_seconds() == 0
+            ):
                 finish_quiz("time_expired")
 
             else:
                 st.session_state.quiz_submit_pending = True
                 finish_quiz("submitted")
 
-            st.rerun()
 
 
 # =========================================
@@ -954,12 +970,15 @@ def show_quiz():
         )
         return
 
-    # Check time expiration.
+    
+    # Check time expiration for normal exams only.
     if (
         not st.session_state.quiz_finished
+        and not st.session_state.quiz_retry_mode
         and get_remaining_seconds() == 0
     ):
         finish_quiz("time_expired")
+
 
     # =====================================
     # FINISHED QUIZ
