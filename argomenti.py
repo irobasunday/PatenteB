@@ -202,7 +202,20 @@ def get_category_icon(category_id):
     }
 
     return icons.get(category_id, "📘")
+def get_category_image(category_id):
+    """Return the SVG image for a chapter, if available."""
 
+    image_path = os.path.join(
+        os.path.dirname(__file__),
+        "assets",
+        "road_signs",
+        f"chapter_{category_id}.svg",
+    )
+
+    if os.path.isfile(image_path):
+        return image_path
+
+    return None
 
 # ==========================================
 # NAVIGATION
@@ -280,12 +293,32 @@ def show_category_card(category):
     progress = max(0, min(100, int(progress)))
 
     icon = get_category_icon(category_id)
+image_path = get_category_image(category_id)
+
+if image_path:
+    with open(image_path, "r", encoding="utf-8") as file:
+        svg_content = file.read()
+
+    import base64
+
+    encoded_svg = base64.b64encode(
+        svg_content.encode("utf-8")
+    ).decode("ascii")
+
+    icon_html = (
+        '<img '
+        f'src="data:image/svg+xml;base64,{encoded_svg}" '
+        'alt="Italian road sign" '
+        'style="width:44px;height:44px;object-fit:contain;">'
+    )
+else:
+    icon_html = safe_text(icon)
 
     card_html = f"""
     <div class="argomenti-card-content">
 
-        <div class="argomenti-category-icon">
-            {safe_text(icon)}
+       <div class="argomenti-category-icon">
+         {icon_html}
         </div>
 
         <div class="argomenti-card-details">
@@ -612,3 +645,4 @@ def show_argomenti():
 
     else:
         show_learning_page(category_id, subtopic_id)
+
