@@ -1,14 +1,10 @@
 
 /* =========================================
-   INSTANT CORRECTION PAGINATION ONLY
+   INSTANT CORRECTION PAGINATION
+   Compact horizontal scrolling buttons
    ========================================= */
 
-/* The scrollable outer container */
 .st-key-instant_pagination_scroll {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -16,83 +12,87 @@
     overflow-x: auto !important;
     overflow-y: hidden !important;
 
+    padding: 8px 4px 12px !important;
+
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
-    touch-action: pan-x pan-y;
-
-    gap: 8px !important;
-    padding: 8px 0 14px !important;
-
     scrollbar-width: thin;
     scrollbar-color: #64748b #172033;
 }
 
-/* Keep Streamlit's horizontal block on one row */
+/* Keep all question buttons in one row */
 .st-key-instant_pagination_scroll
 [data-testid="stHorizontalBlock"] {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-
+    gap: 6px !important;
     width: max-content !important;
     min-width: max-content !important;
-
-    gap: 8px !important;
 }
 
-/* Keep every question container fixed-width */
+/* Prevent Streamlit from stretching button containers */
 .st-key-instant_pagination_scroll
 [class*="st-key-instant_page_"] {
-    flex: 0 0 75px !important;
-    width: 75px !important;
-    min-width: 75px !important;
-    max-width: 75px !important;
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
 }
 
-/* Question number buttons */
+/* Compact numbered buttons */
 .st-key-instant_pagination_scroll button {
-    width: 75px !important;
-    min-width: 75px !important;
-    max-width: 75px !important;
-    height: 46px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 
-    border-radius: 10px !important;
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    font-size: 13px !important;
     font-weight: 700 !important;
+    line-height: 1 !important;
+
+    border-radius: 8px !important;
     white-space: nowrap !important;
 }
 
-/* Correct answers */
+/* Correct answers: green */
 .st-key-instant_pagination_scroll
 [class*="st-key-instant_page_correct_"] button {
-    background-color: #15803d !important;
-    border-color: #22c55e !important;
+    background: #15803d !important;
+    border: 1px solid #22c55e !important;
     color: white !important;
 }
 
-/* Incorrect answers */
+/* Wrong answers: red */
 .st-key-instant_pagination_scroll
 [class*="st-key-instant_page_wrong_"] button {
-    background-color: #b91c1c !important;
-    border-color: #ef4444 !important;
+    background: #b91c1c !important;
+    border: 1px solid #ef4444 !important;
     color: white !important;
 }
 
-/* Unanswered questions */
+/* Unanswered: dark */
 .st-key-instant_pagination_scroll
 [class*="st-key-instant_page_unanswered_"] button {
-    background-color: #1e293b !important;
-    border-color: #475569 !important;
+    background: #1e293b !important;
+    border: 1px solid #475569 !important;
     color: white !important;
 }
 
 /* Scrollbar */
 .st-key-instant_pagination_scroll::-webkit-scrollbar {
-    height: 8px;
+    height: 7px;
 }
 
 .st-key-instant_pagination_scroll::-webkit-scrollbar-track {
     background: #172033;
-    border-radius: 10px;
 }
 
 .st-key-instant_pagination_scroll::-webkit-scrollbar-thumb {
@@ -100,10 +100,10 @@
     border-radius: 10px;
 }
 
-/* Mobile */
-@media screen and (max-width: 768px) {
-    .st-key-instant_pagination_scroll {
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .st-key-instant_pagination_scroll
+    [data-testid="stHorizontalBlock"] {
+        gap: 5px !important;
     }
 }
