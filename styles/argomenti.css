@@ -233,59 +233,77 @@
     line-height: 1;
 }
 
+
 /* ==========================================
-   REAL STREAMLIT NAVIGATION BUTTON
+   CLICKABLE ARGOMENTI CARDS
    ========================================== */
 
-/*
-   The visible card is HTML.
+/* Each card provides the positioning boundary */
 
-   The real Streamlit button covers the card,
-   allowing the entire card to be clicked.
-*/
-
-[class*="st-key-argomenti_category_"]
-[data-testid="stButton"],
-[class*="st-key-argomenti_subtopic_"]
-[data-testid="stButton"] {
-    position: absolute !important;
-    inset: 0 !important;
-
-    width: 100% !important;
-    height: 100% !important;
-
-    z-index: 3 !important;
+[class*="st-key-argomenti_category_"],
+[class*="st-key-argomenti_subtopic_"] {
+    position: relative !important;
+    isolation: isolate;
 }
 
+/* Position the actual Streamlit button wrapper
+   over the entire card */
+
 [class*="st-key-argomenti_category_"]
-[data-testid="stButton"] button,
+[class*="st-key-open_category_"],
 [class*="st-key-argomenti_subtopic_"]
-[data-testid="stButton"] button {
+[class*="st-key-open_subtopic_"] {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 5 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Expand the button to cover the card */
+
+[class*="st-key-open_category_"] button,
+[class*="st-key-open_subtopic_"] button {
+    display: block !important;
     width: 100% !important;
     height: 100% !important;
     min-height: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
 
     background: transparent !important;
     border: none !important;
     border-radius: 14px !important;
+    box-shadow: none !important;
 
     color: transparent !important;
-    font-size: 0 !important;
-
-    padding: 0 !important;
-    box-shadow: none !important;
     cursor: pointer !important;
 }
 
-/* Keep keyboard navigation visible */
+/* Hide the button's label completely */
 
-[class*="st-key-argomenti_category_"]
-[data-testid="stButton"] button:focus-visible,
-[class*="st-key-argomenti_subtopic_"]
-[data-testid="stButton"] button:focus-visible {
-    outline: 2px solid #93c5fd !important;
-    outline-offset: 2px !important;
+[class*="st-key-open_category_"] button p,
+[class*="st-key-open_subtopic_"] button p {
+    display: none !important;
 }
+
+/* Hover feedback */
+
+[class*="st-key-open_category_"] button:hover,
+[class*="st-key-open_subtopic_"] button:hover {
+    background: rgba(147, 197, 253, 0.06) !important;
+}
+
+/* Keyboard accessibility */
+
+[class*="st-key-open_category_"] button:focus-visible,
+[class*="st-key-open_subtopic_"] button:focus-visible {
+    outline: 2px solid #93c5fd !important;
+    outline-offset: -2px !important;
+}
+
 
 /* ==========================================
    SUBTOPIC CARDS

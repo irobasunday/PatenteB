@@ -231,7 +231,12 @@ def show_page_heading(title, back_action):
 # CATEGORY CARD
 # ==========================================
 
-def show_category_card(category):
+if st.button(
+    " ",
+    key=f"open_category_{category_id}",
+    help=f"Open {category_name}",
+):
+    open_category(category_id)
     """
     Render a category using one HTML Flexbox layout.
 
@@ -313,7 +318,12 @@ def show_category_card(category):
 # SUBTOPIC CARD
 # ==========================================
 
-def show_subtopic_card(subtopic):
+if st.button(
+    " ",
+    key=f"open_subtopic_{subtopic_id}",
+    help=f"Open {subtopic_name}",
+):
+    open_subtopic(subtopic_id)
     """
     Compact subtopic card.
 
