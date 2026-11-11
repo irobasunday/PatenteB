@@ -210,7 +210,10 @@ def show_page_heading(title, back_action):
     """Show back button and title on the same line."""
 
     with st.container(key="argomenti_page_heading"):
-        with st.container(horizontal=True, vertical_alignment="center"):
+        with st.container(
+            horizontal=True,
+            vertical_alignment="center",
+        ):
 
             if st.button(
                 "❮",
@@ -224,7 +227,6 @@ def show_page_heading(title, back_action):
                 f'{safe_text(title)}</div>',
                 unsafe_allow_html=True,
             )
-   
 
 
 # ==========================================
@@ -300,9 +302,6 @@ def show_category_card(category):
 
         st.html(card_html)
 
-        # Navigation button belongs INSIDE this function.
-        # The short label avoids the previous vertical text.
-
         if st.button(
             "›",
             key=f"open_category_{category_id}",
@@ -312,13 +311,15 @@ def show_category_card(category):
 
 
 # ==========================================
-# SUBTOPIC CARD
+# SUBTOPIC CARD - NUMBERED
 # ==========================================
 
-def show_subtopic_card(subtopic):
+def show_subtopic_card(subtopic, number):
     """
-    Display a subtopic using the same responsive
-    card design as categories.
+    Display a numbered subtopic card.
+
+    The number appears inside the existing circle.
+    Preserve the current card design and navigation.
     """
 
     subtopic_id = subtopic["id"]
@@ -327,8 +328,10 @@ def show_subtopic_card(subtopic):
     completed = get_subtopic_completed(subtopic_id)
     preview = get_definition_preview(subtopic)
 
-    status_symbol = "✓" if completed else ""
+    # Keep the number visible inside the circle.
+    status_symbol = str(number)
 
+    # Preserve the existing completion styling.
     status_class = (
         "argomenti-status completed"
         if completed
@@ -380,8 +383,6 @@ def show_subtopic_card(subtopic):
     ):
 
         st.html(card_html)
-
-        # Navigation button belongs INSIDE this function.
 
         if st.button(
             "›",
@@ -436,7 +437,7 @@ def show_categories():
 
 
 # ==========================================
-# SUBTOPICS SCREEN
+# SUBTOPICS SCREEN - NUMBERED
 # ==========================================
 
 def show_subtopics(category_id):
@@ -470,9 +471,16 @@ def show_subtopics(category_id):
 
         return
 
+    # Display the category name without adding a number.
     show_page_heading(
         category["name"],
         back_to_categories,
+    )
+
+    # Assign original numbers BEFORE applying search.
+    # This prevents numbers from changing during search.
+    numbered_subtopics = list(
+        enumerate(subtopics, start=1)
     )
 
     search = st.text_input(
@@ -483,19 +491,20 @@ def show_subtopics(category_id):
     )
 
     if search:
-        subtopics = [
-            subtopic
-            for subtopic in subtopics
+        numbered_subtopics = [
+            (number, subtopic)
+            for number, subtopic in numbered_subtopics
             if search.casefold()
             in subtopic["name"].casefold()
         ]
 
-    if not subtopics:
+    if not numbered_subtopics:
         st.info("Nessun sottoargomento trovato.")
         return
 
-    for subtopic in subtopics:
-        show_subtopic_card(subtopic)
+    # Display each subtopic with its original number.
+    for number, subtopic in numbered_subtopics:
+        show_subtopic_card(subtopic, number)
 
 
 # ==========================================
