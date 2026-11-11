@@ -43,18 +43,18 @@
 /* Keep every question container fixed-width */
 .st-key-instant_pagination_scroll
 [class*="st-key-instant_page_"] {
-    flex: 0 0 40px !important;
-    width: 40px !important;
-    min-width: 40px !important;
-    max-width: 40px !important;
+    flex: 0 0 30px !important;
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
 }
 
 /* Question number buttons */
 .st-key-instant_pagination_scroll button {
-    width: 40px !important;
-    min-width: 40px !important;
-    max-width: 40px !important;
-    height: 40px !important;
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
+    height: 30px !important;
 
     border-radius: 10px !important;
     font-weight: 700 !important;
