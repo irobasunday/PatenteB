@@ -1,7 +1,6 @@
 
 import math
 from datetime import datetime, timedelta, timezone
-from textwrap import dedent
 
 import streamlit as st
 
@@ -97,7 +96,6 @@ def normalize_instant_answer(value):
 # SAVE AND LOCK ANSWER
 # =========================================
 
-
 def select_instant_answer(question_id, answer):
 
     if st.session_state.instant_finished:
@@ -109,9 +107,8 @@ def select_instant_answer(question_id, answer):
 
     answers = st.session_state.instant_answers
 
-    # Once marked, the answer cannot be changed.
+    # Once answered, the answer cannot change.
     if question_id in answers:
-
         st.toast(
             "You cannot change your answer.",
             icon="⚠️",
@@ -131,15 +128,14 @@ def select_instant_answer(question_id, answer):
     if question is None:
         raise ValueError("Question not found.")
 
-    # Validate the correct answer from PostgreSQL.
-    correct_answer = normalize_instant_answer(
+    # Validate the stored correct answer.
+    normalize_instant_answer(
         question["correct_answer"]
     )
 
     # Save and permanently lock the user's answer.
     answers[question_id] = answer
 
-    # Move forward to the next unanswered question.
     questions = st.session_state.instant_questions
 
     current_index = next(
@@ -150,30 +146,25 @@ def select_instant_answer(question_id, answer):
 
     next_index = None
 
-    # Search only questions ahead of the current one.
+    # Continue forward to the next unanswered question.
     for index in range(current_index + 1, len(questions)):
-
         if questions[index]["id"] not in answers:
             next_index = index
             break
 
-    # When no unanswered questions remain ahead,
+    # When there are no unanswered questions ahead,
     # search earlier unanswered questions from Question 1.
     if next_index is None:
-
         for index in range(current_index):
-
             if questions[index]["id"] not in answers:
                 next_index = index
                 break
 
     # Automatically finish after all 30 answers.
     if len(answers) == len(questions):
-
         finish_instant_quiz("all_answered")
 
     elif next_index is not None:
-
         st.session_state.instant_question_index = next_index
 
     st.rerun()
@@ -221,7 +212,7 @@ def show_instant_question():
             question_id=question_id,
         )
 
-    # Check whether this question has been answered.
+    # Show correction for previously answered questions.
     already_answered = question_id in answers
 
     if already_answered:
@@ -234,6 +225,7 @@ def show_instant_question():
 
         if selected == correct_answer:
             st.success("✓ Correct answer!")
+
         else:
             st.error("✕ Incorrect answer!")
             st.markdown(
@@ -242,19 +234,21 @@ def show_instant_question():
                 + "**"
             )
 
-    # Keep buttons clickable so a locked answer
-    # produces the warning toast.
-    
+    # =====================================
+    # INSTANT CORRECTION BUTTON STYLING
+    # =====================================
+
     st.markdown(
         """
         <style>
-        /* Instant Correction answer buttons */
+        /* VERO button - green border */
         .st-key-instant_answer_vero button {
             border: 1.5px solid #22c55e !important;
             color: #4ade80 !important;
             border-radius: 10px !important;
         }
 
+        /* FALSO button - red border */
         .st-key-instant_answer_falso button {
             border: 1.5px solid #ef4444 !important;
             color: #f87171 !important;
@@ -266,37 +260,27 @@ def show_instant_question():
             min-height: 42px !important;
         }
 
-        /* Compact previous / next buttons */
+        /* Compact navigation buttons */
         .st-key-instant_previous button,
         .st-key-instant_next button {
             border-radius: 10px !important;
             min-height: 40px !important;
-        }
-
-        /* Mobile horizontal pagination */
-        .st-key-instant_pagination_scroll {
-            overflow-x: auto !important;
-            overflow-y: hidden !important;
-            flex-wrap: nowrap !important;
-            max-width: 100% !important;
-            padding-bottom: 10px;
-            scrollbar-width: thin;
-        }
-
-        .st-key-instant_pagination_scroll
-        [class*="st-key-instant_"] {
-            flex-shrink: 0 !important;
         }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    
-    # Compact answer buttons with colored borders.
-    left_space, vero_col, falso_col, right_space = st.columns(
-        [0.2, 1, 1, 0.2],
-        gap="small",
+    # =====================================
+    # VERO / FALSO ANSWER BUTTONS
+    # =====================================
+
+    # Keep both answer buttons compact and centered.
+    left_space, vero_col, falso_col, right_space = (
+        st.columns(
+            [0.2, 1, 1, 0.2],
+            gap="small",
+        )
     )
 
     with vero_col:
@@ -317,33 +301,19 @@ def show_instant_question():
             ):
                 select_instant_answer(question_id, False)
 
-
-    with vero_col:
-        if st.button(
-            "VERO",
-            key=f"instant_vero_{question_id}",
-            use_container_width=True,
-        ):
-            select_instant_answer(question_id, True)
-
-    with falso_col:
-        if st.button(
-            "FALSO",
-            key=f"instant_falso_{question_id}",
-            use_container_width=True,
-        ):
-            select_instant_answer(question_id, False)
-
     # =====================================
     # PREVIOUS / NEXT NAVIGATION
     # =====================================
 
     st.divider()
 
-    left_space, previous_col, next_col, right_space = st.columns(
-        [0.2, 1, 1, 0.2],
-        gap="small",
+    left_space, previous_col, next_col, right_space = (
+        st.columns(
+            [0.2, 1, 1, 0.2],
+            gap="small",
+        )
     )
+
     with previous_col:
         if st.button(
             "← Previous",
@@ -362,7 +332,7 @@ def show_instant_question():
         ):
             go_to_instant_question(index + 1)
 
-    # Display green/red/default pagination.
+    # Display green/red/unanswered pagination.
     show_instant_pagination()
 
 
@@ -398,49 +368,48 @@ def show_instant_pagination():
     st.markdown(
         """
         <style>
+        /* Correct answers */
         [class*="st-key-instant_correct_"] button {
             background-color: #15803d !important;
             color: white !important;
             border-color: #22c55e !important;
         }
 
+        /* Wrong answers */
         [class*="st-key-instant_wrong_"] button {
             background-color: #b91c1c !important;
             color: white !important;
             border-color: #ef4444 !important;
         }
 
+        /* Unanswered questions */
         [class*="st-key-instant_unanswered_"] button {
             background-color: #1e293b !important;
             color: white !important;
             border-color: #475569 !important;
         }
 
-        [class*="st-key-instant_pagination_scroll"] {
+        /* Horizontally scrolling question numbers */
+        .st-key-instant_pagination_scroll {
             margin-top: 14px;
+            max-width: 100% !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            scrollbar-width: thin;
+            padding-bottom: 8px;
         }
-        
-/* Horizontal scrolling for question pagination */
-.st-key-instant_pagination_scroll {
-    max-width: 100% !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    scrollbar-width: thin;
-    padding-bottom: 8px;
-}
 
-.st-key-instant_pagination_scroll
-[data-testid="stHorizontalBlock"] {
-    flex-wrap: nowrap !important;
-    width: max-content !important;
-    min-width: 100%;
-}
+        .st-key-instant_pagination_scroll
+        [data-testid="stHorizontalBlock"] {
+            flex-wrap: nowrap !important;
+            width: max-content !important;
+            min-width: 100%;
+        }
 
-.st-key-instant_pagination_scroll
-[data-testid="stHorizontalBlock"] > div {
-    flex-shrink: 0 !important;
-}
-
+        .st-key-instant_pagination_scroll
+        [data-testid="stHorizontalBlock"] > div {
+            flex-shrink: 0 !important;
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -591,6 +560,10 @@ def show_instant_results():
 
     minutes, seconds = divmod(elapsed_seconds, 60)
 
+    # =====================================
+    # PASS / FAIL
+    # =====================================
+
     if passed:
         st.success("✓ PASS — Congratulations!")
     else:
@@ -675,16 +648,21 @@ def show_instant_results():
         unsafe_allow_html=True,
     )
 
-    # Dedent prevents Streamlit from displaying
-    # the HTML as a Markdown code block.
-    
-    # Build HTML without Markdown indentation issues.
+    # Build HTML without indentation or Markdown issues.
     badges = [
         ("Correct", correct, "instant-result-correct"),
         ("Wrong", wrong, "instant-result-wrong"),
         ("Unanswered", unanswered, ""),
-        ("Total Errors", total_errors, "instant-result-wrong"),
-        ("Time Taken", f"{minutes:02d}:{seconds:02d}", ""),
+        (
+            "Total Errors",
+            total_errors,
+            "instant-result-wrong",
+        ),
+        (
+            "Time Taken",
+            f"{minutes:02d}:{seconds:02d}",
+            "",
+        ),
     ]
 
     badge_html = ""
@@ -703,15 +681,17 @@ def show_instant_results():
         + '</div>'
     )
 
+    # Render badges only once.
     st.markdown(
         results_html,
         unsafe_allow_html=True,
     )
 
-
-    
-
     st.divider()
+
+    # =====================================
+    # REVIEW YOUR ANSWERS
+    # =====================================
 
     st.markdown("### Review Your Answers")
 
@@ -727,8 +707,10 @@ def show_instant_results():
 
         if question_id not in answers:
             status = "⚪ Unanswered"
+
         elif selected == expected:
             status = "🟢 Correct"
+
         else:
             status = "🔴 Incorrect"
 
@@ -758,23 +740,23 @@ def show_instant_results():
 
 def show_instant_correction():
 
-    # Initialize the 30 questions and session state.
+    # Initialize the questions and session state.
     initialize_instant_quiz()
 
-    # Automatically finish when time expires.
+    # Finish automatically when time expires.
     if (
         not st.session_state.instant_finished
         and get_instant_remaining_seconds() == 0
     ):
         finish_instant_quiz("time_expired")
 
-    # Show results when the quiz is finished.
+    # Display results after quiz completion.
     if st.session_state.instant_finished:
         show_instant_results()
         return
 
-    # Display the live 20-minute countdown.
+    # Display live countdown timer.
     show_instant_timer()
 
-    # Display the current question and pagination.
+    # Display question and navigation controls.
     show_instant_question()
