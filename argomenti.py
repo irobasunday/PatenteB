@@ -522,10 +522,20 @@ def show_categories():
         back_to_dashboard,
     )
     
-    st.image(
-        "assets/road_signs/divieto_di_accesso.svg",
-        width=150
+        # TEST ROAD SIGN FILE
+    image_path = os.path.join(
+        os.path.dirname(__file__),
+        "assets",
+        "road_signs",
+        "divieto_di_accesso.svg",
     )
+
+    st.write("Image exists:", os.path.isfile(image_path))
+    st.write("Image size:", os.path.getsize(image_path) if os.path.isfile(image_path) else "Not found")
+
+    if os.path.isfile(image_path):
+        with open(image_path, "r", encoding="utf-8") as file:
+            st.code(file.read()[:500], language="xml")
 
     search = st.text_input(
         "Cerca l'argomento",
