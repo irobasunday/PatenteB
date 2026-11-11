@@ -147,6 +147,49 @@ def load_argomenti_css():
         with open(css_path, "r", encoding="utf-8") as file:
             st.html(f"<style>{file.read()}</style>")
 
+    # Number styling is scoped to subtopic cards.
+    # It does not modify the existing category cards.
+    st.html(
+        """
+        <style>
+        .argomenti-card-content
+        .argomenti-subtopic-number {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+
+            flex: 0 0 auto !important;
+            width: auto !important;
+            min-width: 48px !important;
+            height: 34px !important;
+            padding: 0 8px !important;
+
+            border: 1px solid #52647d !important;
+            border-radius: 10px !important;
+
+            background: #253650 !important;
+            color: #ffffff !important;
+
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+
+            box-sizing: border-box !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        .argomenti-card-content
+        .argomenti-subtopic-number.completed {
+            border-color: #3e9c76 !important;
+            background: #204638 !important;
+            color: #ffffff !important;
+        }
+        </style>
+        """
+    )
+
 
 def get_category_icon(category_id):
     """Category icons."""
@@ -324,11 +367,12 @@ def show_subtopic_card(subtopic, number, category_number):
     # Hierarchical number, e.g. 1.1 or 2.3
     status_symbol = f"{category_number}.{number}"
 
-    # Preserve completion styling.
-    status_class = (
-        "argomenti-status completed"
+    # Use a dedicated class instead of argomenti-status.
+    # The old class was designed for an empty circle.
+    number_class = (
+        "argomenti-subtopic-number completed"
         if completed
-        else "argomenti-status"
+        else "argomenti-subtopic-number"
     )
 
     preview_html = ""
@@ -344,8 +388,8 @@ def show_subtopic_card(subtopic, number, category_number):
     <div class="argomenti-card-content">
 
         <div
-            class="{status_class}"
-            aria-hidden="true"
+            class="{number_class}"
+            aria-label="Subtopic {status_symbol}"
         >
             {status_symbol}
         </div>
@@ -464,9 +508,7 @@ def show_subtopics(category_id):
 
         return
 
-    # Show the category number in the heading.
-    # Example: 1. Definizioni Generali Doveri Strada
-
+    # Show category number in the heading.
     show_page_heading(
         f'{category_id}. {category["name"]}',
         back_to_categories,
@@ -474,7 +516,6 @@ def show_subtopics(category_id):
 
     # Number subtopics before filtering.
     # Searching must not change their original numbers.
-
     numbered_subtopics = list(
         enumerate(subtopics, start=1)
     )
@@ -498,9 +539,7 @@ def show_subtopics(category_id):
         st.info("Nessun sottoargomento trovato.")
         return
 
-    # Pass the category number and subtopic number.
     # Example: category 1, subtopic 3 = 1.3
-
     for number, subtopic in numbered_subtopics:
         show_subtopic_card(
             subtopic,
