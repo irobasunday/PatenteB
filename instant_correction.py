@@ -535,3 +535,34 @@ def show_instant_results():
                 "Correct answer:",
                 "VERO" if expected else "FALSO"
             )
+
+# =========================================
+# MAIN INSTANT CORRECTION PAGE
+# =========================================
+
+def show_instant_correction():
+
+    # Initialize the 30 questions and session state.
+    initialize_instant_quiz()
+
+    st.markdown("## Instant Correction Mode")
+
+    # Automatically finish when time expires,
+    # even if the timer fragment has not refreshed.
+    if (
+        not st.session_state.instant_finished
+        and get_instant_remaining_seconds() == 0
+    ):
+        finish_instant_quiz("time_expired")
+
+    # Show results when the quiz is finished.
+    if st.session_state.instant_finished:
+        show_instant_results()
+        return
+
+    # Display the live 20-minute countdown.
+    show_instant_timer()
+
+    # Display the current question, answer buttons,
+    # navigation, and colored pagination.
+    show_instant_question()
