@@ -142,3 +142,86 @@ def select_instant_answer(question_id, answer):
             break
 
     st.rerun()
+
+# =========================================
+# INSTANT CORRECTION QUESTION INTERFACE
+# =========================================
+
+def show_instant_question():
+
+    questions = st.session_state.instant_questions
+    index = st.session_state.instant_question_index
+
+    question = questions[index]
+    question_id = question["id"]
+
+    answers = st.session_state.instant_answers
+
+    st.write(
+        f"Question {index + 1} of {len(questions)}"
+    )
+
+    st.progress(len(answers) / len(questions))
+
+    with st.container(border=True):
+
+        st.markdown(f"### DOMANDA {index + 1}")
+
+        st.write(question["question"])
+
+        # Show the original Italian question image.
+        from quiz import get_question_image
+        from audio_player import show_italian_audio
+
+        image_file = get_question_image(
+            question.get("image_path")
+        )
+
+        if image_file:
+            st.image(str(image_file), width=150)
+
+        show_italian_audio(
+            question_text=str(question["question"]),
+            question_id=question_id,
+        )
+
+    # Check whether this question has been answered.
+    already_answered = question_id in answers
+
+    if already_answered:
+
+        selected = answers[question_id]
+
+        correct_answer = normalize_instant_answer(
+            question["correct_answer"]
+        )
+
+        if selected == correct_answer:
+            st.success("✓ Correct answer!")
+        else:
+            st.error("✕ Incorrect answer!")
+            st.markdown(
+                "**Correct answer: "
+                + ("VERO" if correct_answer else "FALSO")
+                + "**"
+            )
+
+    # Keep buttons clickable so a locked answer
+    # produces the warning toast.
+    vero_col, falso_col = st.columns(2)
+
+    with vero_col:
+        if st.button(
+            "VERO",
+            key=f"instant_vero_{question_id}",
+            use_container_width=True,
+        ):
+            select_instant_answer(question_id, True)
+
+    with falso_col:
+        if st.button(
+            "FALSO",
+            key=f"instant_falso_{question_id}",
+            use_container_width=True,
+        ):
+            select_instant_answer(question_id, False)
