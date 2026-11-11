@@ -360,7 +360,120 @@ def go_to_instant_question(index):
 # INSTANT CORRECTION PAGINATION
 # =========================================
 
+
 def show_instant_pagination():
+
+    questions = st.session_state.instant_questions
+    answers = st.session_state.instant_answers
+
+    st.markdown(
+        """
+        <style>
+        /* Scrollable pagination wrapper */
+        .st-key-instant_pagination_scroll {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            padding: 10px 0 !important;
+            scrollbar-width: thin;
+            scrollbar-color: #64748b transparent;
+        }
+
+        /* Target Streamlit's horizontal container */
+        .st-key-instant_pagination_scroll
+        [data-testid="stHorizontalBlock"],
+        .st-key-instant_pagination_scroll
+        [data-testid="stVerticalBlock"] {
+            flex-wrap: nowrap !important;
+        }
+
+        /* Keep all question buttons in one row */
+        .st-key-instant_pagination_scroll
+        [data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            width: max-content !important;
+            min-width: 100%;
+            gap: 8px !important;
+        }
+
+        .st-key-instant_pagination_scroll
+        [data-testid="stHorizontalBlock"] > div {
+            flex: 0 0 auto !important;
+            width: 60px !important;
+            min-width: 60px !important;
+        }
+
+        /* Correct answers - green */
+        [class*="st-key-instant_correct_"] button {
+            background-color: #15803d !important;
+            color: white !important;
+            border-color: #22c55e !important;
+        }
+
+        /* Wrong answers - red */
+        [class*="st-key-instant_wrong_"] button {
+            background-color: #b91c1c !important;
+            color: white !important;
+            border-color: #ef4444 !important;
+        }
+
+        /* Unanswered - dark */
+        [class*="st-key-instant_unanswered_"] button {
+            background-color: #1e293b !important;
+            color: white !important;
+            border-color: #475569 !important;
+        }
+
+        /* Pagination button shape */
+        .st-key-instant_pagination_scroll button {
+            min-width: 55px !important;
+            height: 46px !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # A horizontal container with all 30 questions.
+    with st.container(
+        key="instant_pagination_scroll",
+        horizontal=True,
+        horizontal_alignment="left",
+        gap="small",
+        width="stretch",
+    ):
+
+        for index, question in enumerate(questions):
+
+            question_id = question["id"]
+
+            if question_id not in answers:
+                status = "unanswered"
+            else:
+                expected = normalize_instant_answer(
+                    question["correct_answer"]
+                )
+
+                status = (
+                    "correct"
+                    if answers[question_id] == expected
+                    else "wrong"
+                )
+
+            with st.container(
+                key=f"instant_{status}_{index + 1}"
+            ):
+                if st.button(
+                    str(index + 1),
+                    key=f"instant_page_{index + 1}",
+                    width=60,
+                ):
+                    go_to_instant_question(index)
+
 
     questions = st.session_state.instant_questions
     answers = st.session_state.instant_answers
