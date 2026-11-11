@@ -1,0 +1,222 @@
+
+/* ==========================================
+   ARGOMENTI MANUALE
+   Compact responsive dark layout
+   ========================================== */
+
+/* Center Argomenti content on desktop */
+
+.stApp:has(.st-key-argomenti_page_heading)
+[data-testid="stMainBlockContainer"] {
+    max-width: 760px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* ==========================================
+   PAGE HEADER
+   ========================================== */
+
+.st-key-argomenti_page_heading {
+    margin-bottom: 12px;
+}
+
+.argomenti-heading-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f8fafc;
+    line-height: 1.35;
+}
+
+/* Back button */
+
+.st-key-argomenti_page_heading button {
+    min-height: 36px;
+    border: none;
+    background: transparent;
+    color: #f8fafc;
+    font-size: 1.8rem;
+    padding: 0 8px;
+}
+
+/* ==========================================
+   SEARCH BAR
+   ========================================== */
+
+.stApp:has(.st-key-argomenti_page_heading)
+[data-testid="stTextInput"] input {
+    background: #1e293b !important;
+    border-radius: 12px !important;
+    color: #f8fafc !important;
+    min-height: 44px;
+}
+
+/* ==========================================
+   CATEGORY AND SUBTOPIC CARDS
+   ========================================== */
+
+[class*="st-key-argomenti_category_"],
+[class*="st-key-argomenti_subtopic_"] {
+    background: #192438;
+    border: 1px solid #34445d;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+}
+
+/* Keep contents aligned horizontally */
+
+[class*="st-key-argomenti_category_"]
+[data-testid="stHorizontalBlock"],
+[class*="st-key-argomenti_subtopic_"]
+[data-testid="stHorizontalBlock"] {
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+}
+
+/* ==========================================
+   CATEGORY ICON
+   ========================================== */
+
+.argomenti-category-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background: #263a53;
+    color: #93c5fd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 27px;
+    font-weight: 700;
+}
+
+/* ==========================================
+   CATEGORY TEXT
+   ========================================== */
+
+.argomenti-category-name {
+    color: #f8fafc;
+    font-size: 0.91rem;
+    font-weight: 650;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+    margin-bottom: 7px;
+}
+
+.argomenti-progress-label {
+    color: #cbd5e1;
+    font-size: 0.76rem;
+    white-space: nowrap;
+}
+
+/* Progress bar */
+
+[class*="st-key-argomenti_category_"]
+[data-testid="stProgress"] {
+    margin: 0 !important;
+}
+
+[class*="st-key-argomenti_category_"]
+[data-testid="stProgress"] > div {
+    height: 6px !important;
+    border-radius: 20px;
+}
+
+/* ==========================================
+   SUBTOPIC TEXT
+   ========================================== */
+
+.argomenti-subtopic-name {
+    color: #f8fafc;
+    font-size: 0.92rem;
+    font-weight: 650;
+    line-height: 1.3;
+}
+
+.argomenti-preview {
+    color: #94a3b8;
+    font-size: 0.78rem;
+    margin-top: 5px;
+    line-height: 1.4;
+}
+
+/* Completion indicator */
+
+.argomenti-status {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #64748b;
+    border-radius: 50%;
+    color: #22c55e;
+    font-size: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ==========================================
+   RIGHT ARROW
+   ========================================== */
+
+[class*="st-key-argomenti_category_"] button,
+[class*="st-key-argomenti_subtopic_"] button {
+    border: none !important;
+    background: transparent !important;
+    color: #f8fafc !important;
+    font-size: 1.7rem !important;
+    padding: 0 !important;
+    min-height: 34px !important;
+    box-shadow: none !important;
+}
+
+/* ==========================================
+   MOBILE
+   Same design, smaller dimensions
+   ========================================== */
+
+@media (max-width: 640px) {
+
+    .stApp:has(.st-key-argomenti_page_heading)
+    [data-testid="stMainBlockContainer"] {
+        max-width: 100% !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    .argomenti-heading-title {
+        font-size: 1.05rem;
+    }
+
+    [class*="st-key-argomenti_category_"],
+    [class*="st-key-argomenti_subtopic_"] {
+        padding: 10px 9px;
+        border-radius: 12px;
+        margin-bottom: 7px;
+    }
+
+    .argomenti-category-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 23px;
+        border-radius: 8px;
+    }
+
+    .argomenti-category-name,
+    .argomenti-subtopic-name {
+        font-size: 0.82rem;
+    }
+
+    .argomenti-preview {
+        font-size: 0.72rem;
+    }
+
+    .argomenti-progress-label {
+        font-size: 0.7rem;
+    }
+
+    [class*="st-key-argomenti_category_"] button,
+    [class*="st-key-argomenti_subtopic_"] button {
+        font-size: 1.5rem !important;
+    }
+}

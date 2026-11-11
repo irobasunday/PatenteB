@@ -1,5 +1,6 @@
 
 import os
+import html
 import streamlit as st
 import psycopg
 from psycopg.rows import dict_row
@@ -42,10 +43,7 @@ def get_categories():
     connection = get_connection()
 
     try:
-        with connection.cursor(
-            row_factory=dict_row
-        ) as cursor:
-
+        with connection.cursor(row_factory=dict_row) as cursor:
             cursor.execute(
                 """
                 SELECT id, name, slug
@@ -67,10 +65,7 @@ def get_subtopics(category_id):
     connection = get_connection()
 
     try:
-        with connection.cursor(
-            row_factory=dict_row
-        ) as cursor:
-
+        with connection.cursor(row_factory=dict_row) as cursor:
             cursor.execute(
                 """
                 SELECT id, category_id, name, slug
@@ -93,20 +88,17 @@ def get_subtopics(category_id):
 
 def get_category_progress(category_id):
     """
-    Placeholder for future student progress tracking.
+    Future PostgreSQL student progress integration.
 
-    Later, this function will retrieve the actual
-    student's completed lessons from PostgreSQL.
+    Return 0 until actual progress tracking exists.
     """
-
     return 0
 
 
 def get_subtopic_completed(subtopic_id):
     """
-    Placeholder for future lesson completion tracking.
+    Future PostgreSQL lesson completion integration.
     """
-
     return False
 
 
@@ -115,10 +107,7 @@ def get_subtopic_completed(subtopic_id):
 # ==========================================
 
 def short_description(definition):
-    """
-    Display the first 30 characters of a definition.
-    Add ... only when the definition is longer.
-    """
+    """Return the first 30 characters plus ... if needed."""
 
     if not definition:
         return ""
@@ -133,12 +122,12 @@ def short_description(definition):
 
 def get_definition_preview(subtopic):
     """
-    Definition storage is not yet connected.
+    Definitions are not stored in the current
+    confirmed subtopics schema.
 
-    Return a blank preview rather than inventing
-    a definition or displaying unrelated text.
+    This will display previews once definitions
+    are connected.
     """
-
     return short_description(
         subtopic.get("definition", "")
     )
@@ -178,26 +167,71 @@ def back_to_dashboard():
 
 
 # ==========================================
-# SHARED PAGE TITLE
+# PAGE STYLING
+# ==========================================
+
+def load_argomenti_css():
+    """Load CSS only for the Argomenti interface."""
+
+    css_path = os.path.join(
+        os.path.dirname(__file__),
+        "styles",
+        "argomenti.css",
+    )
+
+    if os.path.exists(css_path):
+        with open(css_path, "r", encoding="utf-8") as file:
+            st.html(f"<style>{file.read()}</style>")
+
+
+def safe_text(value):
+    """Escape database text before inserting into HTML."""
+    return html.escape(str(value or ""))
+
+
+# ==========================================
+# PAGE HEADER
 # ==========================================
 
 def show_page_heading(title, back_action):
-    back_col, title_col = st.columns(
-        [1, 12],
-        vertical_alignment="center",
-        gap="small",
-    )
+    with st.container(key="argomenti_page_heading"):
+        back_col, title_col = st.columns(
+            [1, 11],
+            vertical_alignment="center",
+            gap="small",
+        )
 
-    with back_col:
-        if st.button(
-            "‹",
-            key=f"argomenti_back_{title}",
-            help="Go back",
-        ):
-            back_action()
+        with back_col:
+            if st.button(
+                "‹",
+                key="argomenti_page_back",
+                help="Go back",
+            ):
+                back_action()
 
-    with title_col:
-        st.markdown(f"### {title}")
+        with title_col:
+            st.markdown(
+                f'<div class="argomenti-heading-title">'
+                f'{safe_text(title)}</div>',
+                unsafe_allow_html=True,
+            )
+
+
+# ==========================================
+# CATEGORY ICONS
+# ==========================================
+
+def get_category_icon(category_id):
+    """Simple icons until real category images are linked."""
+
+    icons = {
+        1: "ℹ",
+        2: "⚠",
+        3: "⊘",
+        4: "➜",
+    }
+
+    return icons.get(category_id, "📘")
 
 
 # ==========================================
@@ -212,7 +246,7 @@ def show_categories():
 
     search = st.text_input(
         "Cerca l'argomento",
-        placeholder="Cerca l'argomento",
+        placeholder="⌕  Cerca l'argomento",
         key="argomenti_category_search",
         label_visibility="collapsed",
     )
@@ -229,7 +263,7 @@ def show_categories():
         categories = [
             category
             for category in categories
-            if search.lower() in category["name"].lower()
+            if search.casefold() in category["name"].casefold()
         ]
 
     if not categories:
@@ -238,28 +272,40 @@ def show_categories():
 
     for category in categories:
         category_id = category["id"]
-        progress = get_category_progress(category_id)
+        category_name = category["name"]
+        progress = max(
+            0,
+            min(100, get_category_progress(category_id)),
+        )
 
         with st.container(
-            border=True,
+            border=False,
             key=f"argomenti_category_{category_id}",
         ):
-            icon_col, content_col, arrow_col = st.columns(
-                [1, 8, 1],
+            icon_col, details_col, arrow_col = st.columns(
+                [1.15, 8.2, 0.65],
                 vertical_alignment="center",
                 gap="small",
             )
 
             with icon_col:
-                st.markdown("📘")
-
-            with content_col:
                 st.markdown(
-                    f"**{category_id} - {category['name']}**"
+                    '<div class="argomenti-category-icon">'
+                    f'{safe_text(get_category_icon(category_id))}'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
+
+            with details_col:
+                st.markdown(
+                    '<div class="argomenti-category-name">'
+                    f'{category_id} - {safe_text(category_name)}'
+                    '</div>',
+                    unsafe_allow_html=True,
                 )
 
                 progress_col, percentage_col = st.columns(
-                    [8, 1],
+                    [9, 1],
                     vertical_alignment="center",
                     gap="small",
                 )
@@ -268,13 +314,17 @@ def show_categories():
                     st.progress(progress / 100)
 
                 with percentage_col:
-                    st.caption(f"{progress}%")
+                    st.markdown(
+                        '<span class="argomenti-progress-label">'
+                        f'{progress}%</span>',
+                        unsafe_allow_html=True,
+                    )
 
             with arrow_col:
                 if st.button(
                     "›",
                     key=f"open_category_{category_id}",
-                    help=f"Open {category['name']}",
+                    help=f"Open {category_name}",
                 ):
                     open_category(category_id)
 
@@ -305,10 +355,8 @@ def show_subtopics(category_id):
 
     if category is None:
         st.warning("Category not found.")
-
         if st.button("Back to Argomenti"):
             back_to_categories()
-
         return
 
     show_page_heading(
@@ -318,7 +366,7 @@ def show_subtopics(category_id):
 
     search = st.text_input(
         "Cerca il sottoargomento",
-        placeholder="Cerca l'argomento",
+        placeholder="⌕  Cerca l'argomento",
         key=f"argomenti_subtopic_search_{category_id}",
         label_visibility="collapsed",
     )
@@ -327,7 +375,7 @@ def show_subtopics(category_id):
         subtopics = [
             subtopic
             for subtopic in subtopics
-            if search.lower() in subtopic["name"].lower()
+            if search.casefold() in subtopic["name"].casefold()
         ]
 
     if not subtopics:
@@ -340,29 +388,44 @@ def show_subtopics(category_id):
         preview = get_definition_preview(subtopic)
 
         with st.container(
-            border=True,
+            border=False,
             key=f"argomenti_subtopic_{subtopic_id}",
         ):
-            status_col, content_col, arrow_col = st.columns(
-                [1, 8, 1],
+            status_col, details_col, arrow_col = st.columns(
+                [0.8, 8.5, 0.7],
                 vertical_alignment="center",
                 gap="small",
             )
 
             with status_col:
-                st.markdown("✅" if completed else "⚪")
+                st.markdown(
+                    '<div class="argomenti-status">'
+                    + ("✓" if completed else "")
+                    + "</div>",
+                    unsafe_allow_html=True,
+                )
 
-            with content_col:
-                st.markdown(f"**{subtopic['name']}**")
+            with details_col:
+                st.markdown(
+                    '<div class="argomenti-subtopic-name">'
+                    f'{safe_text(subtopic["name"])}'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
 
                 if preview:
-                    st.caption(preview)
+                    st.markdown(
+                        '<div class="argomenti-preview">'
+                        f'{safe_text(preview)}'
+                        '</div>',
+                        unsafe_allow_html=True,
+                    )
 
             with arrow_col:
                 if st.button(
                     "›",
                     key=f"open_subtopic_{subtopic_id}",
-                    help=f"Open {subtopic['name']}",
+                    help=f'Open {subtopic["name"]}',
                 ):
                     open_subtopic(subtopic_id)
 
@@ -410,6 +473,8 @@ def show_learning_page(category_id, subtopic_id):
 # ==========================================
 
 def show_argomenti():
+    load_argomenti_css()
+
     if "argomenti_category_id" not in st.session_state:
         st.session_state.argomenti_category_id = None
 
