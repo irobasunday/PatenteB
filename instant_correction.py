@@ -199,14 +199,14 @@ def select_instant_answer(question_id, answer):
 
     answers[question_id] = answer
 
-    # Finish immediately when all 30 are answered.
+    # Finish immediately when all questions are answered.
     if len(answers) == len(questions):
         finish_instant_quiz("all_answered")
         st.rerun()
 
     next_index = None
 
-    # Search forward for the next unanswered question.
+    # Find the next unanswered question.
     for index in range(
         current_index + 1,
         len(questions),
@@ -299,95 +299,31 @@ def load_instant_styles():
         }
 
         /* =================================
-           HORIZONTAL PAGINATION
+           PAGINATION BUTTON COLORS
            ================================= */
 
         /*
-           Keep the native Streamlit horizontal
-           container, matching Translate Mode.
+           Pagination uses the same native
+           Streamlit horizontal container
+           structure as Translate Mode.
 
-           Only the outer pagination container
-           handles horizontal scrolling.
-
-           Do not change all Streamlit vertical
-           blocks into horizontal blocks.
+           No custom flex layout or overflow
+           overrides are applied here.
         */
 
-        .st-key-instant_pagination_scroll {
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-
-            overflow-x: auto !important;
-            overflow-y: hidden !important;
-
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior-x: contain;
-            scrollbar-width: thin;
-
-            padding: 8px 0 12px !important;
-        }
-
-        /*
-           Prevent the horizontal button row
-           from wrapping on mobile.
-        */
-
-        .st-key-instant_pagination_scroll
-        [data-testid="stHorizontalBlock"] {
-            flex-wrap: nowrap !important;
-        }
-
-        /*
-           Every pagination button is fixed
-           width, allowing sideways scrolling.
-        */
-
-        .st-key-instant_pagination_scroll
-        [class*="st-key-instant_page_"] {
-            flex: 0 0 75px !important;
-            width: 75px !important;
-            min-width: 75px !important;
-            max-width: 75px !important;
-        }
-
-        .st-key-instant_pagination_scroll
-        button {
-            width: 75px !important;
-            min-width: 75px !important;
-            height: 46px !important;
-
-            border-radius: 10px !important;
-            font-weight: 600 !important;
-            white-space: nowrap !important;
-        }
-
-        /* =================================
-           PAGINATION COLORS
-           ================================= */
-
-        /*
-           The status is now included in the
-           button key itself. No extra
-           st.container is needed for colors.
-        */
-
-        [class*="st-key-instant_page_correct_"]
-        button {
+        [class*="st-key-instant_correct_"] button {
             background-color: #15803d !important;
             color: white !important;
             border-color: #22c55e !important;
         }
 
-        [class*="st-key-instant_page_wrong_"]
-        button {
+        [class*="st-key-instant_wrong_"] button {
             background-color: #b91c1c !important;
             color: white !important;
             border-color: #ef4444 !important;
         }
 
-        [class*="st-key-instant_page_unanswered_"]
-        button {
+        [class*="st-key-instant_unanswered_"] button {
             background-color: #1e293b !important;
             color: white !important;
             border-color: #475569 !important;
@@ -470,18 +406,15 @@ def load_instant_styles():
 
 
 # =========================================
-# HORIZONTAL QUESTION PAGINATION
+# INSTANT CORRECTION PAGINATION
 # =========================================
 
 def show_instant_pagination():
     """
-    Display all 30 question numbers in
-    a horizontally scrollable row.
+    Display 30 numbered question buttons.
 
-    Uses the same native horizontal
-    container structure as Translate Mode.
-
-    No nested containers around buttons.
+    This uses the same horizontal container
+    structure as the working Translate Mode.
     """
 
     questions = st.session_state.instant_questions
@@ -495,12 +428,12 @@ def show_instant_pagination():
         width="stretch",
     ):
 
-        for index, question in enumerate(questions):
+        for index in range(len(questions)):
 
             number = index + 1
+            question = questions[index]
             question_id = question["id"]
 
-            # Determine the question's status.
             if question_id not in answers:
 
                 status = "unanswered"
@@ -516,21 +449,19 @@ def show_instant_pagination():
                 else:
                     status = "wrong"
 
-            # IMPORTANT:
-            # Render the button directly inside
-            # the horizontal Streamlit container.
-            #
-            # Status is included in the key
-            # so CSS can color each button.
-            #
-            # No additional st.container here.
-
-            if st.button(
-                str(number),
-                key=f"instant_page_{status}_{number}",
-                width=75,
+            # Match the working Translate Mode:
+            # one status container per question.
+            with st.container(
+                key=f"instant_{status}_{number}"
             ):
-                go_to_instant_question(index)
+
+                if st.button(
+                    str(number),
+                    key=f"instant_page_{number}",
+                    width=75,
+                ):
+
+                    go_to_instant_question(index)
 
 
 # =========================================
