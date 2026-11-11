@@ -278,3 +278,8 @@
 .st-key-quiz_pagination_scroll [data-testid="stHorizontalBlock"] {
     flex-wrap: nowrap !important;
 }
+
+/* Instant Correction pagination */
+.st-key-instant_pagination_scroll [data-testid='stHorizontalBlock'] {
+    flex-wrap: nowrap !important;
+}
