@@ -1,4 +1,4 @@
-
+﻿
 /* =========================================
    PATENTE B - SHARED LAYOUT
    Design 1: Clean & Modern Dark
@@ -280,6 +280,36 @@
 }
 
 /* Instant Correction pagination */
-.st-key-instant_pagination_scroll [data-testid='stHorizontalBlock'] {
+.st-key-instant_pagination_scroll {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    max-width: 100%;
+    padding-bottom: 12px !important;
+    scrollbar-width: auto;
+    scrollbar-color: #64748b #172033;
+    -webkit-overflow-scrolling: touch;
+}
+
+.st-key-instant_pagination_scroll::-webkit-scrollbar {
+    height: 12px;
+}
+
+.st-key-instant_pagination_scroll::-webkit-scrollbar-track {
+    background: #172033;
+    border-radius: 10px;
+}
+
+.st-key-instant_pagination_scroll::-webkit-scrollbar-thumb {
+    background: #64748b;
+    border-radius: 10px;
+    border: 2px solid #172033;
+}
+
+.st-key-instant_pagination_scroll::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.st-key-instant_pagination_scroll [data-testid="stHorizontalBlock"] {
     flex-wrap: nowrap !important;
 }
+
