@@ -99,6 +99,10 @@ def select_instant_answer(question_id, answer):
     if st.session_state.instant_finished:
         return
 
+    if get_instant_remaining_seconds() == 0:
+        finish_instant_quiz("time_expired")
+        st.rerun()
+
     answers = st.session_state.instant_answers
 
     # Once marked, the answer cannot be changed.
@@ -141,7 +145,11 @@ def select_instant_answer(question_id, answer):
             st.session_state.instant_question_index = index
             break
 
+    if len(answers) == len(questions):
+        finish_instant_quiz("all_answered")
+
     st.rerun()
+
 
 # =========================================
 # INSTANT CORRECTION QUESTION INTERFACE
@@ -225,8 +233,7 @@ def show_instant_question():
             use_container_width=True,
         ):
             select_instant_answer(question_id, False)
-            
-            
+
     # =====================================
     # PREVIOUS / NEXT NAVIGATION
     # =====================================
@@ -265,6 +272,10 @@ def go_to_instant_question(index):
 
     if st.session_state.instant_finished:
         return
+
+    if get_instant_remaining_seconds() == 0:
+        finish_instant_quiz("time_expired")
+        st.rerun()
 
     questions = st.session_state.instant_questions
 
@@ -347,3 +358,69 @@ def show_instant_pagination():
                     width=65,
                 ):
                     go_to_instant_question(index)
+
+
+# =========================================
+# INSTANT CORRECTION TIMER
+# =========================================
+
+import math
+
+
+def get_instant_remaining_seconds():
+
+    elapsed = (
+        datetime.now(timezone.utc)
+        - st.session_state.instant_started_at
+    ).total_seconds()
+
+    return max(
+        0,
+        math.ceil(
+            QUIZ_DURATION_MINUTES * 60 - elapsed
+        ),
+    )
+
+
+def finish_instant_quiz(reason):
+
+    if st.session_state.instant_finished:
+        return
+
+    if reason == "time_expired":
+        finished_at = (
+            st.session_state.instant_started_at
+            + __import__("datetime").timedelta(
+                minutes=QUIZ_DURATION_MINUTES
+            )
+        )
+    else:
+        finished_at = datetime.now(timezone.utc)
+
+    st.session_state.instant_finished = True
+    st.session_state.instant_finish_reason = reason
+    st.session_state.instant_finished_at = finished_at
+
+
+@st.fragment(run_every="1s")
+def show_instant_timer():
+
+    if st.session_state.instant_finished:
+        return
+
+    remaining = get_instant_remaining_seconds()
+
+    if remaining == 0:
+        finish_instant_quiz("time_expired")
+        st.rerun(scope="app")
+
+    minutes, seconds = divmod(remaining, 60)
+
+    if remaining <= 300:
+        st.error(
+            f"⏱ Time Remaining: {minutes:02d}:{seconds:02d}"
+        )
+    else:
+        st.info(
+            f"⏱ Time Remaining: {minutes:02d}:{seconds:02d}"
+        )
