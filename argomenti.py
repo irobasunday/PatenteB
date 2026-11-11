@@ -1,6 +1,7 @@
 
 import os
 import html
+import base64
 import streamlit as st
 import psycopg
 from psycopg.rows import dict_row
@@ -191,8 +192,34 @@ def load_argomenti_css():
     )
 
 
+# ==========================================
+# MANUAL ROAD SIGN IMAGE MAPPING
+# ==========================================
+#
+# Left: PostgreSQL category ID
+# Right: Exact SVG filename inside assets/road_signs/
+#
+# You can change the filenames whenever you want.
+# If a file is missing, the default icon will appear.
+#
+# Example:
+# 4: "segnale_obbligo.svg",
+#
+# ==========================================
+
+CATEGORY_IMAGES = {
+    1: "chapter_1.svg",
+    2: "chapter_2.svg",
+    3: "divieto_di_accesso.svg",
+}
+
+
+# ==========================================
+# DEFAULT CATEGORY ICONS
+# ==========================================
+
 def get_category_icon(category_id):
-    """Category icons."""
+    """Return the default icon when no SVG image exists."""
 
     icons = {
         1: "ℹ",
@@ -202,20 +229,32 @@ def get_category_icon(category_id):
     }
 
     return icons.get(category_id, "📘")
+
+
+# ==========================================
+# GET MANUALLY ASSIGNED SVG IMAGE
+# ==========================================
+
 def get_category_image(category_id):
-    """Return the SVG image for a chapter, if available."""
+    """Return the SVG image assigned to a chapter."""
+
+    filename = CATEGORY_IMAGES.get(category_id)
+
+    if not filename:
+        return None
 
     image_path = os.path.join(
         os.path.dirname(__file__),
         "assets",
         "road_signs",
-        f"chapter_{category_id}.svg",
+        filename,
     )
 
     if os.path.isfile(image_path):
         return image_path
 
     return None
+
 
 # ==========================================
 # NAVIGATION
@@ -284,6 +323,9 @@ def show_page_heading(title, back_action):
 def show_category_card(category):
     """
     Display a category using the existing Flexbox card.
+
+    Show the manually assigned SVG image when available.
+    Otherwise, show the original category icon.
     """
 
     category_id = category["id"]
@@ -292,33 +334,40 @@ def show_category_card(category):
     progress = get_category_progress(category_id)
     progress = max(0, min(100, int(progress)))
 
+    # Get the original fallback icon.
     icon = get_category_icon(category_id)
-image_path = get_category_image(category_id)
 
-if image_path:
-    with open(image_path, "r", encoding="utf-8") as file:
-        svg_content = file.read()
+    # Look for a manually assigned SVG image.
+    image_path = get_category_image(category_id)
 
-    import base64
+    if image_path:
+        # Load and encode the SVG for HTML display.
+        with open(image_path, "rb") as file:
+            svg_bytes = file.read()
 
-    encoded_svg = base64.b64encode(
-        svg_content.encode("utf-8")
-    ).decode("ascii")
+        encoded_svg = base64.b64encode(
+            svg_bytes
+        ).decode("ascii")
 
-    icon_html = (
-        '<img '
-        f'src="data:image/svg+xml;base64,{encoded_svg}" '
-        'alt="Italian road sign" '
-        'style="width:44px;height:44px;object-fit:contain;">'
-    )
-else:
-    icon_html = safe_text(icon)
+        icon_html = (
+            '<img '
+            f'src="data:image/svg+xml;base64,{encoded_svg}" '
+            f'alt="{safe_text(category_name)}" '
+            'style="width:44px;height:44px;'
+            'object-fit:contain;display:block;">'
+        )
 
+    else:
+        # No SVG assigned, or the image file is missing.
+        # Keep the original icon.
+        icon_html = safe_text(icon)
+
+    # Preserve the existing category card HTML.
     card_html = f"""
     <div class="argomenti-card-content">
 
-       <div class="argomenti-category-icon">
-         {icon_html}
+        <div class="argomenti-category-icon">
+            {icon_html}
         </div>
 
         <div class="argomenti-card-details">
@@ -645,4 +694,3 @@ def show_argomenti():
 
     else:
         show_learning_page(category_id, subtopic_id)
-
