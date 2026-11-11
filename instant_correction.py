@@ -555,48 +555,7 @@ def show_instant_pagination():
     questions = st.session_state.instant_questions
     answers = st.session_state.instant_answers
 
-    # Only one scroll container is created.
-    with st.container(
-        key="instant_pagination_scroll",
-        horizontal=True,
-        horizontal_alignment="left",
-        gap="small",
-        width="stretch",
-    ):
-
-        for index, question in enumerate(questions):
-
-            question_id = question["id"]
-
-            # Determine the question status.
-            if question_id not in answers:
-
-                status = "unanswered"
-
-            else:
-
-                expected = normalize_instant_answer(
-                    question["correct_answer"]
-                )
-
-                status = (
-                    "correct"
-                    if answers[question_id] == expected
-                    else "wrong"
-                )
-
-            # Each question gets a unique key.
-            with st.container(
-                key=f"instant_{status}_{index + 1}"
-            ):
-
-                if st.button(
-                    str(index + 1),
-                    key=f"instant_page_{index + 1}",
-                    width=60,
-                ):
-
-                    go_to_instant_question(index)
+    
 
 
 # =========================================
