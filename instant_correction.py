@@ -467,7 +467,90 @@ def load_instant_styles():
 # ONLY ONE PAGINATION FUNCTION
 # =========================================
 
+# =========================================
+# INSTANT CORRECTION PAGINATION
+# Same working structure as Translate Mode
+# =========================================
+
 def show_instant_pagination():
+    """Display all 30 question numbers in one horizontal row."""
+
+    questions = st.session_state.instant_questions
+    answers = st.session_state.instant_answers
+
+    st.markdown(
+        """
+        <style>
+        /* Correct answers: green */
+        [class*="st-key-instant_correct_"] button {
+            background-color: #15803d !important;
+            color: white !important;
+            border-color: #22c55e !important;
+        }
+
+        /* Incorrect answers: red */
+        [class*="st-key-instant_wrong_"] button {
+            background-color: #b91c1c !important;
+            color: white !important;
+            border-color: #ef4444 !important;
+        }
+
+        /* Unanswered questions: dark */
+        [class*="st-key-instant_unanswered_"] button {
+            background-color: #1e293b !important;
+            color: white !important;
+            border-color: #475569 !important;
+        }
+
+        /* Consistent numbered buttons */
+        [class*="st-key-instant_page_"] button {
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Same horizontal container used in quiz.py.
+    with st.container(
+        key="instant_pagination_scroll",
+        horizontal=True,
+        horizontal_alignment="left",
+        gap="small",
+        width="stretch",
+    ):
+
+        for index in range(len(questions)):
+
+            number = index + 1
+            question = questions[index]
+            question_id = question["id"]
+
+            if question_id not in answers:
+                status = "unanswered"
+
+            else:
+                expected = normalize_instant_answer(
+                    question["correct_answer"]
+                )
+
+                if answers[question_id] == expected:
+                    status = "correct"
+                else:
+                    status = "wrong"
+
+            with st.container(
+                key=f"instant_{status}_{number}"
+            ):
+
+                if st.button(
+                    str(number),
+                    key=f"instant_page_{number}",
+                    width=75,
+                ):
+                    go_to_instant_question(index)
+
 
     questions = st.session_state.instant_questions
     answers = st.session_state.instant_answers
