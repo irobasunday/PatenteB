@@ -1,4 +1,3 @@
-
 import streamlit as st
 
 from dashboard import show_dashboard
@@ -63,6 +62,20 @@ elif st.session_state.page == "dashboard":
     show_dashboard()
 
 
+elif st.session_state.page == "argomenti":
+
+    st.title("Argomenti")
+    st.write("Study Italian driving theory topics and subtopics.")
+
+    st.info(
+        "The Argomenti learning section is being prepared."
+    )
+
+    if st.button("Back to Dashboard", key="argomenti_back"):
+        st.session_state.page = "dashboard"
+        st.rerun()
+
+
 elif st.session_state.page == "quiz":
 
     # Existing Translate Mode - unchanged
@@ -75,7 +88,7 @@ elif st.session_state.page == "quiz":
 
 elif st.session_state.page == "instant_correction":
 
-    # New Instant Correction Mode
+    # Existing Instant Correction Mode - unchanged
     if st.button(
         "‹‹ Instant Correction Mode",
         key="instant_quiz_back",
@@ -94,18 +107,6 @@ elif st.session_state.page == "coming_soon":
     if st.button("Back to Dashboard"):
         st.session_state.page = "dashboard"
         st.rerun()
-
-
-elif st.session_state.page == "results":
-
-    st.title("My Results")
-    st.info("Results page coming soon.")
-
-
-elif st.session_state.page == "settings":
-
-    st.title("Settings")
-    st.info("Settings page coming soon.")
 
 
 # Shared footer

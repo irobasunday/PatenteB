@@ -38,14 +38,15 @@ def show_dashboard():
     col1, col2 = st.columns(2, gap="medium")
 
     with col1:
-        # Quiz Practice Card
+        # Quiz Practices Card
         with st.container(border=False, key="pb_quiz_card"):
             st.markdown(
                 '<div class="pb-card-icon">📖</div>',
                 unsafe_allow_html=True,
             )
+
             st.markdown("#### Quiz Practices")
-            st.caption("Exam Mode & Practice Mode")
+            st.caption("Translate Mode & Instant Correction")
 
             if st.button(
                 "Open Quiz ↗",
@@ -54,56 +55,26 @@ def show_dashboard():
             ):
                 open_quiz()
 
-        # My Results Card
-        with st.container(border=False, key="pb_results_card"):
-            st.markdown(
-                '<div class="pb-card-icon">📊</div>',
-                unsafe_allow_html=True,
-            )
-            st.markdown("#### My Results")
-            st.caption("Track your progress")
-
-            if st.button(
-                "View Results ↗",
-                key="dashboard_results",
-                use_container_width=True,
-            ):
-                navigate("results")
-
     with col2:
-        # Translate Mode Card
+        # Argomenti Card
+        # Keep existing container key for CSS compatibility
         with st.container(border=False, key="pb_translate_card"):
             st.markdown(
-                '<div class="pb-card-icon">🌐</div>',
+                '<div class="pb-card-icon">📚</div>',
                 unsafe_allow_html=True,
             )
-            st.markdown("#### Translate Mode")
-            st.caption("Learn in English")
+
+            st.markdown("#### Argomenti")
+            st.caption("Learn Italian driving theory in Italian and English")
 
             if st.button(
-                "Open Translate ↗",
-                key="dashboard_translate",
+                "Open Argomenti ↗",
+                key="dashboard_argomenti",
                 use_container_width=True,
             ):
-                open_quiz()
+                navigate("argomenti")
 
-        # Settings Card
-        with st.container(border=False, key="pb_settings_card"):
-            st.markdown(
-                '<div class="pb-card-icon">⚙️</div>',
-                unsafe_allow_html=True,
-            )
-            st.markdown("#### Settings")
-            st.caption("Preferences")
-
-            if st.button(
-                "Open Settings ↗",
-                key="dashboard_settings",
-                use_container_width=True,
-            ):
-                navigate("settings")
-
-    # Learning Progress
+    # Learning Progress - preserved
     with st.container(border=False, key="pb_progress_card"):
         st.markdown("#### Your Learning Progress")
 
