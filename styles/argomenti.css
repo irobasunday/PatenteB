@@ -238,16 +238,18 @@
    CLICKABLE ARGOMENTI CARDS
    ========================================== */
 
-/* Each card provides the positioning boundary */
+/* ==========================================
+   ARGOMENTI CARD NAVIGATION
+   ========================================== */
+
+/* Each card is the positioning container */
 
 [class*="st-key-argomenti_category_"],
 [class*="st-key-argomenti_subtopic_"] {
     position: relative !important;
-    isolation: isolate;
 }
 
-/* Position the actual Streamlit button wrapper
-   over the entire card */
+/* Place the real Streamlit button over the card */
 
 [class*="st-key-argomenti_category_"]
 [class*="st-key-open_category_"],
@@ -257,16 +259,15 @@
     inset: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    z-index: 5 !important;
+    z-index: 10 !important;
     margin: 0 !important;
     padding: 0 !important;
 }
 
-/* Expand the button to cover the card */
+/* Make the button cover the entire card */
 
 [class*="st-key-open_category_"] button,
 [class*="st-key-open_subtopic_"] button {
-    display: block !important;
     width: 100% !important;
     height: 100% !important;
     min-height: 100% !important;
@@ -282,21 +283,21 @@
     cursor: pointer !important;
 }
 
-/* Hide the button's label completely */
+/* Hide the duplicate arrow inside the button */
 
 [class*="st-key-open_category_"] button p,
 [class*="st-key-open_subtopic_"] button p {
-    display: none !important;
+    visibility: hidden !important;
 }
 
-/* Hover feedback */
+/* Hover effect */
 
 [class*="st-key-open_category_"] button:hover,
 [class*="st-key-open_subtopic_"] button:hover {
     background: rgba(147, 197, 253, 0.06) !important;
 }
 
-/* Keyboard accessibility */
+/* Keyboard focus */
 
 [class*="st-key-open_category_"] button:focus-visible,
 [class*="st-key-open_subtopic_"] button:focus-visible {
