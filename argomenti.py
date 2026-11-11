@@ -240,9 +240,7 @@ def show_page_heading(title, back_action):
             f'{safe_text(title)}'
             '</div>'
         )
-    """Display the page title and working back button."""
-
-    with st.container(key="argomenti_page_heading"):
+    
 
         st.html(
             '<div class="argomenti-heading-title">'
