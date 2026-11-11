@@ -172,13 +172,8 @@ def select_instant_answer(question_id, answer):
     answers = st.session_state.instant_answers
 
     if question_id in answers:
-
-        st.toast(
-            "You cannot change your answer.",
-            icon="⚠️",
-            duration="short",
-        )
-        return
+     st.session_state.instant_answer_warning = True
+    st.rerun()
 
     questions = st.session_state.instant_questions
 
@@ -596,6 +591,8 @@ def show_instant_question():
     # =====================================
     # PREVIOUS / NEXT NAVIGATION
     # =====================================
+        if st.session_state.pop("instant_answer_warning", False):
+            st.warning("⚠️ You cannot change your answer.")
 
     st.divider()
 
