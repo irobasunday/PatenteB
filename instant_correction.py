@@ -97,6 +97,7 @@ def normalize_instant_answer(value):
 # SAVE AND LOCK ANSWER
 # =========================================
 
+
 def select_instant_answer(question_id, answer):
 
     if st.session_state.instant_finished:
@@ -130,26 +131,50 @@ def select_instant_answer(question_id, answer):
     if question is None:
         raise ValueError("Question not found.")
 
+    # Validate the correct answer from PostgreSQL.
     correct_answer = normalize_instant_answer(
         question["correct_answer"]
     )
 
-    # Save the answer permanently for this attempt.
+    # Save and permanently lock the user's answer.
     answers[question_id] = answer
 
-    # The question is now automatically marked.
-    is_correct = answer == correct_answer
-
-    # Move to the next unanswered question.
+    # Move forward to the next unanswered question.
     questions = st.session_state.instant_questions
 
-    for index, item in enumerate(questions):
-        if item["id"] not in answers:
-            st.session_state.instant_question_index = index
+    current_index = next(
+        index
+        for index, item in enumerate(questions)
+        if item["id"] == question_id
+    )
+
+    next_index = None
+
+    # Search only questions ahead of the current one.
+    for index in range(current_index + 1, len(questions)):
+
+        if questions[index]["id"] not in answers:
+            next_index = index
             break
 
+    # When no unanswered questions remain ahead,
+    # search earlier unanswered questions from Question 1.
+    if next_index is None:
+
+        for index in range(current_index):
+
+            if questions[index]["id"] not in answers:
+                next_index = index
+                break
+
+    # Automatically finish after all 30 answers.
     if len(answers) == len(questions):
+
         finish_instant_quiz("all_answered")
+
+    elif next_index is not None:
+
+        st.session_state.instant_question_index = next_index
 
     st.rerun()
 
