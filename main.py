@@ -1,3 +1,4 @@
+
 import streamlit as st
 
 from dashboard import show_dashboard
@@ -41,8 +42,12 @@ if "quiz_mode" not in st.session_state:
     st.session_state.quiz_mode = None
 
 
-# Shared header - hidden on quiz pages
-if st.session_state.page not in ("quiz", "instant_correction"):
+# Shared header - hidden on quiz and Argomenti pages
+if st.session_state.page not in (
+    "quiz",
+    "instant_correction",
+    "argomenti",
+):
     show_header()
 
 
@@ -64,16 +69,26 @@ elif st.session_state.page == "dashboard":
 
 elif st.session_state.page == "argomenti":
 
-    st.title("Argomenti")
-    st.write("Study Italian driving theory topics and subtopics.")
-
-    st.info(
-        "The Argomenti learning section is being prepared."
+    # Back arrow and title on the same horizontal line
+    back_col, title_col = st.columns(
+        [1, 12],
+        vertical_alignment="center",
+        gap="small",
     )
 
-    if st.button("Back to Dashboard", key="argomenti_back"):
-        st.session_state.page = "dashboard"
-        st.rerun()
+    with back_col:
+        if st.button(
+            "‹‹",
+            key="argomenti_back",
+            help="Back to Dashboard",
+        ):
+            st.session_state.page = "dashboard"
+            st.rerun()
+
+    with title_col:
+        st.markdown("### Argomenti Manuale")
+
+    # Argomenti learning content will be added here
 
 
 elif st.session_state.page == "quiz":
