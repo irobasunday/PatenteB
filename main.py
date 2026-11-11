@@ -8,6 +8,7 @@ from components.footer import show_footer
 from components.quiz_modal import show_quiz_modal
 from quiz import show_quiz
 from instant_correction import show_instant_correction
+from argomenti import show_argomenti
 
 
 st.set_page_config(
@@ -69,26 +70,7 @@ elif st.session_state.page == "dashboard":
 
 elif st.session_state.page == "argomenti":
 
-    # Back arrow and title on the same horizontal line
-    back_col, title_col = st.columns(
-        [1, 12],
-        vertical_alignment="center",
-        gap="small",
-    )
-
-    with back_col:
-        if st.button(
-            "‹‹",
-            key="argomenti_back",
-            help="Back to Dashboard",
-        ):
-            st.session_state.page = "dashboard"
-            st.rerun()
-
-    with title_col:
-        st.markdown("### Argomenti Manuale")
-
-    # Argomenti learning content will be added here
+    show_argomenti()
 
 
 elif st.session_state.page == "quiz":
