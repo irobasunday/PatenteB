@@ -361,7 +361,106 @@ def go_to_instant_question(index):
 # =========================================
 
 
+
 def show_instant_pagination():
+    questions = st.session_state.instant_questions
+    answers = st.session_state.instant_answers
+
+    st.markdown(
+        """
+        <style>
+        .st-key-instant_pagination_scroll {
+            max-width: 100% !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            padding: 10px 0 !important;
+        }
+
+        .st-key-instant_pagination_scroll > div,
+        .st-key-instant_pagination_scroll
+        [data-testid="stHorizontalBlock"] {
+            flex-wrap: nowrap !important;
+        }
+
+        .st-key-instant_pagination_scroll
+        [data-testid="stHorizontalBlock"] {
+            width: max-content !important;
+            min-width: 100%;
+        }
+
+        .st-key-instant_pagination_scroll
+        [data-testid="stHorizontalBlock"] > div {
+            flex: 0 0 auto !important;
+            min-width: 60px !important;
+        }
+
+        .st-key-instant_pagination_scroll button {
+            min-width: 55px !important;
+            height: 46px !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+        }
+
+        /* Correct answers: green */
+        [class*="st-key-instant_correct_"] button {
+            background-color: #15803d !important;
+            color: white !important;
+            border-color: #22c55e !important;
+        }
+
+        /* Wrong answers: red */
+        [class*="st-key-instant_wrong_"] button {
+            background-color: #b91c1c !important;
+            color: white !important;
+            border-color: #ef4444 !important;
+        }
+
+        /* Unanswered questions: dark */
+        [class*="st-key-instant_unanswered_"] button {
+            background-color: #1e293b !important;
+            color: white !important;
+            border-color: #475569 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Create only ONE pagination container.
+    with st.container(
+        key="instant_pagination_scroll",
+        horizontal=True,
+        horizontal_alignment="left",
+        gap="small",
+        width="stretch",
+    ):
+        for index, question in enumerate(questions):
+            question_id = question["id"]
+
+            if question_id not in answers:
+                status = "unanswered"
+            else:
+                expected = normalize_instant_answer(
+                    question["correct_answer"]
+                )
+                status = (
+                    "correct"
+                    if answers[question_id] == expected
+                    else "wrong"
+                )
+
+            with st.container(
+                key=f"instant_{status}_{index + 1}"
+            ):
+                if st.button(
+                    str(index + 1),
+                    key=f"instant_page_{index + 1}",
+                    width=60,
+                ):
+                    go_to_instant_question(index)
+
 
     questions = st.session_state.instant_questions
     answers = st.session_state.instant_answers
@@ -528,13 +627,16 @@ def show_instant_pagination():
         unsafe_allow_html=True,
     )
 
+   
     with st.container(
         key="instant_pagination_scroll",
         horizontal=True,
         horizontal_alignment="left",
         gap="small",
         width="stretch",
+        horizontal_scroll=True,
     ):
+
 
         for index, question in enumerate(questions):
 
