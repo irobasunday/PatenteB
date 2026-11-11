@@ -244,7 +244,79 @@ def show_instant_question():
 
     # Keep buttons clickable so a locked answer
     # produces the warning toast.
-    vero_col, falso_col = st.columns(2)
+    
+    st.markdown(
+        """
+        <style>
+        /* Instant Correction answer buttons */
+        .st-key-instant_answer_vero button {
+            border: 1.5px solid #22c55e !important;
+            color: #4ade80 !important;
+            border-radius: 10px !important;
+        }
+
+        .st-key-instant_answer_falso button {
+            border: 1.5px solid #ef4444 !important;
+            color: #f87171 !important;
+            border-radius: 10px !important;
+        }
+
+        .st-key-instant_answer_vero button,
+        .st-key-instant_answer_falso button {
+            min-height: 42px !important;
+        }
+
+        /* Compact previous / next buttons */
+        .st-key-instant_previous button,
+        .st-key-instant_next button {
+            border-radius: 10px !important;
+            min-height: 40px !important;
+        }
+
+        /* Mobile horizontal pagination */
+        .st-key-instant_pagination_scroll {
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            flex-wrap: nowrap !important;
+            max-width: 100% !important;
+            padding-bottom: 10px;
+            scrollbar-width: thin;
+        }
+
+        .st-key-instant_pagination_scroll
+        [class*="st-key-instant_"] {
+            flex-shrink: 0 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    
+    # Compact answer buttons with colored borders.
+    left_space, vero_col, falso_col, right_space = st.columns(
+        [0.2, 1, 1, 0.2],
+        gap="small",
+    )
+
+    with vero_col:
+        with st.container(key="instant_answer_vero"):
+            if st.button(
+                "VERO",
+                key=f"instant_vero_{question_id}",
+                use_container_width=True,
+            ):
+                select_instant_answer(question_id, True)
+
+    with falso_col:
+        with st.container(key="instant_answer_falso"):
+            if st.button(
+                "FALSO",
+                key=f"instant_falso_{question_id}",
+                use_container_width=True,
+            ):
+                select_instant_answer(question_id, False)
+
 
     with vero_col:
         if st.button(
@@ -268,8 +340,10 @@ def show_instant_question():
 
     st.divider()
 
-    previous_col, next_col = st.columns(2)
-
+    left_space, previous_col, next_col, right_space = st.columns(
+        [0.2, 1, 1, 0.2],
+        gap="small",
+    )
     with previous_col:
         if st.button(
             "← Previous",
@@ -345,6 +419,28 @@ def show_instant_pagination():
         [class*="st-key-instant_pagination_scroll"] {
             margin-top: 14px;
         }
+        
+/* Horizontal scrolling for question pagination */
+.st-key-instant_pagination_scroll {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: thin;
+    padding-bottom: 8px;
+}
+
+.st-key-instant_pagination_scroll
+[data-testid="stHorizontalBlock"] {
+    flex-wrap: nowrap !important;
+    width: max-content !important;
+    min-width: 100%;
+}
+
+.st-key-instant_pagination_scroll
+[data-testid="stHorizontalBlock"] > div {
+    flex-shrink: 0 !important;
+}
+
         </style>
         """,
         unsafe_allow_html=True,
