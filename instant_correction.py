@@ -500,7 +500,8 @@ def show_instant_results():
             display: inline-flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
+            align-self: flex-start;
             width: fit-content;
             min-width: 85px;
             padding: 9px 14px;
@@ -555,34 +556,37 @@ def show_instant_results():
 
     # Dedent prevents Streamlit from displaying
     # the HTML as a Markdown code block.
-    results_html = f"""
-    <div class="instant-results">
-        <div class="instant-result-badge instant-result-correct">
-            <span class="instant-result-label">Correct</span>
-            <span class="instant-result-value">{correct}</span>
-        </div>
+    
+    # Build HTML without Markdown indentation issues.
+    badges = [
+        ("Correct", correct, "instant-result-correct"),
+        ("Wrong", wrong, "instant-result-wrong"),
+        ("Unanswered", unanswered, ""),
+        ("Total Errors", total_errors, "instant-result-wrong"),
+        ("Time Taken", f"{minutes:02d}:{seconds:02d}", ""),
+    ]
 
-        <div class="instant-result-badge instant-result-wrong">
-            <span class="instant-result-label">Wrong</span>
-            <span class="instant-result-value">{wrong}</span>
-        </div>
+    badge_html = ""
 
-        <div class="instant-result-badge">
-            <span class="instant-result-label">Unanswered</span>
-            <span class="instant-result-value">{unanswered}</span>
-        </div>
+    for label, value, status_class in badges:
+        badge_html += (
+            f'<div class="instant-result-badge {status_class}">'
+            f'<span class="instant-result-label">{label}</span>'
+            f'<span class="instant-result-value">{value}</span>'
+            '</div>'
+        )
 
-        <div class="instant-result-badge instant-result-wrong">
-            <span class="instant-result-label">Total Errors</span>
-            <span class="instant-result-value">{total_errors}</span>
-        </div>
+    results_html = (
+        '<div class="instant-results">'
+        + badge_html
+        + '</div>'
+    )
 
-        <div class="instant-result-badge">
-            <span class="instant-result-label">Time Taken</span>
-            <span class="instant-result-value">{minutes:02d}:{seconds:02d}</span>
-        </div>
-    </div>
-    """
+    st.markdown(
+        results_html,
+        unsafe_allow_html=True,
+    )
+
 
     st.markdown(
         dedent(results_html).strip(),
