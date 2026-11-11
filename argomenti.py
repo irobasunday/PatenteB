@@ -38,7 +38,7 @@ def get_connection():
 
 @st.cache_data(ttl=300)
 def get_categories():
-    """Load categories from the existing PostgreSQL database."""
+    """Load categories from the existing database."""
 
     connection = get_connection()
 
@@ -51,14 +51,16 @@ def get_categories():
                 ORDER BY id
                 """
             )
+
             return [dict(row) for row in cursor.fetchall()]
+
     finally:
         connection.close()
 
 
 @st.cache_data(ttl=300)
 def get_subtopics(category_id):
-    """Load subtopics belonging to the selected category."""
+    """Load subtopics for the selected category."""
 
     connection = get_connection()
 
@@ -73,7 +75,9 @@ def get_subtopics(category_id):
                 """,
                 (category_id,),
             )
+
             return [dict(row) for row in cursor.fetchall()]
+
     finally:
         connection.close()
 
@@ -84,18 +88,17 @@ def get_subtopics(category_id):
 
 def get_category_progress(category_id):
     """
-    Future database integration.
+    Placeholder for future PostgreSQL progress tracking.
 
-    Return actual completed lesson percentage
-    when student progress tracking is available.
+    Return the actual completed lesson percentage
+    when student progress is implemented.
     """
     return 0
 
 
 def get_subtopic_completed(subtopic_id):
     """
-    Future database integration for individual
-    student lesson completion.
+    Placeholder for future lesson completion tracking.
     """
     return False
 
@@ -105,7 +108,7 @@ def get_subtopic_completed(subtopic_id):
 # ==========================================
 
 def short_description(definition):
-    """First 30 characters, followed by ... when longer."""
+    """Show 30 characters followed by ... if longer."""
 
     if not definition:
         return ""
@@ -122,8 +125,8 @@ def get_definition_preview(subtopic):
     """
     Definitions are not connected yet.
 
-    Once the Italian definitions are stored,
-    this function will show their previews.
+    When definitions become available,
+    this function will display a short preview.
     """
     return short_description(
         subtopic.get("definition", "")
@@ -135,12 +138,12 @@ def get_definition_preview(subtopic):
 # ==========================================
 
 def safe_text(value):
-    """Escape text before inserting it into HTML."""
+    """Escape database text before inserting into HTML."""
     return html.escape(str(value or ""), quote=True)
 
 
 def load_argomenti_css():
-    """Load the dedicated Argomenti stylesheet."""
+    """Load the existing Argomenti stylesheet."""
 
     css_path = os.path.join(
         os.path.dirname(__file__),
@@ -154,7 +157,7 @@ def load_argomenti_css():
 
 
 def get_category_icon(category_id):
-    """Category icons; real images can be connected later."""
+    """Category icons."""
 
     icons = {
         1: "ℹ",
@@ -204,12 +207,7 @@ def back_to_dashboard():
 # ==========================================
 
 def show_page_heading(title, back_action):
-    """
-    One compact header.
-
-    The back button is a real Streamlit button.
-    CSS positions it beside the heading.
-    """
+    """Display the page title and working back button."""
 
     with st.container(key="argomenti_page_heading"):
 
@@ -231,19 +229,11 @@ def show_page_heading(title, back_action):
 # CATEGORY CARD
 # ==========================================
 
-if st.button(
-    " ",
-    key=f"open_category_{category_id}",
-    help=f"Open {category_name}",
-):
-    open_category(category_id)
+def show_category_card(category):
     """
-    Render a category using one HTML Flexbox layout.
+    Display a category using the existing Flexbox card.
 
-    The invisible Streamlit button overlays the
-    card, making the entire card clickable.
-
-    No Streamlit columns are used.
+    A Streamlit button handles navigation.
     """
 
     category_id = category["id"]
@@ -291,8 +281,10 @@ if st.button(
 
         </div>
 
-        <div class="argomenti-card-arrow"
-             aria-hidden="true">
+        <div
+            class="argomenti-card-arrow"
+            aria-hidden="true"
+        >
             &#8250;
         </div>
 
@@ -306,8 +298,11 @@ if st.button(
 
         st.html(card_html)
 
+        # Navigation button belongs INSIDE this function.
+        # The short label avoids the previous vertical text.
+
         if st.button(
-            f"Open {category_name}",
+            "›",
             key=f"open_category_{category_id}",
             help=f"Open {category_name}",
         ):
@@ -318,17 +313,10 @@ if st.button(
 # SUBTOPIC CARD
 # ==========================================
 
-if st.button(
-    " ",
-    key=f"open_subtopic_{subtopic_id}",
-    help=f"Open {subtopic_name}",
-):
-    open_subtopic(subtopic_id)
+def show_subtopic_card(subtopic):
     """
-    Compact subtopic card.
-
-    Uses the same responsive card system
-    as categories.
+    Display a subtopic using the same responsive
+    card design as categories.
     """
 
     subtopic_id = subtopic["id"]
@@ -338,6 +326,7 @@ if st.button(
     preview = get_definition_preview(subtopic)
 
     status_symbol = "✓" if completed else ""
+
     status_class = (
         "argomenti-status completed"
         if completed
@@ -356,8 +345,10 @@ if st.button(
     card_html = f"""
     <div class="argomenti-card-content">
 
-        <div class="{status_class}"
-             aria-hidden="true">
+        <div
+            class="{status_class}"
+            aria-hidden="true"
+        >
             {status_symbol}
         </div>
 
@@ -371,8 +362,10 @@ if st.button(
 
         </div>
 
-        <div class="argomenti-card-arrow"
-             aria-hidden="true">
+        <div
+            class="argomenti-card-arrow"
+            aria-hidden="true"
+        >
             &#8250;
         </div>
 
@@ -386,8 +379,10 @@ if st.button(
 
         st.html(card_html)
 
+        # Navigation button belongs INSIDE this function.
+
         if st.button(
-            f"Open {subtopic_name}",
+            "›",
             key=f"open_subtopic_{subtopic_id}",
             help=f"Open {subtopic_name}",
         ):
