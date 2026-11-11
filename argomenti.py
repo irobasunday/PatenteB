@@ -51,7 +51,6 @@ def get_categories():
                 ORDER BY id
                 """
             )
-
             return [dict(row) for row in cursor.fetchall()]
 
     finally:
@@ -75,7 +74,6 @@ def get_subtopics(category_id):
                 """,
                 (category_id,),
             )
-
             return [dict(row) for row in cursor.fetchall()]
 
     finally:
@@ -89,9 +87,6 @@ def get_subtopics(category_id):
 def get_category_progress(category_id):
     """
     Placeholder for future PostgreSQL progress tracking.
-
-    Return the actual completed lesson percentage
-    when student progress is implemented.
     """
     return 0
 
@@ -124,9 +119,6 @@ def short_description(definition):
 def get_definition_preview(subtopic):
     """
     Definitions are not connected yet.
-
-    When definitions become available,
-    this function will display a short preview.
     """
     return short_description(
         subtopic.get("definition", "")
@@ -236,8 +228,6 @@ def show_page_heading(title, back_action):
 def show_category_card(category):
     """
     Display a category using the existing Flexbox card.
-
-    A Streamlit button handles navigation.
     """
 
     category_id = category["id"]
@@ -311,15 +301,18 @@ def show_category_card(category):
 
 
 # ==========================================
-# SUBTOPIC CARD - NUMBERED
+# SUBTOPIC CARD - HIERARCHICAL NUMBERING
 # ==========================================
 
-def show_subtopic_card(subtopic, number):
+def show_subtopic_card(subtopic, number, category_number):
     """
-    Display a numbered subtopic card.
+    Display a subtopic with hierarchical numbering.
 
-    The number appears inside the existing circle.
-    Preserve the current card design and navigation.
+    Examples:
+        Category 1: 1.1, 1.2, 1.3
+        Category 2: 2.1, 2.2, 2.3
+
+    Preserve the existing card design and navigation.
     """
 
     subtopic_id = subtopic["id"]
@@ -328,10 +321,10 @@ def show_subtopic_card(subtopic, number):
     completed = get_subtopic_completed(subtopic_id)
     preview = get_definition_preview(subtopic)
 
-    # Keep the number visible inside the circle.
-    status_symbol = str(number)
+    # Hierarchical number, e.g. 1.1 or 2.3
+    status_symbol = f"{category_number}.{number}"
 
-    # Preserve the existing completion styling.
+    # Preserve completion styling.
     status_class = (
         "argomenti-status completed"
         if completed
@@ -437,7 +430,7 @@ def show_categories():
 
 
 # ==========================================
-# SUBTOPICS SCREEN - NUMBERED
+# SUBTOPICS SCREEN
 # ==========================================
 
 def show_subtopics(category_id):
@@ -471,14 +464,17 @@ def show_subtopics(category_id):
 
         return
 
-    # Display the category name without adding a number.
+    # Show the category number in the heading.
+    # Example: 1. Definizioni Generali Doveri Strada
+
     show_page_heading(
-        category["name"],
+        f'{category_id}. {category["name"]}',
         back_to_categories,
     )
 
-    # Assign original numbers BEFORE applying search.
-    # This prevents numbers from changing during search.
+    # Number subtopics before filtering.
+    # Searching must not change their original numbers.
+
     numbered_subtopics = list(
         enumerate(subtopics, start=1)
     )
@@ -502,9 +498,15 @@ def show_subtopics(category_id):
         st.info("Nessun sottoargomento trovato.")
         return
 
-    # Display each subtopic with its original number.
+    # Pass the category number and subtopic number.
+    # Example: category 1, subtopic 3 = 1.3
+
     for number, subtopic in numbered_subtopics:
-        show_subtopic_card(subtopic, number)
+        show_subtopic_card(
+            subtopic,
+            number,
+            category_id,
+        )
 
 
 # ==========================================
