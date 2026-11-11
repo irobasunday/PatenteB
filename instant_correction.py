@@ -1,6 +1,9 @@
 
+import math
+from datetime import datetime, timedelta, timezone
+from textwrap import dedent
+
 import streamlit as st
-from datetime import datetime, timezone
 
 from database import fetch_quiz_questions
 
@@ -364,9 +367,6 @@ def show_instant_pagination():
 # INSTANT CORRECTION TIMER
 # =========================================
 
-import math
-
-
 def get_instant_remaining_seconds():
 
     elapsed = (
@@ -390,9 +390,7 @@ def finish_instant_quiz(reason):
     if reason == "time_expired":
         finished_at = (
             st.session_state.instant_started_at
-            + __import__("datetime").timedelta(
-                minutes=QUIZ_DURATION_MINUTES
-            )
+            + timedelta(minutes=QUIZ_DURATION_MINUTES)
         )
     else:
         finished_at = datetime.now(timezone.utc)
@@ -424,6 +422,7 @@ def show_instant_timer():
         st.info(
             f"⏱ Time Remaining: {minutes:02d}:{seconds:02d}"
         )
+
 
 # =========================================
 # INSTANT CORRECTION RESULTS DASHBOARD
@@ -471,20 +470,22 @@ def show_instant_results():
 
     minutes, seconds = divmod(elapsed_seconds, 60)
 
-    # st.markdown("## Instant Correction Results")
-
     if passed:
         st.success("✓ PASS — Congratulations!")
     else:
         st.error("✕ FAIL — Keep practicing!")
 
     if st.session_state.instant_finish_reason == "time_expired":
-        st.warning("Time expired. Your quiz was submitted automatically.")
+        st.warning(
+            "Time expired. Your quiz was submitted automatically."
+        )
     else:
         st.info("All 30 questions completed.")
 
-    
-    # Compact, rounded result badges.
+    # =====================================
+    # COMPACT ROUNDED RESULT BADGES
+    # =====================================
+
     st.markdown(
         """
         <style>
@@ -552,38 +553,41 @@ def show_instant_results():
         unsafe_allow_html=True,
     )
 
-    st.markdown(
-        f"""
-        <div class="instant-results">
-            <div class="instant-result-badge instant-result-correct">
-                <span class="instant-result-label">Correct</span>
-                <span class="instant-result-value">{correct}</span>
-            </div>
-
-            <div class="instant-result-badge instant-result-wrong">
-                <span class="instant-result-label">Wrong</span>
-                <span class="instant-result-value">{wrong}</span>
-            </div>
-
-            <div class="instant-result-badge">
-                <span class="instant-result-label">Unanswered</span>
-                <span class="instant-result-value">{unanswered}</span>
-            </div>
-
-            <div class="instant-result-badge instant-result-wrong">
-                <span class="instant-result-label">Total Errors</span>
-                <span class="instant-result-value">{total_errors}</span>
-            </div>
-
-            <div class="instant-result-badge">
-                <span class="instant-result-label">Time Taken</span>
-                <span class="instant-result-value">{minutes:02d}:{seconds:02d}</span>
-            </div>
+    # Dedent prevents Streamlit from displaying
+    # the HTML as a Markdown code block.
+    results_html = f"""
+    <div class="instant-results">
+        <div class="instant-result-badge instant-result-correct">
+            <span class="instant-result-label">Correct</span>
+            <span class="instant-result-value">{correct}</span>
         </div>
-        """,
+
+        <div class="instant-result-badge instant-result-wrong">
+            <span class="instant-result-label">Wrong</span>
+            <span class="instant-result-value">{wrong}</span>
+        </div>
+
+        <div class="instant-result-badge">
+            <span class="instant-result-label">Unanswered</span>
+            <span class="instant-result-value">{unanswered}</span>
+        </div>
+
+        <div class="instant-result-badge instant-result-wrong">
+            <span class="instant-result-label">Total Errors</span>
+            <span class="instant-result-value">{total_errors}</span>
+        </div>
+
+        <div class="instant-result-badge">
+            <span class="instant-result-label">Time Taken</span>
+            <span class="instant-result-value">{minutes:02d}:{seconds:02d}</span>
+        </div>
+    </div>
+    """
+
+    st.markdown(
+        dedent(results_html).strip(),
         unsafe_allow_html=True,
     )
-
 
     st.divider()
 
@@ -592,6 +596,7 @@ def show_instant_results():
     for index, question in enumerate(questions):
 
         question_id = question["id"]
+
         expected = normalize_instant_answer(
             question["correct_answer"]
         )
@@ -624,6 +629,7 @@ def show_instant_results():
                 "VERO" if expected else "FALSO"
             )
 
+
 # =========================================
 # MAIN INSTANT CORRECTION PAGE
 # =========================================
@@ -633,10 +639,7 @@ def show_instant_correction():
     # Initialize the 30 questions and session state.
     initialize_instant_quiz()
 
-    # st.markdown("## Instant Correction Mode")
-
-    # Automatically finish when time expires,
-    # even if the timer fragment has not refreshed.
+    # Automatically finish when time expires.
     if (
         not st.session_state.instant_finished
         and get_instant_remaining_seconds() == 0
@@ -651,6 +654,5 @@ def show_instant_correction():
     # Display the live 20-minute countdown.
     show_instant_timer()
 
-    # Display the current question, answer buttons,
-    # navigation, and colored pagination.
+    # Display the current question and pagination.
     show_instant_question()
