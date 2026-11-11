@@ -1,8 +1,8 @@
 
 import os
 import streamlit as st
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import psycopg
+from psycopg.rows import dict_row
 
 
 # ==========================================
@@ -28,7 +28,7 @@ def get_connection():
             "or environment variables."
         )
 
-    return psycopg2.connect(database_url)
+    return psycopg.connect(database_url)
 
 
 # ==========================================
@@ -43,7 +43,7 @@ def get_categories():
 
     try:
         with connection.cursor(
-            cursor_factory=RealDictCursor
+            row_factory=dict_row
         ) as cursor:
 
             cursor.execute(
@@ -68,7 +68,7 @@ def get_subtopics(category_id):
 
     try:
         with connection.cursor(
-            cursor_factory=RealDictCursor
+            row_factory=dict_row
         ) as cursor:
 
             cursor.execute(
@@ -219,6 +219,7 @@ def show_categories():
 
     try:
         categories = get_categories()
+
     except Exception as error:
         st.error("Unable to load categories from PostgreSQL.")
         st.exception(error)
@@ -285,6 +286,7 @@ def show_categories():
 def show_subtopics(category_id):
     try:
         categories = get_categories()
+
         category = next(
             (
                 item
@@ -303,8 +305,10 @@ def show_subtopics(category_id):
 
     if category is None:
         st.warning("Category not found.")
+
         if st.button("Back to Argomenti"):
             back_to_categories()
+
         return
 
     show_page_heading(
