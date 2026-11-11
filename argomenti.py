@@ -521,6 +521,11 @@ def show_categories():
         "Argomenti Manuale",
         back_to_dashboard,
     )
+    
+    st.image(
+        "assets/road_signs/divieto_di_accesso.svg",
+        width=150
+    )
 
     search = st.text_input(
         "Cerca l'argomento",
