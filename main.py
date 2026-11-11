@@ -7,6 +7,7 @@ from components.header import show_header
 from components.footer import show_footer
 from components.quiz_modal import show_quiz_modal
 from quiz import show_quiz
+from instant_correction import show_instant_correction
 
 
 st.set_page_config(
@@ -41,8 +42,8 @@ if "quiz_mode" not in st.session_state:
     st.session_state.quiz_mode = None
 
 
-# Shared header - hidden on quiz page
-if st.session_state.page != "quiz":
+# Shared header - hidden on quiz pages
+if st.session_state.page not in ("quiz", "instant_correction"):
     show_header()
 
 
@@ -64,12 +65,25 @@ elif st.session_state.page == "dashboard":
 
 elif st.session_state.page == "quiz":
 
-    # Single-line quiz header with back navigation
+    # Existing Translate Mode - unchanged
     if st.button("‹‹ Quiz Translate Mode", key="quiz_back"):
         st.session_state.page = "dashboard"
         st.rerun()
 
     show_quiz()
+
+
+elif st.session_state.page == "instant_correction":
+
+    # New Instant Correction Mode
+    if st.button(
+        "‹‹ Instant Correction Mode",
+        key="instant_quiz_back",
+    ):
+        st.session_state.page = "dashboard"
+        st.rerun()
+
+    show_instant_correction()
 
 
 elif st.session_state.page == "coming_soon":

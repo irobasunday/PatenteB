@@ -1,3 +1,4 @@
+
 import streamlit as st
 
 
@@ -27,7 +28,7 @@ def show_quiz_modal():
         "Auto Correction",
         key="quiz_auto_correction",
         on_change=select_auto_correction,
-        help="Automatic answer correction. Coming soon.",
+        help="Practice 30 Italian questions with instant answer correction.",
     )
 
     st.divider()
@@ -45,7 +46,8 @@ def show_quiz_modal():
     ):
 
         if st.session_state.quiz_auto_correction:
-            st.session_state.page = "coming_soon"
+            st.session_state.page = "instant_correction"
+            st.session_state.quiz_mode = "instant_correction"
 
         elif st.session_state.quiz_translation:
             st.session_state.page = "quiz"
