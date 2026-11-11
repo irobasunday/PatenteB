@@ -588,10 +588,7 @@ def show_instant_results():
     )
 
 
-    st.markdown(
-        dedent(results_html).strip(),
-        unsafe_allow_html=True,
-    )
+    
 
     st.divider()
 
