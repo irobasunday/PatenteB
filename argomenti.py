@@ -207,6 +207,39 @@ def back_to_dashboard():
 # ==========================================
 
 def show_page_heading(title, back_action):
+    """Show back button and title on the same line."""
+
+    with st.container(key="argomenti_page_heading"):
+        with st.container(horizontal=True, vertical_alignment="center"):
+
+            if st.button(
+                "❮",
+                key="argomenti_page_back",
+                help="Back to previous page",
+            ):
+                back_action()
+
+            st.markdown(
+                f'<div class="argomenti-heading-title">'
+                f'{safe_text(title)}</div>',
+                unsafe_allow_html=True,
+            )
+    """Display a back button beside the page title."""
+
+    with st.container(key="argomenti_page_heading"):
+
+        if st.button(
+            "❮",
+            key="argomenti_page_back",
+            help="Back",
+        ):
+            back_action()
+
+        st.html(
+            '<div class="argomenti-heading-title">'
+            f'{safe_text(title)}'
+            '</div>'
+        )
     """Display the page title and working back button."""
 
     with st.container(key="argomenti_page_heading"):
