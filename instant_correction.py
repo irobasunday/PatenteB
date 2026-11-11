@@ -225,3 +225,125 @@ def show_instant_question():
             use_container_width=True,
         ):
             select_instant_answer(question_id, False)
+            
+            
+    # =====================================
+    # PREVIOUS / NEXT NAVIGATION
+    # =====================================
+
+    st.divider()
+
+    previous_col, next_col = st.columns(2)
+
+    with previous_col:
+        if st.button(
+            "← Previous",
+            key="instant_previous",
+            disabled=index == 0,
+            use_container_width=True,
+        ):
+            go_to_instant_question(index - 1)
+
+    with next_col:
+        if st.button(
+            "Next →",
+            key="instant_next",
+            disabled=index == len(questions) - 1,
+            use_container_width=True,
+        ):
+            go_to_instant_question(index + 1)
+
+    # Display green/red/default pagination.
+    show_instant_pagination()
+
+
+# =========================================
+# INSTANT CORRECTION NAVIGATION
+# =========================================
+
+def go_to_instant_question(index):
+
+    if st.session_state.instant_finished:
+        return
+
+    questions = st.session_state.instant_questions
+
+    if 0 <= index < len(questions):
+        st.session_state.instant_question_index = index
+        st.rerun()
+
+
+# =========================================
+# INSTANT CORRECTION PAGINATION
+# =========================================
+
+def show_instant_pagination():
+
+    questions = st.session_state.instant_questions
+    answers = st.session_state.instant_answers
+
+    st.markdown(
+        """
+        <style>
+        [class*="st-key-instant_correct_"] button {
+            background-color: #15803d !important;
+            color: white !important;
+            border-color: #22c55e !important;
+        }
+
+        [class*="st-key-instant_wrong_"] button {
+            background-color: #b91c1c !important;
+            color: white !important;
+            border-color: #ef4444 !important;
+        }
+
+        [class*="st-key-instant_unanswered_"] button {
+            background-color: #1e293b !important;
+            color: white !important;
+            border-color: #475569 !important;
+        }
+
+        [class*="st-key-instant_pagination_scroll"] {
+            margin-top: 14px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    with st.container(
+        key="instant_pagination_scroll",
+        horizontal=True,
+        horizontal_alignment="left",
+        gap="small",
+        width="stretch",
+    ):
+
+        for index, question in enumerate(questions):
+
+            question_id = question["id"]
+
+            if question_id not in answers:
+                status = "unanswered"
+
+            else:
+                expected = normalize_instant_answer(
+                    question["correct_answer"]
+                )
+
+                status = (
+                    "correct"
+                    if answers[question_id] == expected
+                    else "wrong"
+                )
+
+            with st.container(
+                key=f"instant_{status}_{index + 1}"
+            ):
+
+                if st.button(
+                    str(index + 1),
+                    key=f"instant_page_{index + 1}",
+                    width=65,
+                ):
+                    go_to_instant_question(index)
