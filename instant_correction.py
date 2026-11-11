@@ -424,3 +424,114 @@ def show_instant_timer():
         st.info(
             f"⏱ Time Remaining: {minutes:02d}:{seconds:02d}"
         )
+
+# =========================================
+# INSTANT CORRECTION RESULTS DASHBOARD
+# =========================================
+
+def show_instant_results():
+
+    questions = st.session_state.instant_questions
+    answers = st.session_state.instant_answers
+
+    correct = 0
+    wrong = 0
+
+    for question in questions:
+
+        question_id = question["id"]
+
+        if question_id not in answers:
+            continue
+
+        expected = normalize_instant_answer(
+            question["correct_answer"]
+        )
+
+        if answers[question_id] == expected:
+            correct += 1
+        else:
+            wrong += 1
+
+    unanswered = len(questions) - len(answers)
+    total_errors = wrong + unanswered
+
+    passed = total_errors <= 3
+
+    started_at = st.session_state.instant_started_at
+    finished_at = st.session_state.instant_finished_at
+
+    if finished_at is None:
+        finished_at = datetime.now(timezone.utc)
+
+    elapsed_seconds = max(
+        0,
+        int((finished_at - started_at).total_seconds())
+    )
+
+    minutes, seconds = divmod(elapsed_seconds, 60)
+
+    st.markdown("## Instant Correction Results")
+
+    if passed:
+        st.success("✓ PASS — Congratulations!")
+    else:
+        st.error("✕ FAIL — Keep practicing!")
+
+    if st.session_state.instant_finish_reason == "time_expired":
+        st.warning("Time expired. Your quiz was submitted automatically.")
+    else:
+        st.info("All 30 questions completed.")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric("Correct", correct)
+
+    with col2:
+        st.metric("Wrong", wrong)
+
+    with col3:
+        st.metric("Unanswered", unanswered)
+
+    st.metric("Total Errors", total_errors)
+    st.metric("Time Taken", f"{minutes:02d}:{seconds:02d}")
+
+    st.divider()
+
+    st.markdown("### Review Your Answers")
+
+    for index, question in enumerate(questions):
+
+        question_id = question["id"]
+        expected = normalize_instant_answer(
+            question["correct_answer"]
+        )
+
+        selected = answers.get(question_id)
+
+        if question_id not in answers:
+            status = "⚪ Unanswered"
+        elif selected == expected:
+            status = "🟢 Correct"
+        else:
+            status = "🔴 Incorrect"
+
+        with st.expander(
+            f"Question {index + 1} — {status}"
+        ):
+
+            st.write(question["question"])
+
+            if question_id in answers:
+                st.write(
+                    "Your answer:",
+                    "VERO" if selected else "FALSO"
+                )
+            else:
+                st.write("Your answer: Not answered")
+
+            st.write(
+                "Correct answer:",
+                "VERO" if expected else "FALSO"
+            )
