@@ -350,12 +350,12 @@ def show_category_card(category):
         ).decode("ascii")
 
         icon_html = (
-            '<img '
-            f'src="data:image/svg+xml;base64,{encoded_svg}" '
-            f'alt="{safe_text(category_name)}" '
-            'style="width:44px;height:44px;'
-            'object-fit:contain;display:block;">'
-        )
+    '<img '
+    f'src="data:image/svg+xml;base64,{encoded_svg}" '
+    f'alt="{safe_text(category_name)}" '
+    'width="44" height="44" '
+    'style="display:block;object-fit:contain;">'
+)
 
     else:
         # No SVG assigned, or the image file is missing.
