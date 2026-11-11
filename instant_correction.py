@@ -22,6 +22,7 @@ QUIZ_DURATION_MINUTES = 20
 def initialize_instant_quiz():
 
     if "instant_questions" not in st.session_state:
+
         questions = fetch_quiz_questions()
 
         if len(questions) != TOTAL_QUESTIONS:
@@ -63,6 +64,7 @@ def normalize_instant_answer(value):
         return value
 
     if isinstance(value, str):
+
         mapping = {
             "t": True,
             "true": True,
@@ -110,10 +112,12 @@ def finish_instant_quiz(reason):
         return
 
     if reason == "time_expired":
+
         finished_at = (
             st.session_state.instant_started_at
             + timedelta(minutes=QUIZ_DURATION_MINUTES)
         )
+
     else:
         finished_at = datetime.now(timezone.utc)
 
@@ -137,10 +141,13 @@ def show_instant_timer():
     minutes, seconds = divmod(remaining, 60)
 
     if remaining <= 300:
+
         st.error(
             f"⏱ Time Remaining: {minutes:02d}:{seconds:02d}"
         )
+
     else:
+
         st.info(
             f"⏱ Time Remaining: {minutes:02d}:{seconds:02d}"
         )
@@ -162,6 +169,7 @@ def select_instant_answer(question_id, answer):
     answers = st.session_state.instant_answers
 
     if question_id in answers:
+
         st.toast(
             "You cannot change your answer.",
             icon="⚠️",
@@ -191,25 +199,28 @@ def select_instant_answer(question_id, answer):
 
     answers[question_id] = answer
 
-    # Finish when all questions are answered.
+    # Finish immediately when all 30 are answered.
     if len(answers) == len(questions):
         finish_instant_quiz("all_answered")
         st.rerun()
 
     next_index = None
 
-    # Find the next unanswered question.
+    # Search forward for the next unanswered question.
     for index in range(
         current_index + 1,
         len(questions),
     ):
+
         if questions[index]["id"] not in answers:
             next_index = index
             break
 
     # Return to earlier unanswered questions.
     if next_index is None:
+
         for index in range(current_index):
+
             if questions[index]["id"] not in answers:
                 next_index = index
                 break
@@ -236,6 +247,7 @@ def go_to_instant_question(index):
     questions = st.session_state.instant_questions
 
     if 0 <= index < len(questions):
+
         st.session_state.instant_question_index = index
         st.rerun()
 
@@ -287,8 +299,19 @@ def load_instant_styles():
         }
 
         /* =================================
-           HORIZONTAL QUESTION PAGINATION
+           HORIZONTAL PAGINATION
            ================================= */
+
+        /*
+           Keep the native Streamlit horizontal
+           container, matching Translate Mode.
+
+           Only the outer pagination container
+           handles horizontal scrolling.
+
+           Do not change all Streamlit vertical
+           blocks into horizontal blocks.
+        */
 
         .st-key-instant_pagination_scroll {
             width: 100% !important;
@@ -299,55 +322,37 @@ def load_instant_styles():
             overflow-y: hidden !important;
 
             -webkit-overflow-scrolling: touch;
-            touch-action: pan-x pan-y;
             overscroll-behavior-x: contain;
-
             scrollbar-width: thin;
-            scrollbar-color: #64748b transparent;
 
             padding: 8px 0 12px !important;
         }
 
         /*
-           Force the pagination's inner
-           Streamlit layout into one row.
+           Prevent the horizontal button row
+           from wrapping on mobile.
         */
 
         .st-key-instant_pagination_scroll
-        > div[data-testid="stVerticalBlock"],
-        .st-key-instant_pagination_scroll
-        > div[data-testid="stHorizontalBlock"],
-        .st-key-instant_pagination_scroll
-        > div[data-testid="stVerticalBlockBorderWrapper"]
-        > div[data-testid="stVerticalBlock"] {
-            display: flex !important;
-            flex-direction: row !important;
+        [data-testid="stHorizontalBlock"] {
             flex-wrap: nowrap !important;
-
-            width: max-content !important;
-            min-width: 100% !important;
-
-            gap: 8px !important;
         }
 
         /*
-           Keep all numbered question
-           containers fixed-width.
+           Every pagination button is fixed
+           width, allowing sideways scrolling.
         */
 
         .st-key-instant_pagination_scroll
-        [class*="st-key-instant_correct_"],
-        .st-key-instant_pagination_scroll
-        [class*="st-key-instant_wrong_"],
-        .st-key-instant_pagination_scroll
-        [class*="st-key-instant_unanswered_"] {
+        [class*="st-key-instant_page_"] {
             flex: 0 0 75px !important;
             width: 75px !important;
             min-width: 75px !important;
             max-width: 75px !important;
         }
 
-        .st-key-instant_pagination_scroll button {
+        .st-key-instant_pagination_scroll
+        button {
             width: 75px !important;
             min-width: 75px !important;
             height: 46px !important;
@@ -361,19 +366,28 @@ def load_instant_styles():
            PAGINATION COLORS
            ================================= */
 
-        [class*="st-key-instant_correct_"] button {
+        /*
+           The status is now included in the
+           button key itself. No extra
+           st.container is needed for colors.
+        */
+
+        [class*="st-key-instant_page_correct_"]
+        button {
             background-color: #15803d !important;
             color: white !important;
             border-color: #22c55e !important;
         }
 
-        [class*="st-key-instant_wrong_"] button {
+        [class*="st-key-instant_page_wrong_"]
+        button {
             background-color: #b91c1c !important;
             color: white !important;
             border-color: #ef4444 !important;
         }
 
-        [class*="st-key-instant_unanswered_"] button {
+        [class*="st-key-instant_page_unanswered_"]
+        button {
             background-color: #1e293b !important;
             color: white !important;
             border-color: #475569 !important;
@@ -456,19 +470,23 @@ def load_instant_styles():
 
 
 # =========================================
-# INSTANT CORRECTION PAGINATION
+# HORIZONTAL QUESTION PAGINATION
 # =========================================
 
 def show_instant_pagination():
     """
-    Display 30 numbered question buttons
-    in one horizontally scrollable row.
+    Display all 30 question numbers in
+    a horizontally scrollable row.
+
+    Uses the same native horizontal
+    container structure as Translate Mode.
+
+    No nested containers around buttons.
     """
 
     questions = st.session_state.instant_questions
     answers = st.session_state.instant_answers
 
-    # Exactly one pagination container.
     with st.container(
         key="instant_pagination_scroll",
         horizontal=True,
@@ -477,16 +495,18 @@ def show_instant_pagination():
         width="stretch",
     ):
 
-        for index in range(len(questions)):
+        for index, question in enumerate(questions):
 
             number = index + 1
-            question = questions[index]
             question_id = question["id"]
 
+            # Determine the question's status.
             if question_id not in answers:
+
                 status = "unanswered"
 
             else:
+
                 expected = normalize_instant_answer(
                     question["correct_answer"]
                 )
@@ -496,16 +516,21 @@ def show_instant_pagination():
                 else:
                     status = "wrong"
 
-            with st.container(
-                key=f"instant_{status}_{number}"
-            ):
+            # IMPORTANT:
+            # Render the button directly inside
+            # the horizontal Streamlit container.
+            #
+            # Status is included in the key
+            # so CSS can color each button.
+            #
+            # No additional st.container here.
 
-                if st.button(
-                    str(number),
-                    key=f"instant_page_{number}",
-                    width=75,
-                ):
-                    go_to_instant_question(index)
+            if st.button(
+                str(number),
+                key=f"instant_page_{status}_{number}",
+                width=75,
+            ):
+                go_to_instant_question(index)
 
 
 # =========================================
@@ -552,6 +577,7 @@ def show_instant_question():
         )
 
         if image_file:
+
             st.image(
                 str(image_file),
                 width=150,
@@ -741,10 +767,13 @@ def show_instant_results():
     # =====================================
 
     if passed:
+
         st.success(
             "✓ PASS — Congratulations!"
         )
+
     else:
+
         st.error(
             "✕ FAIL — Keep practicing!"
         )
@@ -753,10 +782,13 @@ def show_instant_results():
         st.session_state.instant_finish_reason
         == "time_expired"
     ):
+
         st.warning(
             "Time expired. Your quiz was submitted automatically."
         )
+
     else:
+
         st.info(
             "All 30 questions completed."
         )
@@ -836,12 +868,15 @@ def show_instant_results():
         selected = answers.get(question_id)
 
         if question_id not in answers:
+
             status = "⚪ Unanswered"
 
         elif selected == expected:
+
             status = "🟢 Correct"
 
         else:
+
             status = "🔴 Incorrect"
 
         with st.expander(
@@ -860,6 +895,7 @@ def show_instant_results():
                 )
 
             else:
+
                 st.write(
                     "Your answer: Not answered"
                 )
@@ -878,25 +914,27 @@ def show_instant_correction():
 
     initialize_instant_quiz()
 
-    # Load styles.
+    # Load Instant Correction styling.
     load_instant_styles()
 
-    # Finish automatically when time expires.
+    # Automatically finish when time expires.
     if (
         not st.session_state.instant_finished
         and get_instant_remaining_seconds() == 0
     ):
+
         finish_instant_quiz(
             "time_expired"
         )
 
-    # Display results after completion.
+    # Show results when finished.
     if st.session_state.instant_finished:
+
         show_instant_results()
         return
 
-    # Display live countdown timer.
+    # Live countdown.
     show_instant_timer()
 
-    # Display question and pagination.
+    # Question, answers, and pagination.
     show_instant_question()
