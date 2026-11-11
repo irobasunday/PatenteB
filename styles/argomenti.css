@@ -4,9 +4,7 @@
    RESPONSIVE DARK THEME
    ========================================== */
 
-/* ==========================================
-   MAIN PAGE
-   ========================================== */
+/* PAGE WIDTH */
 
 .stApp:has(.st-key-argomenti_page_heading)
 [data-testid="stMainBlockContainer"] {
@@ -21,53 +19,50 @@
    ========================================== */
 
 .st-key-argomenti_page_heading {
-    margin-bottom: 8px !important;
-}
-
-.st-key-argomenti_page_heading
-[data-testid="stHorizontalBlock"] {
+    position: relative !important;
+    min-height: 54px !important;
+    margin-bottom: 12px !important;
+    padding-left: 60px !important;
     display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
     align-items: center !important;
-    gap: 10px !important;
-    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
-.st-key-argomenti_page_heading
-[data-testid="stHorizontalBlock"]
-> [data-testid="column"]:first-child {
-    flex: 0 0 46px !important;
-    width: 46px !important;
-    min-width: 46px !important;
+.argomenti-heading-title {
+    color: #f8fafc;
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
 }
 
+/* Larger back arrow */
+
 .st-key-argomenti_page_heading
-[data-testid="stHorizontalBlock"]
-> [data-testid="column"]:last-child {
-    flex: 1 1 0 !important;
-    width: 0 !important;
-    min-width: 0 !important;
+[data-testid="stButton"] {
+    position: absolute !important;
+    left: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 2 !important;
 }
 
 .st-key-argomenti_page_heading button {
-    width: 46px !important;
-    height: 46px !important;
-    min-height: 46px !important;
-    padding: 0 !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
 
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    padding: 0 !important;
 
     background: #263a53 !important;
     border: 1px solid #405574 !important;
     border-radius: 10px !important;
 
     color: #ffffff !important;
-    font-size: 2.3rem !important;
+    font-size: 2.4rem !important;
     font-weight: 800 !important;
     line-height: 1 !important;
+
     box-shadow: none !important;
 }
 
@@ -76,16 +71,8 @@
     border-color: #93c5fd !important;
 }
 
-.argomenti-heading-title {
-    color: #f8fafc;
-    font-size: 1.25rem;
-    font-weight: 700;
-    line-height: 1.3;
-    overflow-wrap: anywhere;
-}
-
 /* ==========================================
-   SEARCH
+   SEARCH BAR
    ========================================== */
 
 .stApp:has(.st-key-argomenti_page_heading)
@@ -97,24 +84,25 @@
 .stApp:has(.st-key-argomenti_page_heading)
 [data-testid="stTextInput"] input {
     width: 100% !important;
-    min-width: 0 !important;
     min-height: 44px !important;
-    box-sizing: border-box !important;
 
     background: #1e293b !important;
     border: 1px solid #34445d !important;
     border-radius: 12px !important;
+
     color: #f8fafc !important;
+    box-sizing: border-box !important;
 }
 
 /* ==========================================
-   CARDS
+   CATEGORY AND SUBTOPIC CARDS
    ========================================== */
 
 [class*="st-key-argomenti_category_"],
 [class*="st-key-argomenti_subtopic_"] {
+    position: relative !important;
+
     width: 100% !important;
-    max-width: 100% !important;
     min-width: 0 !important;
     box-sizing: border-box !important;
 
@@ -122,40 +110,15 @@
     border: 1px solid #34445d !important;
     border-radius: 14px !important;
 
-    padding: 10px 12px !important;
-    margin-bottom: 4px !important;
-}
-
-/* Remove excessive internal vertical spacing */
-
-[class*="st-key-argomenti_category_"]
-[data-testid="stVerticalBlock"],
-[class*="st-key-argomenti_subtopic_"]
-[data-testid="stVerticalBlock"] {
-    gap: 0.35rem !important;
+    padding: 12px !important;
+    margin-bottom: 8px !important;
 }
 
 /* ==========================================
-   OUTER CARD ROW
-   Icon | Content | Arrow
+   SINGLE FLEXBOX CARD LAYOUT
    ========================================== */
 
-/*
-   Select only a horizontal block that has
-   exactly three direct Streamlit columns.
-
-   This avoids accidentally styling the
-   two-column progress row.
-*/
-
-[class*="st-key-argomenti_category_"]
-[data-testid="stHorizontalBlock"]:has(
-    > [data-testid="column"]:nth-child(3)
-),
-[class*="st-key-argomenti_subtopic_"]
-[data-testid="stHorizontalBlock"]:has(
-    > [data-testid="column"]:nth-child(3)
-) {
+.argomenti-card-content {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
@@ -163,118 +126,61 @@
 
     width: 100% !important;
     min-width: 0 !important;
-    gap: 10px !important;
+    box-sizing: border-box !important;
+
+    gap: 12px !important;
 }
 
-/* First column: icon */
-
-[class*="st-key-argomenti_category_"]
-[data-testid="stHorizontalBlock"]:has(
-    > [data-testid="column"]:nth-child(3)
-)
-> [data-testid="column"]:first-child,
-[class*="st-key-argomenti_subtopic_"]
-[data-testid="stHorizontalBlock"]:has(
-    > [data-testid="column"]:nth-child(3)
-)
-> [data-testid="column"]:first-child {
-    flex: 0 0 48px !important;
-    width: 48px !important;
-    min-width: 48px !important;
-    max-width: 48px !important;
-}
-
-/* Second column: flexible text */
-
-[class*="st-key-argomenti_category_"]
-[data-testid="stHorizontalBlock"]:has(
-    > [data-testid="column"]:nth-child(3)
-)
-> [data-testid="column"]:nth-child(2),
-[class*="st-key-argomenti_subtopic_"]
-[data-testid="stHorizontalBlock"]:has(
-    > [data-testid="column"]:nth-child(3)
-)
-> [data-testid="column"]:nth-child(2) {
-    flex: 1 1 0 !important;
-    width: 0 !important;
-    min-width: 0 !important;
-    max-width: none !important;
-}
-
-/* Third column: arrow */
-
-[class*="st-key-argomenti_category_"]
-[data-testid="stHorizontalBlock"]:has(
-    > [data-testid="column"]:nth-child(3)
-)
-> [data-testid="column"]:last-child,
-[class*="st-key-argomenti_subtopic_"]
-[data-testid="stHorizontalBlock"]:has(
-    > [data-testid="column"]:nth-child(3)
-)
-> [data-testid="column"]:last-child {
-    flex: 0 0 32px !important;
-    width: 32px !important;
-    min-width: 32px !important;
-    max-width: 32px !important;
-}
-
-/* ==========================================
-   CATEGORY ICON
-   ========================================== */
+/* Fixed icon */
 
 .argomenti-category-icon {
+    flex: 0 0 48px !important;
+
     width: 48px;
     height: 48px;
-    flex-shrink: 0;
-
-    border-radius: 10px;
-    background: #263a53;
-    color: #93c5fd;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
+    border-radius: 10px;
+    background: #263a53;
+    color: #93c5fd;
+
     font-size: 27px;
     font-weight: 700;
 }
 
-/* ==========================================
-   CATEGORY TITLE
-   ========================================== */
+/* Flexible middle section */
+
+.argomenti-card-details {
+    flex: 1 1 0 !important;
+
+    min-width: 0 !important;
+    width: 0 !important;
+
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+/* Category title */
 
 .argomenti-category-name {
-    width: 100%;
-    min-width: 0;
-
     color: #f8fafc;
-    font-size: 0.91rem;
+    font-size: 0.92rem;
     font-weight: 650;
     line-height: 1.35;
 
     white-space: normal !important;
-    overflow-wrap: break-word !important;
-    word-break: normal !important;
-
-    margin-bottom: 6px;
+    overflow-wrap: anywhere !important;
 }
 
 /* ==========================================
-   PROGRESS ROW
-   Bar | Percentage
+   PROGRESS BAR
    ========================================== */
 
-/*
-   Only target the horizontal block with
-   two direct columns inside a category.
-*/
-
-[class*="st-key-argomenti_category_"]
-[data-testid="stHorizontalBlock"]:has(
-    > [data-testid="column"]:nth-child(2):last-child
-) {
+.argomenti-progress-row {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
@@ -282,56 +188,107 @@
 
     width: 100% !important;
     min-width: 0 !important;
-    gap: 8px !important;
+    gap: 9px !important;
 }
 
-/* Progress bar column */
-
-[class*="st-key-argomenti_category_"]
-[data-testid="stHorizontalBlock"]:has(
-    > [data-testid="column"]:nth-child(2):last-child
-)
-> [data-testid="column"]:first-child {
+.argomenti-progress-track {
     flex: 1 1 0 !important;
+
     width: 0 !important;
     min-width: 0 !important;
-    max-width: none !important;
+    height: 6px;
+
+    background: #3d485b;
+    border-radius: 20px;
+    overflow: hidden;
 }
 
-/* Percentage column */
-
-[class*="st-key-argomenti_category_"]
-[data-testid="stHorizontalBlock"]:has(
-    > [data-testid="column"]:nth-child(2):last-child
-)
-> [data-testid="column"]:last-child {
-    flex: 0 0 36px !important;
-    width: 36px !important;
-    min-width: 36px !important;
-    max-width: 36px !important;
-}
-
-[class*="st-key-argomenti_category_"]
-[data-testid="stProgress"] {
-    width: 100% !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-}
-
-[class*="st-key-argomenti_category_"]
-[data-testid="stProgress"] > div {
-    height: 6px !important;
-    border-radius: 20px !important;
+.argomenti-progress-fill {
+    height: 100%;
+    background: #60a5fa;
+    border-radius: inherit;
 }
 
 .argomenti-progress-label {
+    flex: 0 0 auto;
+
     color: #cbd5e1;
     font-size: 0.76rem;
     white-space: nowrap;
 }
 
 /* ==========================================
-   SUBTOPICS
+   RIGHT ARROW
+   ========================================== */
+
+.argomenti-card-arrow {
+    flex: 0 0 24px !important;
+
+    width: 24px;
+    text-align: center;
+
+    color: #f8fafc;
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* ==========================================
+   REAL STREAMLIT NAVIGATION BUTTON
+   ========================================== */
+
+/*
+   The visible card is HTML.
+
+   The real Streamlit button covers the card,
+   allowing the entire card to be clicked.
+*/
+
+[class*="st-key-argomenti_category_"]
+[data-testid="stButton"],
+[class*="st-key-argomenti_subtopic_"]
+[data-testid="stButton"] {
+    position: absolute !important;
+    inset: 0 !important;
+
+    width: 100% !important;
+    height: 100% !important;
+
+    z-index: 3 !important;
+}
+
+[class*="st-key-argomenti_category_"]
+[data-testid="stButton"] button,
+[class*="st-key-argomenti_subtopic_"]
+[data-testid="stButton"] button {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+
+    background: transparent !important;
+    border: none !important;
+    border-radius: 14px !important;
+
+    color: transparent !important;
+    font-size: 0 !important;
+
+    padding: 0 !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+}
+
+/* Keep keyboard navigation visible */
+
+[class*="st-key-argomenti_category_"]
+[data-testid="stButton"] button:focus-visible,
+[class*="st-key-argomenti_subtopic_"]
+[data-testid="stButton"] button:focus-visible {
+    outline: 2px solid #93c5fd !important;
+    outline-offset: 2px !important;
+}
+
+/* ==========================================
+   SUBTOPIC CARDS
    ========================================== */
 
 .argomenti-subtopic-name {
@@ -340,53 +297,40 @@
     font-weight: 650;
     line-height: 1.35;
 
-    min-width: 0;
-    white-space: normal;
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
 }
 
 .argomenti-preview {
     color: #94a3b8;
     font-size: 0.78rem;
     line-height: 1.4;
-    margin-top: 5px;
-    overflow-wrap: break-word;
+
+    overflow-wrap: anywhere;
 }
 
-/* Future completion indicator */
+/* Completion circle */
 
 .argomenti-status {
-    width: 16px;
-    height: 16px;
+    flex: 0 0 18px !important;
+
+    width: 18px;
+    height: 18px;
+
     border: 2px solid #64748b;
     border-radius: 50%;
-
-    color: #22c55e;
-    font-size: 12px;
 
     display: flex;
     align-items: center;
     justify-content: center;
+
+    color: transparent;
+    font-size: 12px;
 }
 
-/* ==========================================
-   RIGHT ARROW
-   ========================================== */
-
-[class*="st-key-argomenti_category_"] button,
-[class*="st-key-argomenti_subtopic_"] button {
-    width: 32px !important;
-    min-width: 32px !important;
-    min-height: 38px !important;
-
-    padding: 0 !important;
-    border: none !important;
-    background: transparent !important;
-
-    color: #f8fafc !important;
-    font-size: 1.8rem !important;
-    font-weight: 700 !important;
-    box-shadow: none !important;
+.argomenti-status.completed {
+    border-color: #22c55e;
+    background: #22c55e;
+    color: #ffffff;
 }
 
 /* ==========================================
@@ -402,6 +346,10 @@
         padding-right: 10px !important;
     }
 
+    .st-key-argomenti_page_heading {
+        padding-left: 56px !important;
+    }
+
     .argomenti-heading-title {
         font-size: 1.08rem;
     }
@@ -415,64 +363,23 @@
 
     [class*="st-key-argomenti_category_"],
     [class*="st-key-argomenti_subtopic_"] {
-        padding: 10px 9px !important;
+        padding: 10px !important;
         border-radius: 12px !important;
+        margin-bottom: 7px !important;
     }
 
-    /* Reduce outer row spacing */
-
-    [class*="st-key-argomenti_category_"]
-    [data-testid="stHorizontalBlock"]:has(
-        > [data-testid="column"]:nth-child(3)
-    ),
-    [class*="st-key-argomenti_subtopic_"]
-    [data-testid="stHorizontalBlock"]:has(
-        > [data-testid="column"]:nth-child(3)
-    ) {
-        gap: 8px !important;
-    }
-
-    /* Smaller icon column */
-
-    [class*="st-key-argomenti_category_"]
-    [data-testid="stHorizontalBlock"]:has(
-        > [data-testid="column"]:nth-child(3)
-    )
-    > [data-testid="column"]:first-child,
-    [class*="st-key-argomenti_subtopic_"]
-    [data-testid="stHorizontalBlock"]:has(
-        > [data-testid="column"]:nth-child(3)
-    )
-    > [data-testid="column"]:first-child {
-        flex-basis: 38px !important;
-        width: 38px !important;
-        min-width: 38px !important;
-        max-width: 38px !important;
+    .argomenti-card-content {
+        gap: 9px !important;
     }
 
     .argomenti-category-icon {
+        flex-basis: 38px !important;
+
         width: 38px;
         height: 38px;
+
         font-size: 23px;
         border-radius: 8px;
-    }
-
-    /* Smaller arrow column */
-
-    [class*="st-key-argomenti_category_"]
-    [data-testid="stHorizontalBlock"]:has(
-        > [data-testid="column"]:nth-child(3)
-    )
-    > [data-testid="column"]:last-child,
-    [class*="st-key-argomenti_subtopic_"]
-    [data-testid="stHorizontalBlock"]:has(
-        > [data-testid="column"]:nth-child(3)
-    )
-    > [data-testid="column"]:last-child {
-        flex-basis: 28px !important;
-        width: 28px !important;
-        min-width: 28px !important;
-        max-width: 28px !important;
     }
 
     .argomenti-category-name,
@@ -488,10 +395,9 @@
         font-size: 0.7rem;
     }
 
-    [class*="st-key-argomenti_category_"] button,
-    [class*="st-key-argomenti_subtopic_"] button {
-        width: 28px !important;
-        min-width: 28px !important;
-        font-size: 1.6rem !important;
+    .argomenti-card-arrow {
+        flex-basis: 18px !important;
+        width: 18px;
+        font-size: 1.6rem;
     }
 }
