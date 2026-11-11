@@ -8,7 +8,7 @@ from database import fetch_quiz_questions
 
 
 # =========================================
-# INSTANT CORRECTION SETTINGS
+# SETTINGS
 # =========================================
 
 TOTAL_QUESTIONS = 30
@@ -16,7 +16,7 @@ QUIZ_DURATION_MINUTES = 20
 
 
 # =========================================
-# INITIALIZE INSTANT CORRECTION
+# INITIALIZE QUIZ
 # =========================================
 
 def initialize_instant_quiz():
@@ -26,19 +26,13 @@ def initialize_instant_quiz():
         questions = fetch_quiz_questions()
 
         if len(questions) != TOTAL_QUESTIONS:
-            raise ValueError(
-                "Expected exactly 30 questions."
-            )
+            raise ValueError("Expected exactly 30 questions.")
 
         if len({q["id"] for q in questions}) != TOTAL_QUESTIONS:
-            raise ValueError(
-                "Duplicate question IDs detected."
-            )
+            raise ValueError("Duplicate question IDs detected.")
 
         if len({q["chapter_id"] for q in questions}) != 25:
-            raise ValueError(
-                "Questions must cover all 25 chapters."
-            )
+            raise ValueError("Questions must cover all 25 chapters.")
 
         st.session_state.instant_questions = questions
 
@@ -61,7 +55,7 @@ def initialize_instant_quiz():
 
 
 # =========================================
-# NORMALIZE CORRECT ANSWER
+# NORMALIZE ANSWERS
 # =========================================
 
 def normalize_instant_answer(value):
@@ -70,6 +64,7 @@ def normalize_instant_answer(value):
         return value
 
     if isinstance(value, str):
+
         mapping = {
             "t": True,
             "true": True,
@@ -93,583 +88,7 @@ def normalize_instant_answer(value):
 
 
 # =========================================
-# SAVE AND LOCK ANSWER
-# =========================================
-
-def select_instant_answer(question_id, answer):
-
-    if st.session_state.instant_finished:
-        return
-
-    if get_instant_remaining_seconds() == 0:
-        finish_instant_quiz("time_expired")
-        st.rerun()
-
-    answers = st.session_state.instant_answers
-
-    # Once answered, the answer cannot change.
-    if question_id in answers:
-        st.toast(
-            "You cannot change your answer.",
-            icon="⚠️",
-            duration="short",
-        )
-        return
-
-    # Find the question using its PostgreSQL ID.
-    question = next(
-        (
-            q for q in st.session_state.instant_questions
-            if q["id"] == question_id
-        ),
-        None,
-    )
-
-    if question is None:
-        raise ValueError("Question not found.")
-
-    # Validate the stored correct answer.
-    normalize_instant_answer(
-        question["correct_answer"]
-    )
-
-    # Save and permanently lock the user's answer.
-    answers[question_id] = answer
-
-    questions = st.session_state.instant_questions
-
-    current_index = next(
-        index
-        for index, item in enumerate(questions)
-        if item["id"] == question_id
-    )
-
-    next_index = None
-
-    # Continue forward to the next unanswered question.
-    for index in range(current_index + 1, len(questions)):
-        if questions[index]["id"] not in answers:
-            next_index = index
-            break
-
-    # When there are no unanswered questions ahead,
-    # search earlier unanswered questions from Question 1.
-    if next_index is None:
-        for index in range(current_index):
-            if questions[index]["id"] not in answers:
-                next_index = index
-                break
-
-    # Automatically finish after all 30 answers.
-    if len(answers) == len(questions):
-        finish_instant_quiz("all_answered")
-
-    elif next_index is not None:
-        st.session_state.instant_question_index = next_index
-
-    st.rerun()
-
-
-# =========================================
-# INSTANT CORRECTION QUESTION INTERFACE
-# =========================================
-
-def show_instant_question():
-
-    questions = st.session_state.instant_questions
-    index = st.session_state.instant_question_index
-
-    question = questions[index]
-    question_id = question["id"]
-
-    answers = st.session_state.instant_answers
-
-    st.write(
-        f"Question {index + 1} of {len(questions)}"
-    )
-
-    st.progress(len(answers) / len(questions))
-
-    with st.container(border=True):
-
-        st.markdown(f"### DOMANDA {index + 1}")
-
-        st.write(question["question"])
-
-        # Show the original Italian question image.
-        from quiz import get_question_image
-        from audio_player import show_italian_audio
-
-        image_file = get_question_image(
-            question.get("image_path")
-        )
-
-        if image_file:
-            st.image(str(image_file), width=150)
-
-        show_italian_audio(
-            question_text=str(question["question"]),
-            question_id=question_id,
-        )
-
-    # Show correction for previously answered questions.
-    already_answered = question_id in answers
-
-    if already_answered:
-
-        selected = answers[question_id]
-
-        correct_answer = normalize_instant_answer(
-            question["correct_answer"]
-        )
-
-        if selected == correct_answer:
-            st.success("✓ Correct answer!")
-
-        else:
-            st.error("✕ Incorrect answer!")
-            st.markdown(
-                "**Correct answer: "
-                + ("VERO" if correct_answer else "FALSO")
-                + "**"
-            )
-
-    # =====================================
-    # INSTANT CORRECTION BUTTON STYLING
-    # =====================================
-
-    st.markdown(
-        """
-        <style>
-        /* VERO button - green border */
-        .st-key-instant_answer_vero button {
-            border: 1.5px solid #22c55e !important;
-            color: #4ade80 !important;
-            border-radius: 10px !important;
-        }
-
-        /* FALSO button - red border */
-        .st-key-instant_answer_falso button {
-            border: 1.5px solid #ef4444 !important;
-            color: #f87171 !important;
-            border-radius: 10px !important;
-        }
-
-        .st-key-instant_answer_vero button,
-        .st-key-instant_answer_falso button {
-            min-height: 42px !important;
-        }
-
-        /* Compact navigation buttons */
-        .st-key-instant_previous button,
-        .st-key-instant_next button {
-            border-radius: 10px !important;
-            min-height: 40px !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # =====================================
-    # VERO / FALSO ANSWER BUTTONS
-    # =====================================
-
-    # Keep both answer buttons compact and centered.
-    left_space, vero_col, falso_col, right_space = (
-        st.columns(
-            [0.2, 1, 1, 0.2],
-            gap="small",
-        )
-    )
-
-    with vero_col:
-        with st.container(key="instant_answer_vero"):
-            if st.button(
-                "VERO",
-                key=f"instant_vero_{question_id}",
-                use_container_width=True,
-            ):
-                select_instant_answer(question_id, True)
-
-    with falso_col:
-        with st.container(key="instant_answer_falso"):
-            if st.button(
-                "FALSO",
-                key=f"instant_falso_{question_id}",
-                use_container_width=True,
-            ):
-                select_instant_answer(question_id, False)
-
-    # =====================================
-    # PREVIOUS / NEXT NAVIGATION
-    # =====================================
-
-    st.divider()
-
-    left_space, previous_col, next_col, right_space = (
-        st.columns(
-            [0.2, 1, 1, 0.2],
-            gap="small",
-        )
-    )
-
-    with previous_col:
-        if st.button(
-            "← Previous",
-            key="instant_previous",
-            disabled=index == 0,
-            use_container_width=True,
-        ):
-            go_to_instant_question(index - 1)
-
-    with next_col:
-        if st.button(
-            "Next →",
-            key="instant_next",
-            disabled=index == len(questions) - 1,
-            use_container_width=True,
-        ):
-            go_to_instant_question(index + 1)
-
-    # Display green/red/unanswered pagination.
-    show_instant_pagination()
-
-
-# =========================================
-# INSTANT CORRECTION NAVIGATION
-# =========================================
-
-def go_to_instant_question(index):
-
-    if st.session_state.instant_finished:
-        return
-
-    if get_instant_remaining_seconds() == 0:
-        finish_instant_quiz("time_expired")
-        st.rerun()
-
-    questions = st.session_state.instant_questions
-
-    if 0 <= index < len(questions):
-        st.session_state.instant_question_index = index
-        st.rerun()
-
-
-# =========================================
-# INSTANT CORRECTION PAGINATION
-# =========================================
-
-
-
-def show_instant_pagination():
-    questions = st.session_state.instant_questions
-    answers = st.session_state.instant_answers
-
-    st.markdown(
-        """
-        <style>
-        .st-key-instant_pagination_scroll {
-            max-width: 100% !important;
-            overflow-x: auto !important;
-            overflow-y: hidden !important;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: thin;
-            padding: 10px 0 !important;
-        }
-
-        .st-key-instant_pagination_scroll > div,
-        .st-key-instant_pagination_scroll
-        [data-testid="stHorizontalBlock"] {
-            flex-wrap: nowrap !important;
-        }
-
-        .st-key-instant_pagination_scroll
-        [data-testid="stHorizontalBlock"] {
-            width: max-content !important;
-            min-width: 100%;
-        }
-
-        .st-key-instant_pagination_scroll
-        [data-testid="stHorizontalBlock"] > div {
-            flex: 0 0 auto !important;
-            min-width: 60px !important;
-        }
-
-        .st-key-instant_pagination_scroll button {
-            min-width: 55px !important;
-            height: 46px !important;
-            border-radius: 10px !important;
-            font-weight: 600 !important;
-        }
-
-        /* Correct answers: green */
-        [class*="st-key-instant_correct_"] button {
-            background-color: #15803d !important;
-            color: white !important;
-            border-color: #22c55e !important;
-        }
-
-        /* Wrong answers: red */
-        [class*="st-key-instant_wrong_"] button {
-            background-color: #b91c1c !important;
-            color: white !important;
-            border-color: #ef4444 !important;
-        }
-
-        /* Unanswered questions: dark */
-        [class*="st-key-instant_unanswered_"] button {
-            background-color: #1e293b !important;
-            color: white !important;
-            border-color: #475569 !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # Create only ONE pagination container.
-    with st.container(
-        key="instant_pagination_scroll",
-        horizontal=True,
-        horizontal_alignment="left",
-        gap="small",
-        width="stretch",
-    ):
-        for index, question in enumerate(questions):
-            question_id = question["id"]
-
-            if question_id not in answers:
-                status = "unanswered"
-            else:
-                expected = normalize_instant_answer(
-                    question["correct_answer"]
-                )
-                status = (
-                    "correct"
-                    if answers[question_id] == expected
-                    else "wrong"
-                )
-
-            with st.container(
-                key=f"instant_{status}_{index + 1}"
-            ):
-                if st.button(
-                    str(index + 1),
-                    key=f"instant_page_{index + 1}",
-                    width=60,
-                ):
-                    go_to_instant_question(index)
-
-
-    questions = st.session_state.instant_questions
-    answers = st.session_state.instant_answers
-
-    st.markdown(
-        """
-        <style>
-        /* Scrollable pagination wrapper */
-        .st-key-instant_pagination_scroll {
-            width: 100% !important;
-            max-width: 100% !important;
-            overflow-x: auto !important;
-            overflow-y: hidden !important;
-            padding: 10px 0 !important;
-            scrollbar-width: thin;
-            scrollbar-color: #64748b transparent;
-        }
-
-        /* Target Streamlit's horizontal container */
-        .st-key-instant_pagination_scroll
-        [data-testid="stHorizontalBlock"],
-        .st-key-instant_pagination_scroll
-        [data-testid="stVerticalBlock"] {
-            flex-wrap: nowrap !important;
-        }
-
-        /* Keep all question buttons in one row */
-        .st-key-instant_pagination_scroll
-        [data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important;
-            width: max-content !important;
-            min-width: 100%;
-            gap: 8px !important;
-        }
-
-        .st-key-instant_pagination_scroll
-        [data-testid="stHorizontalBlock"] > div {
-            flex: 0 0 auto !important;
-            width: 60px !important;
-            min-width: 60px !important;
-        }
-
-        /* Correct answers - green */
-        [class*="st-key-instant_correct_"] button {
-            background-color: #15803d !important;
-            color: white !important;
-            border-color: #22c55e !important;
-        }
-
-        /* Wrong answers - red */
-        [class*="st-key-instant_wrong_"] button {
-            background-color: #b91c1c !important;
-            color: white !important;
-            border-color: #ef4444 !important;
-        }
-
-        /* Unanswered - dark */
-        [class*="st-key-instant_unanswered_"] button {
-            background-color: #1e293b !important;
-            color: white !important;
-            border-color: #475569 !important;
-        }
-
-        /* Pagination button shape */
-        .st-key-instant_pagination_scroll button {
-            min-width: 55px !important;
-            height: 46px !important;
-            border-radius: 10px !important;
-            font-weight: 600 !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # A horizontal container with all 30 questions.
-    with st.container(
-        key="instant_pagination_scroll",
-        horizontal=True,
-        horizontal_alignment="left",
-        gap="small",
-        width="stretch",
-    ):
-
-        for index, question in enumerate(questions):
-
-            question_id = question["id"]
-
-            if question_id not in answers:
-                status = "unanswered"
-            else:
-                expected = normalize_instant_answer(
-                    question["correct_answer"]
-                )
-
-                status = (
-                    "correct"
-                    if answers[question_id] == expected
-                    else "wrong"
-                )
-
-            with st.container(
-                key=f"instant_{status}_{index + 1}"
-            ):
-                if st.button(
-                    str(index + 1),
-                    key=f"instant_page_{index + 1}",
-                    width=60,
-                ):
-                    go_to_instant_question(index)
-
-
-    questions = st.session_state.instant_questions
-    answers = st.session_state.instant_answers
-
-    st.markdown(
-        """
-        <style>
-        /* Correct answers */
-        [class*="st-key-instant_correct_"] button {
-            background-color: #15803d !important;
-            color: white !important;
-            border-color: #22c55e !important;
-        }
-
-        /* Wrong answers */
-        [class*="st-key-instant_wrong_"] button {
-            background-color: #b91c1c !important;
-            color: white !important;
-            border-color: #ef4444 !important;
-        }
-
-        /* Unanswered questions */
-        [class*="st-key-instant_unanswered_"] button {
-            background-color: #1e293b !important;
-            color: white !important;
-            border-color: #475569 !important;
-        }
-
-        /* Horizontally scrolling question numbers */
-        .st-key-instant_pagination_scroll {
-            margin-top: 14px;
-            max-width: 100% !important;
-            overflow-x: auto !important;
-            overflow-y: hidden !important;
-            scrollbar-width: thin;
-            padding-bottom: 8px;
-        }
-
-        .st-key-instant_pagination_scroll
-        [data-testid="stHorizontalBlock"] {
-            flex-wrap: nowrap !important;
-            width: max-content !important;
-            min-width: 100%;
-        }
-
-        .st-key-instant_pagination_scroll
-        [data-testid="stHorizontalBlock"] > div {
-            flex-shrink: 0 !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-   
-    with st.container(
-        key="instant_pagination_scroll",
-        horizontal=True,
-        horizontal_alignment="left",
-        gap="small",
-        width="stretch",
-        horizontal_scroll=True,
-    ):
-
-
-        for index, question in enumerate(questions):
-
-            question_id = question["id"]
-
-            if question_id not in answers:
-                status = "unanswered"
-
-            else:
-                expected = normalize_instant_answer(
-                    question["correct_answer"]
-                )
-
-                status = (
-                    "correct"
-                    if answers[question_id] == expected
-                    else "wrong"
-                )
-
-            with st.container(
-                key=f"instant_{status}_{index + 1}"
-            ):
-
-                if st.button(
-                    str(index + 1),
-                    key=f"instant_page_{index + 1}",
-                    width=65,
-                ):
-                    go_to_instant_question(index)
-
-
-# =========================================
-# INSTANT CORRECTION TIMER
+# TIMER HELPERS
 # =========================================
 
 def get_instant_remaining_seconds():
@@ -681,9 +100,7 @@ def get_instant_remaining_seconds():
 
     return max(
         0,
-        math.ceil(
-            QUIZ_DURATION_MINUTES * 60 - elapsed
-        ),
+        math.ceil(QUIZ_DURATION_MINUTES * 60 - elapsed),
     )
 
 
@@ -730,74 +147,252 @@ def show_instant_timer():
 
 
 # =========================================
-# INSTANT CORRECTION RESULTS DASHBOARD
+# SAVE AND LOCK ANSWER
 # =========================================
 
-def show_instant_results():
+def select_instant_answer(question_id, answer):
 
-    questions = st.session_state.instant_questions
+    if st.session_state.instant_finished:
+        return
+
+    if get_instant_remaining_seconds() == 0:
+        finish_instant_quiz("time_expired")
+        st.rerun()
+
     answers = st.session_state.instant_answers
 
-    correct = 0
-    wrong = 0
+    # Previously answered questions are locked.
+    if question_id in answers:
 
-    for question in questions:
-
-        question_id = question["id"]
-
-        if question_id not in answers:
-            continue
-
-        expected = normalize_instant_answer(
-            question["correct_answer"]
+        st.toast(
+            "You cannot change your answer.",
+            icon="⚠️",
+            duration="short",
         )
+        return
 
-        if answers[question_id] == expected:
-            correct += 1
-        else:
-            wrong += 1
+    questions = st.session_state.instant_questions
 
-    unanswered = len(questions) - len(answers)
-    total_errors = wrong + unanswered
-
-    passed = total_errors <= 3
-
-    started_at = st.session_state.instant_started_at
-    finished_at = st.session_state.instant_finished_at
-
-    if finished_at is None:
-        finished_at = datetime.now(timezone.utc)
-
-    elapsed_seconds = max(
-        0,
-        int((finished_at - started_at).total_seconds())
+    # Locate the original question.
+    current_index = next(
+        (
+            index
+            for index, item in enumerate(questions)
+            if item["id"] == question_id
+        ),
+        None,
     )
 
-    minutes, seconds = divmod(elapsed_seconds, 60)
+    if current_index is None:
+        raise ValueError("Question not found.")
 
-    # =====================================
-    # PASS / FAIL
-    # =====================================
+    question = questions[current_index]
 
-    if passed:
-        st.success("✓ PASS — Congratulations!")
-    else:
-        st.error("✕ FAIL — Keep practicing!")
+    # Validate the answer stored in PostgreSQL.
+    normalize_instant_answer(
+        question["correct_answer"]
+    )
 
-    if st.session_state.instant_finish_reason == "time_expired":
-        st.warning(
-            "Time expired. Your quiz was submitted automatically."
-        )
-    else:
-        st.info("All 30 questions completed.")
+    # Save the selected answer.
+    answers[question_id] = answer
 
-    # =====================================
-    # COMPACT ROUNDED RESULT BADGES
-    # =====================================
+    # Finish immediately if all 30 are answered.
+    if len(answers) == len(questions):
+        finish_instant_quiz("all_answered")
+        st.rerun()
+
+    # First continue forward.
+    next_index = None
+
+    for index in range(current_index + 1, len(questions)):
+
+        if questions[index]["id"] not in answers:
+            next_index = index
+            break
+
+    # After reaching the end, return to earlier
+    # unanswered questions, starting from Question 1.
+    if next_index is None:
+
+        for index in range(current_index):
+
+            if questions[index]["id"] not in answers:
+                next_index = index
+                break
+
+    if next_index is not None:
+        st.session_state.instant_question_index = next_index
+
+    st.rerun()
+
+
+# =========================================
+# QUESTION NAVIGATION
+# =========================================
+
+def go_to_instant_question(index):
+
+    if st.session_state.instant_finished:
+        return
+
+    if get_instant_remaining_seconds() == 0:
+        finish_instant_quiz("time_expired")
+        st.rerun()
+
+    questions = st.session_state.instant_questions
+
+    if 0 <= index < len(questions):
+        st.session_state.instant_question_index = index
+        st.rerun()
+
+
+# =========================================
+# INSTANT CORRECTION STYLING
+# =========================================
+
+def load_instant_styles():
 
     st.markdown(
         """
         <style>
+
+        /* =================================
+           VERO AND FALSO BUTTONS
+           ================================= */
+
+        .st-key-instant_answer_vero button {
+            border: 1.5px solid #22c55e !important;
+            color: #4ade80 !important;
+            border-radius: 10px !important;
+            min-height: 42px !important;
+        }
+
+        .st-key-instant_answer_falso button {
+            border: 1.5px solid #ef4444 !important;
+            color: #f87171 !important;
+            border-radius: 10px !important;
+            min-height: 42px !important;
+        }
+
+        .st-key-instant_answer_vero button:hover {
+            background-color: #14532d !important;
+        }
+
+        .st-key-instant_answer_falso button:hover {
+            background-color: #7f1d1d !important;
+        }
+
+        /* =================================
+           PREVIOUS AND NEXT BUTTONS
+           ================================= */
+
+        .st-key-instant_previous button,
+        .st-key-instant_next button {
+            border-radius: 10px !important;
+            min-height: 40px !important;
+        }
+
+        /* =================================
+           MOBILE PAGINATION SCROLLING
+           ================================= */
+
+        .st-key-instant_pagination_scroll {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain;
+            scrollbar-width: thin;
+            scrollbar-color: #64748b transparent;
+            padding: 8px 0 12px !important;
+        }
+
+        /*
+           Streamlit's horizontal container
+           must not wrap question numbers.
+        */
+
+        .st-key-instant_pagination_scroll
+        [data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            width: max-content !important;
+            min-width: 100%;
+            gap: 8px !important;
+        }
+
+        /*
+           Some Streamlit versions use
+           vertical blocks inside horizontal
+           containers. Keep the direct
+           children on one row.
+        */
+
+        .st-key-instant_pagination_scroll
+        > div[data-testid="stVerticalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            width: max-content !important;
+            min-width: 100%;
+            gap: 8px !important;
+        }
+
+        .st-key-instant_pagination_scroll
+        [data-testid="stHorizontalBlock"] > div {
+            flex: 0 0 60px !important;
+            width: 60px !important;
+            min-width: 60px !important;
+            max-width: 60px !important;
+        }
+
+        /*
+           Prevent each numbered button
+           from shrinking or wrapping.
+        */
+
+        .st-key-instant_pagination_scroll
+        [class*="st-key-instant_"] {
+            flex-shrink: 0 !important;
+        }
+
+        .st-key-instant_pagination_scroll button {
+            width: 55px !important;
+            min-width: 55px !important;
+            height: 46px !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            white-space: nowrap !important;
+        }
+
+        /* =================================
+           PAGINATION COLORS
+           ================================= */
+
+        [class*="st-key-instant_correct_"] button {
+            background-color: #15803d !important;
+            color: white !important;
+            border-color: #22c55e !important;
+        }
+
+        [class*="st-key-instant_wrong_"] button {
+            background-color: #b91c1c !important;
+            color: white !important;
+            border-color: #ef4444 !important;
+        }
+
+        [class*="st-key-instant_unanswered_"] button {
+            background-color: #1e293b !important;
+            color: white !important;
+            border-color: #475569 !important;
+        }
+
+        /* =================================
+           COMPACT RESULTS BADGES
+           ================================= */
+
         .instant-results {
             display: flex;
             flex-wrap: wrap;
@@ -809,7 +404,7 @@ def show_instant_results():
             display: inline-flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center;
             align-self: flex-start;
             width: fit-content;
             min-width: 85px;
@@ -849,6 +444,7 @@ def show_instant_results():
         }
 
         @media (max-width: 480px) {
+
             .instant-results {
                 gap: 8px;
             }
@@ -857,17 +453,351 @@ def show_instant_results():
                 min-width: 75px;
                 padding: 7px 11px;
             }
+
         }
+
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    # Build HTML without indentation or Markdown issues.
+
+# =========================================
+# PAGINATION
+# ONLY ONE PAGINATION FUNCTION
+# =========================================
+
+def show_instant_pagination():
+
+    questions = st.session_state.instant_questions
+    answers = st.session_state.instant_answers
+
+    # Only one scroll container is created.
+    with st.container(
+        key="instant_pagination_scroll",
+        horizontal=True,
+        horizontal_alignment="left",
+        gap="small",
+        width="stretch",
+    ):
+
+        for index, question in enumerate(questions):
+
+            question_id = question["id"]
+
+            # Determine the question status.
+            if question_id not in answers:
+
+                status = "unanswered"
+
+            else:
+
+                expected = normalize_instant_answer(
+                    question["correct_answer"]
+                )
+
+                status = (
+                    "correct"
+                    if answers[question_id] == expected
+                    else "wrong"
+                )
+
+            # Each question gets a unique key.
+            with st.container(
+                key=f"instant_{status}_{index + 1}"
+            ):
+
+                if st.button(
+                    str(index + 1),
+                    key=f"instant_page_{index + 1}",
+                    width=60,
+                ):
+
+                    go_to_instant_question(index)
+
+
+# =========================================
+# QUESTION INTERFACE
+# =========================================
+
+def show_instant_question():
+
+    questions = st.session_state.instant_questions
+    index = st.session_state.instant_question_index
+
+    question = questions[index]
+    question_id = question["id"]
+
+    answers = st.session_state.instant_answers
+
+    st.write(
+        f"Question {index + 1} of {len(questions)}"
+    )
+
+    st.progress(
+        len(answers) / len(questions)
+    )
+
+    # =====================================
+    # ITALIAN QUESTION CARD
+    # =====================================
+
+    with st.container(border=True):
+
+        st.markdown(
+            f"### DOMANDA {index + 1}"
+        )
+
+        st.write(
+            question["question"]
+        )
+
+        from quiz import get_question_image
+        from audio_player import show_italian_audio
+
+        image_file = get_question_image(
+            question.get("image_path")
+        )
+
+        if image_file:
+            st.image(
+                str(image_file),
+                width=150,
+            )
+
+        show_italian_audio(
+            question_text=str(question["question"]),
+            question_id=question_id,
+        )
+
+    # =====================================
+    # DISPLAY CORRECTION
+    # =====================================
+
+    already_answered = question_id in answers
+
+    if already_answered:
+
+        selected = answers[question_id]
+
+        correct_answer = normalize_instant_answer(
+            question["correct_answer"]
+        )
+
+        if selected == correct_answer:
+
+            st.success(
+                "✓ Correct answer!"
+            )
+
+        else:
+
+            st.error(
+                "✕ Incorrect answer!"
+            )
+
+            st.markdown(
+                "**Correct answer: "
+                + ("VERO" if correct_answer else "FALSO")
+                + "**"
+            )
+
+    # =====================================
+    # VERO / FALSO BUTTONS
+    # ONLY ONE PAIR
+    # =====================================
+
+    left_space, vero_col, falso_col, right_space = (
+        st.columns(
+            [0.2, 1, 1, 0.2],
+            gap="small",
+        )
+    )
+
+    with vero_col:
+
+        with st.container(
+            key="instant_answer_vero"
+        ):
+
+            if st.button(
+                "VERO",
+                key=f"instant_vero_{question_id}",
+                use_container_width=True,
+            ):
+
+                select_instant_answer(
+                    question_id,
+                    True,
+                )
+
+    with falso_col:
+
+        with st.container(
+            key="instant_answer_falso"
+        ):
+
+            if st.button(
+                "FALSO",
+                key=f"instant_falso_{question_id}",
+                use_container_width=True,
+            ):
+
+                select_instant_answer(
+                    question_id,
+                    False,
+                )
+
+    # =====================================
+    # PREVIOUS / NEXT BUTTONS
+    # =====================================
+
+    st.divider()
+
+    left_space, previous_col, next_col, right_space = (
+        st.columns(
+            [0.2, 1, 1, 0.2],
+            gap="small",
+        )
+    )
+
+    with previous_col:
+
+        if st.button(
+            "← Previous",
+            key="instant_previous",
+            disabled=index == 0,
+            use_container_width=True,
+        ):
+
+            go_to_instant_question(
+                index - 1
+            )
+
+    with next_col:
+
+        if st.button(
+            "Next →",
+            key="instant_next",
+            disabled=index == len(questions) - 1,
+            use_container_width=True,
+        ):
+
+            go_to_instant_question(
+                index + 1
+            )
+
+    # =====================================
+    # HORIZONTAL QUESTION PAGINATION
+    # =====================================
+
+    show_instant_pagination()
+
+
+# =========================================
+# RESULTS DASHBOARD
+# =========================================
+
+def show_instant_results():
+
+    questions = st.session_state.instant_questions
+    answers = st.session_state.instant_answers
+
+    correct = 0
+    wrong = 0
+
+    for question in questions:
+
+        question_id = question["id"]
+
+        if question_id not in answers:
+            continue
+
+        expected = normalize_instant_answer(
+            question["correct_answer"]
+        )
+
+        if answers[question_id] == expected:
+            correct += 1
+        else:
+            wrong += 1
+
+    unanswered = len(questions) - len(answers)
+
+    total_errors = wrong + unanswered
+
+    passed = total_errors <= 3
+
+    started_at = st.session_state.instant_started_at
+
+    finished_at = st.session_state.instant_finished_at
+
+    if finished_at is None:
+        finished_at = datetime.now(timezone.utc)
+
+    elapsed_seconds = max(
+        0,
+        int(
+            (finished_at - started_at).total_seconds()
+        ),
+    )
+
+    minutes, seconds = divmod(
+        elapsed_seconds,
+        60,
+    )
+
+    # =====================================
+    # PASS / FAIL
+    # =====================================
+
+    if passed:
+
+        st.success(
+            "✓ PASS — Congratulations!"
+        )
+
+    else:
+
+        st.error(
+            "✕ FAIL — Keep practicing!"
+        )
+
+    if (
+        st.session_state.instant_finish_reason
+        == "time_expired"
+    ):
+
+        st.warning(
+            "Time expired. Your quiz was submitted automatically."
+        )
+
+    else:
+
+        st.info(
+            "All 30 questions completed."
+        )
+
+    # =====================================
+    # COMPACT RESULT BADGES
+    # =====================================
+
     badges = [
-        ("Correct", correct, "instant-result-correct"),
-        ("Wrong", wrong, "instant-result-wrong"),
-        ("Unanswered", unanswered, ""),
+        (
+            "Correct",
+            correct,
+            "instant-result-correct",
+        ),
+        (
+            "Wrong",
+            wrong,
+            "instant-result-wrong",
+        ),
+        (
+            "Unanswered",
+            unanswered,
+            "",
+        ),
         (
             "Total Errors",
             total_errors,
@@ -883,6 +813,7 @@ def show_instant_results():
     badge_html = ""
 
     for label, value, status_class in badges:
+
         badge_html += (
             f'<div class="instant-result-badge {status_class}">'
             f'<span class="instant-result-label">{label}</span>'
@@ -896,7 +827,7 @@ def show_instant_results():
         + '</div>'
     )
 
-    # Render badges only once.
+    # Display result badges only once.
     st.markdown(
         results_html,
         unsafe_allow_html=True,
@@ -908,7 +839,9 @@ def show_instant_results():
     # REVIEW YOUR ANSWERS
     # =====================================
 
-    st.markdown("### Review Your Answers")
+    st.markdown(
+        "### Review Your Answers"
+    )
 
     for index, question in enumerate(questions):
 
@@ -921,31 +854,41 @@ def show_instant_results():
         selected = answers.get(question_id)
 
         if question_id not in answers:
+
             status = "⚪ Unanswered"
 
         elif selected == expected:
+
             status = "🟢 Correct"
 
         else:
+
             status = "🔴 Incorrect"
 
         with st.expander(
             f"Question {index + 1} — {status}"
         ):
 
-            st.write(question["question"])
+            st.write(
+                question["question"]
+            )
 
             if question_id in answers:
+
                 st.write(
                     "Your answer:",
-                    "VERO" if selected else "FALSO"
+                    "VERO" if selected else "FALSO",
                 )
+
             else:
-                st.write("Your answer: Not answered")
+
+                st.write(
+                    "Your answer: Not answered"
+                )
 
             st.write(
                 "Correct answer:",
-                "VERO" if expected else "FALSO"
+                "VERO" if expected else "FALSO",
             )
 
 
@@ -955,23 +898,29 @@ def show_instant_results():
 
 def show_instant_correction():
 
-    # Initialize the questions and session state.
     initialize_instant_quiz()
 
-    # Finish automatically when time expires.
+    # Load Instant Correction styling.
+    load_instant_styles()
+
+    # Automatically finish when time expires.
     if (
         not st.session_state.instant_finished
         and get_instant_remaining_seconds() == 0
     ):
-        finish_instant_quiz("time_expired")
 
-    # Display results after quiz completion.
+        finish_instant_quiz(
+            "time_expired"
+        )
+
+    # Show results when finished.
     if st.session_state.instant_finished:
+
         show_instant_results()
         return
 
-    # Display live countdown timer.
+    # Live countdown.
     show_instant_timer()
 
-    # Display question and navigation controls.
+    # Question, answers, and pagination.
     show_instant_question()
