@@ -471,7 +471,7 @@ def show_instant_results():
 
     minutes, seconds = divmod(elapsed_seconds, 60)
 
-    st.markdown("## Instant Correction Results")
+    # st.markdown("## Instant Correction Results")
 
     if passed:
         st.success("✓ PASS — Congratulations!")
@@ -483,19 +483,107 @@ def show_instant_results():
     else:
         st.info("All 30 questions completed.")
 
-    col1, col2, col3 = st.columns(3)
+    
+    # Compact, rounded result badges.
+    st.markdown(
+        """
+        <style>
+        .instant-results {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 18px 0 24px;
+        }
 
-    with col1:
-        st.metric("Correct", correct)
+        .instant-result-badge {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: fit-content;
+            min-width: 85px;
+            padding: 9px 14px;
+            border: 1px solid #475569;
+            border-radius: 12px;
+            background: #111827;
+            text-align: center;
+        }
 
-    with col2:
-        st.metric("Wrong", wrong)
+        .instant-result-label {
+            font-size: 12px;
+            color: #cbd5e1;
+        }
 
-    with col3:
-        st.metric("Unanswered", unanswered)
+        .instant-result-value {
+            font-size: 21px;
+            font-weight: 700;
+            line-height: 1.4;
+            color: #f8fafc;
+        }
 
-    st.metric("Total Errors", total_errors)
-    st.metric("Time Taken", f"{minutes:02d}:{seconds:02d}")
+        .instant-result-correct {
+            border-color: #22c55e;
+        }
+
+        .instant-result-correct .instant-result-value {
+            color: #4ade80;
+        }
+
+        .instant-result-wrong {
+            border-color: #ef4444;
+        }
+
+        .instant-result-wrong .instant-result-value {
+            color: #f87171;
+        }
+
+        @media (max-width: 480px) {
+            .instant-results {
+                gap: 8px;
+            }
+
+            .instant-result-badge {
+                min-width: 75px;
+                padding: 7px 11px;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        f"""
+        <div class="instant-results">
+            <div class="instant-result-badge instant-result-correct">
+                <span class="instant-result-label">Correct</span>
+                <span class="instant-result-value">{correct}</span>
+            </div>
+
+            <div class="instant-result-badge instant-result-wrong">
+                <span class="instant-result-label">Wrong</span>
+                <span class="instant-result-value">{wrong}</span>
+            </div>
+
+            <div class="instant-result-badge">
+                <span class="instant-result-label">Unanswered</span>
+                <span class="instant-result-value">{unanswered}</span>
+            </div>
+
+            <div class="instant-result-badge instant-result-wrong">
+                <span class="instant-result-label">Total Errors</span>
+                <span class="instant-result-value">{total_errors}</span>
+            </div>
+
+            <div class="instant-result-badge">
+                <span class="instant-result-label">Time Taken</span>
+                <span class="instant-result-value">{minutes:02d}:{seconds:02d}</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 
     st.divider()
 
@@ -545,7 +633,7 @@ def show_instant_correction():
     # Initialize the 30 questions and session state.
     initialize_instant_quiz()
 
-    st.markdown("## Instant Correction Mode")
+    # st.markdown("## Instant Correction Mode")
 
     # Automatically finish when time expires,
     # even if the timer fragment has not refreshed.
