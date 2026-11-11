@@ -1,0 +1,109 @@
+
+/* =========================================
+   INSTANT CORRECTION PAGINATION ONLY
+   ========================================= */
+
+/* The scrollable outer container */
+.st-key-instant_pagination_scroll {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
+
+    gap: 8px !important;
+    padding: 8px 0 14px !important;
+
+    scrollbar-width: thin;
+    scrollbar-color: #64748b #172033;
+}
+
+/* Keep Streamlit's horizontal block on one row */
+.st-key-instant_pagination_scroll
+[data-testid="stHorizontalBlock"] {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+
+    width: max-content !important;
+    min-width: max-content !important;
+
+    gap: 8px !important;
+}
+
+/* Keep every question container fixed-width */
+.st-key-instant_pagination_scroll
+[class*="st-key-instant_page_"] {
+    flex: 0 0 75px !important;
+    width: 75px !important;
+    min-width: 75px !important;
+    max-width: 75px !important;
+}
+
+/* Question number buttons */
+.st-key-instant_pagination_scroll button {
+    width: 75px !important;
+    min-width: 75px !important;
+    max-width: 75px !important;
+    height: 46px !important;
+
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+}
+
+/* Correct answers */
+.st-key-instant_pagination_scroll
+[class*="st-key-instant_page_correct_"] button {
+    background-color: #15803d !important;
+    border-color: #22c55e !important;
+    color: white !important;
+}
+
+/* Incorrect answers */
+.st-key-instant_pagination_scroll
+[class*="st-key-instant_page_wrong_"] button {
+    background-color: #b91c1c !important;
+    border-color: #ef4444 !important;
+    color: white !important;
+}
+
+/* Unanswered questions */
+.st-key-instant_pagination_scroll
+[class*="st-key-instant_page_unanswered_"] button {
+    background-color: #1e293b !important;
+    border-color: #475569 !important;
+    color: white !important;
+}
+
+/* Scrollbar */
+.st-key-instant_pagination_scroll::-webkit-scrollbar {
+    height: 8px;
+}
+
+.st-key-instant_pagination_scroll::-webkit-scrollbar-track {
+    background: #172033;
+    border-radius: 10px;
+}
+
+.st-key-instant_pagination_scroll::-webkit-scrollbar-thumb {
+    background: #64748b;
+    border-radius: 10px;
+}
+
+/* Mobile */
+@media screen and (max-width: 768px) {
+    .st-key-instant_pagination_scroll {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+    }
+}

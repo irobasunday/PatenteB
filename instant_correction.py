@@ -1,6 +1,7 @@
 
 import math
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import streamlit as st
 
@@ -13,6 +14,8 @@ from database import fetch_quiz_questions
 
 TOTAL_QUESTIONS = 30
 QUIZ_DURATION_MINUTES = 20
+
+PROJECT_FOLDER = Path(__file__).resolve().parent
 
 
 # =========================================
@@ -206,7 +209,7 @@ def select_instant_answer(question_id, answer):
 
     next_index = None
 
-    # Find the next unanswered question.
+    # Search forward for the next unanswered question.
     for index in range(
         current_index + 1,
         len(questions),
@@ -253,6 +256,33 @@ def go_to_instant_question(index):
 
 
 # =========================================
+# LOAD DEDICATED PAGINATION CSS
+# =========================================
+
+def load_instant_pagination_css():
+
+    css_file = (
+        PROJECT_FOLDER
+        / "styles"
+        / "instant_pagination.css"
+    )
+
+    if not css_file.is_file():
+        st.error(
+            "Instant pagination stylesheet not found: "
+            "styles/instant_pagination.css"
+        )
+        return
+
+    css = css_file.read_text(encoding="utf-8")
+
+    st.markdown(
+        f"<style>{css}</style>",
+        unsafe_allow_html=True,
+    )
+
+
+# =========================================
 # INSTANT CORRECTION STYLING
 # =========================================
 
@@ -296,37 +326,6 @@ def load_instant_styles():
         .st-key-instant_next button {
             border-radius: 10px !important;
             min-height: 40px !important;
-        }
-
-        /* =================================
-           PAGINATION BUTTON COLORS
-           ================================= */
-
-        /*
-           Pagination uses the same native
-           Streamlit horizontal container
-           structure as Translate Mode.
-
-           No custom flex layout or overflow
-           overrides are applied here.
-        */
-
-        [class*="st-key-instant_correct_"] button {
-            background-color: #15803d !important;
-            color: white !important;
-            border-color: #22c55e !important;
-        }
-
-        [class*="st-key-instant_wrong_"] button {
-            background-color: #b91c1c !important;
-            color: white !important;
-            border-color: #ef4444 !important;
-        }
-
-        [class*="st-key-instant_unanswered_"] button {
-            background-color: #1e293b !important;
-            color: white !important;
-            border-color: #475569 !important;
         }
 
         /* =================================
@@ -406,15 +405,16 @@ def load_instant_styles():
 
 
 # =========================================
-# INSTANT CORRECTION PAGINATION
+# HORIZONTAL QUESTION PAGINATION
 # =========================================
 
 def show_instant_pagination():
     """
-    Display 30 numbered question buttons.
+    Display question numbers in a single
+    horizontally scrollable row.
 
-    This uses the same horizontal container
-    structure as the working Translate Mode.
+    Each button retains its correct,
+    wrong, or unanswered status.
     """
 
     questions = st.session_state.instant_questions
@@ -428,10 +428,9 @@ def show_instant_pagination():
         width="stretch",
     ):
 
-        for index in range(len(questions)):
+        for index, question in enumerate(questions):
 
             number = index + 1
-            question = questions[index]
             question_id = question["id"]
 
             if question_id not in answers:
@@ -449,15 +448,13 @@ def show_instant_pagination():
                 else:
                     status = "wrong"
 
-            # Match the working Translate Mode:
-            # one status container per question.
             with st.container(
-                key=f"instant_{status}_{number}"
+                key=f"instant_page_{status}_{number}"
             ):
 
                 if st.button(
                     str(number),
-                    key=f"instant_page_{number}",
+                    key=f"instant_page_button_{number}",
                     width=75,
                 ):
 
@@ -845,8 +842,11 @@ def show_instant_correction():
 
     initialize_instant_quiz()
 
-    # Load Instant Correction styling.
+    # Existing Instant Correction styling.
     load_instant_styles()
+
+    # Dedicated horizontal pagination styling.
+    load_instant_pagination_css()
 
     # Automatically finish when time expires.
     if (
