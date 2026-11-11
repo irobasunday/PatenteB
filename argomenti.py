@@ -694,3 +694,11 @@ def show_argomenti():
 
     else:
         show_learning_page(category_id, subtopic_id)
+load_argomenti_css()
+image_path = get_category_image(3)
+
+if image_path:
+    st.success("Chapter 3 SVG image found on server!")
+    st.write("Image location:", image_path)
+else:
+    st.error("divieto_di_accesso.svg NOT FOUND on server!")
