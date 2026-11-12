@@ -213,7 +213,7 @@ CATEGORY_IMAGES = {
     3: "divieto_di_accesso.svg",
     4: "direzione_obbligatoria_a_destra.svg",
     5: "dare_precedenza.svg",
-    6: "",
+    6: "segnaletica_orizzontale.svg",
     7: "semaforo_verticale.svg",
     8: "rifornimento.svg",
     9: "",
