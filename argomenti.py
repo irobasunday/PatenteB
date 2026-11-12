@@ -230,9 +230,9 @@ CATEGORY_IMAGES = {
     20: "chapter_20.png",
     21: "incidente.svg",
     22: "dogana.svg",
-    23: "posto_di_blocco.svg",
-    24: "",
-    25: ""
+    23: "chapter_23.png",
+    24: "chapter_24.png",
+    25: "chapter_25.png"
    
         
         
