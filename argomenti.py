@@ -220,7 +220,7 @@ CATEGORY_IMAGES = {
     10: "estesa.svg",
     11: "limite_di_velocita_50.svg",
     12: "distanziamento_minimo_obbligatorio.svg",
-    13: "chapter_13.png",
+    13: "554.png",
     14: "chapter_14.png",
     15: "divieto_di_sorpasso.svg",
     16: "divieto_di_fermata.svg",
