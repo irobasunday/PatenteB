@@ -224,7 +224,7 @@ CATEGORY_IMAGES = {
     14: "",
     15: "divieto_di_sorpasso.svg",
     16: "divieto_di_fermata.svg",
-    17: "",
+    17: "Inizio_autostrada.svg",
     18: "",
     19: "",
     20: "",
