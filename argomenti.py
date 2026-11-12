@@ -232,12 +232,8 @@ CATEGORY_IMAGES = {
     22: "dogana.svg",
     23: "chapter_23.png",
     24: "chapter_24.png",
-    25: "chapter_25.png"
-   
-        
-        
-        
-    
+    25: "chapter_25.png",
+     
     
 }
 
