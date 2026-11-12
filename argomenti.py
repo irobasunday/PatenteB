@@ -218,6 +218,7 @@ CATEGORY_IMAGES = {
     8: "rifornimento.svg",
     9: "",
     10: "estesa.svg",
+    11: "limite_di_velocita_50.svg",
     
 }
 
