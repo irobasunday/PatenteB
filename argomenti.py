@@ -217,7 +217,7 @@ CATEGORY_IMAGES = {
     7: "semaforo_verticale.svg",
     8: "rifornimento.svg",
     9: "",
-    10: "rimozione_forzata.svg",
+    10: "estesa.svg",
     
 }
 
