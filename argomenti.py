@@ -208,12 +208,12 @@ def load_argomenti_css():
 # ==========================================
 
 CATEGORY_IMAGES = {
-    1: "chapter_1.svg",
+    1: "img_sign/562.png",
     2: "discesa_pericolosa.svg",
     3: "divieto_di_accesso.svg",
     4: "direzione_obbligatoria_a_destra.svg",
     5: "dare_precedenza.svg",
-    6: "Segnaletica_orizzontale.svg",
+    6: "img_sign/517.png",
     7: "semaforo_verticale.svg",
     8: "rifornimento.svg",
     9: "",
