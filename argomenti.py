@@ -216,7 +216,7 @@ CATEGORY_IMAGES = {
     6: "img_sign/517.png",
     7: "semaforo_verticale.svg",
     8: "rifornimento.svg",
-    9: "",
+    9: "img_sign/276.png",
     10: "estesa.svg",
     11: "limite_di_velocita_50.svg",
     12: "distanziamento_minimo_obbligatorio.svg",
