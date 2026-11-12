@@ -225,7 +225,7 @@ CATEGORY_IMAGES = {
     15: "divieto_di_sorpasso.svg",
     16: "divieto_di_fermata.svg",
     17: "Inizio_autostrada.svg",
-    18: "img_sing/696.png",
+    18: "img_sign/696.png",
     19: "img_sign/707.png",
     20: "chapter_20.png",
     21: "incidente.svg",
