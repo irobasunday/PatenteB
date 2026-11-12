@@ -230,7 +230,7 @@ CATEGORY_IMAGES = {
     20: "",
     21: "incidente.svg",
     22: "dogana.svg",
-    23: "",
+    23: "posto_di_blocco.svg",
     24: "",
     25: ""
    
