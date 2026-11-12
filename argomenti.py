@@ -223,7 +223,7 @@ CATEGORY_IMAGES = {
     13: "",
     14: "",
     15: "divieto_di_sorpasso.svg",
-    16: "",
+    16: "divieto_di_fermata.svg",
     17: "",
     18: "",
     19: "",
