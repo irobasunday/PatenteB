@@ -264,6 +264,30 @@ def get_category_icon(category_id):
 # ==========================================
 
 def get_category_image(category_id):
+    filename = CATEGORY_IMAGES.get(category_id)
+
+    if not filename:
+        return None
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Images from the existing PostgreSQL question bank
+    if filename.startswith("img_sign/"):
+        image_path = os.path.join(base_dir, filename)
+
+    # Existing chapter SVG and PNG images
+    else:
+        image_path = os.path.join(
+            base_dir,
+            "assets",
+            "road_signs",
+            filename
+        )
+
+    if os.path.isfile(image_path):
+        return image_path
+
+    return None
     """Return the SVG image assigned to a chapter."""
 
     filename = CATEGORY_IMAGES.get(category_id)
@@ -368,22 +392,31 @@ def show_category_card(category):
     # Look for a manually assigned SVG image.
     image_path = get_category_image(category_id)
 
+    
     if image_path:
-        # Load and encode the SVG for HTML display.
+        # Read either an SVG or PNG image.
         with open(image_path, "rb") as file:
-            svg_bytes = file.read()
+            image_bytes = file.read()
 
-        encoded_svg = base64.b64encode(
-            svg_bytes
+        encoded_image = base64.b64encode(
+            image_bytes
         ).decode("ascii")
 
+        # Detect the correct image format.
+        if image_path.lower().endswith(".png"):
+            mime_type = "image/png"
+        else:
+            mime_type = "image/svg+xml"
+
+        # Display the image using the existing card design.
         icon_html = (
-    '<img '
-    f'src="data:image/svg+xml;base64,{encoded_svg}" '
-    f'alt="{safe_text(category_name)}" '
-    'width="44" height="44" '
-    'style="display:block;object-fit:contain;">'
-)
+            '<img '
+            f'src="data:{mime_type};base64,{encoded_image}" '
+            f'alt="{safe_text(category_name)}" '
+            'width="44" height="44" '
+            'style="display:block;object-fit:contain;">'
+        )
+
 
     else:
         # No SVG assigned, or the image file is missing.
