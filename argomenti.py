@@ -227,7 +227,7 @@ CATEGORY_IMAGES = {
     17: "Inizio_autostrada.svg",
     18: "img_sing/696.png",
     19: "img_sign/707.png",
-    20: "img_sign/707.png",
+    20: "chapter_20.png",
     21: "incidente.svg",
     22: "dogana.svg",
     23: "posto_di_blocco.svg",
