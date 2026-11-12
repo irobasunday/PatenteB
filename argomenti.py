@@ -211,7 +211,8 @@ CATEGORY_IMAGES = {
     1: "chapter_1.svg",
     2: "discesa_pericolosa.svg",
     3: "divieto_di_accesso.svg",
-    4: "direzioni_consentite_a_dritto_ed_a_sinistra.svg",
+    4: "direzione_obbligatoria_a_destra.svg",
+    
 }
 
 
