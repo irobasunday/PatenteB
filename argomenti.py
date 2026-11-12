@@ -212,6 +212,7 @@ CATEGORY_IMAGES = {
     2: "discesa_pericolosa.svg",
     3: "divieto_di_accesso.svg",
     4: "direzione_obbligatoria_a_destra.svg",
+    5:  "dare_precedenza.svg",
     
 }
 
