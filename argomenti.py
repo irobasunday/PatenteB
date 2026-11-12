@@ -209,7 +209,7 @@ def load_argomenti_css():
 
 CATEGORY_IMAGES = {
     1: "chapter_1.svg",
-    2: "chapter_2.svg",
+    2: "discesa_pericolosa.svg",
     3: "divieto_di_accesso.svg",
 }
 
