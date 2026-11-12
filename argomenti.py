@@ -727,8 +727,8 @@ def show_argomenti():
 load_argomenti_css()
 image_path = get_category_image(3)
 
-if image_path:
-    st.success("Chapter 3 SVG image found on server!")
-    st.write("Image location:", image_path)
-else:
-    st.error("divieto_di_accesso.svg NOT FOUND on server!")
+# if image_path:
+    # st.success("Chapter 3 SVG image found on server!")
+   # st.write("Image location:", image_path)
+# else:
+    # st.error("divieto_di_accesso.svg NOT FOUND on server!")
