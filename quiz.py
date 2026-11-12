@@ -9,6 +9,16 @@ import streamlit as st
 from database import fetch_quiz_questions, get_or_create_translation
 from audio_player import show_italian_audio
 
+from browser_identity import get_browser_id, create_browser_id
+from quiz_question_recovery import fetch_questions_by_ids
+from quiz_attempt_storage import (
+    load_active_attempt,
+    start_attempt,
+    save_progress,
+    finish_attempt,
+)
+
+
 
 # =========================================
 # QUIZ SETTINGS
@@ -23,29 +33,126 @@ PROJECT_FOLDER = Path(__file__).resolve().parent
 # QUIZ STATE
 # =========================================
 
+
+def persist_quiz_progress():
+    """Save answers and question position to PostgreSQL."""
+
+    if st.session_state.get("quiz_retry_mode"):
+        return
+
+    saved = save_progress(
+        st.session_state.quiz_attempt_id,
+        st.session_state.browser_id,
+        "quiz",
+        st.session_state.quiz_answers,
+        st.session_state.quiz_question_index,
+    )
+
+    if not saved:
+        raise RuntimeError(
+            "Unable to save the active quiz attempt."
+        )
+
+
+def start_persisted_quiz(questions):
+    """Start a new quiz and save its question IDs."""
+
+    started_at = datetime.now(timezone.utc)
+
+    attempt_id = start_attempt(
+        st.session_state.browser_id,
+        "quiz",
+        [question["id"] for question in questions],
+        started_at,
+    )
+
+    reset_quiz(questions)
+
+    st.session_state.quiz_attempt_id = attempt_id
+    st.session_state.quiz_started_at = started_at
+    st.session_state.quiz_retry_mode = False
+
+
+
 def initialize_quiz():
-    """Load questions once and initialize quiz state."""
+    """Restore an active quiz or start a new one."""
 
     if "quiz_questions" not in st.session_state:
-        questions = fetch_quiz_questions()
 
-        if len(questions) != TOTAL_QUESTIONS:
-            raise ValueError(
-                f"Expected {TOTAL_QUESTIONS} questions, "
-                f"received {len(questions)}."
+        browser_id = st.session_state.get("browser_id")
+
+        if not browser_id:
+            raise RuntimeError(
+                "Browser identity is not available."
             )
 
-        if len({q["id"] for q in questions}) != TOTAL_QUESTIONS:
-            raise ValueError(
-                "The database returned duplicate question IDs."
+        attempt = load_active_attempt(browser_id, "quiz")
+
+        if attempt is not None:
+
+            questions = fetch_questions_by_ids(
+                attempt["question_ids"]
             )
 
-        if len({q["chapter_id"] for q in questions}) != 25:
-            raise ValueError(
-                "The questions do not cover all 25 chapters."
+            if len(questions) != TOTAL_QUESTIONS:
+                raise ValueError(
+                    "Saved quiz must contain 30 questions."
+                )
+
+            st.session_state.quiz_questions = questions
+            st.session_state.quiz_attempt_id = attempt["id"]
+
+            st.session_state.quiz_question_index = max(
+                0,
+                min(
+                    int(attempt["question_index"]),
+                    len(questions) - 1,
+                ),
             )
 
-        st.session_state.quiz_questions = questions
+            valid_ids = {
+                question["id"] for question in questions
+            }
+
+            st.session_state.quiz_answers = {
+                int(key): value
+                for key, value in attempt["answers"].items()
+                if int(key) in valid_ids
+                and isinstance(value, bool)
+            }
+
+            st.session_state.quiz_started_at = (
+                attempt["started_at"]
+            )
+
+            st.session_state.quiz_retry_mode = False
+
+            st.session_state.quiz_completion_prompt_shown = (
+                len(st.session_state.quiz_answers)
+                == len(questions)
+            )
+
+        else:
+
+            questions = fetch_quiz_questions()
+
+            if (
+                len(questions) != TOTAL_QUESTIONS
+                or len({
+                    question["id"]
+                    for question in questions
+                }) != TOTAL_QUESTIONS
+                or len({
+                    question["chapter_id"]
+                    for question in questions
+                }) != 25
+            ):
+                raise ValueError(
+                    "Expected 30 unique questions "
+                    "covering all 25 chapters."
+                )
+
+            start_persisted_quiz(questions)
 
     defaults = {
         "quiz_question_index": 0,
@@ -67,7 +174,9 @@ def initialize_quiz():
             st.session_state[key] = value
 
     if "quiz_started_at" not in st.session_state:
-        st.session_state.quiz_started_at = datetime.now(timezone.utc)
+        st.session_state.quiz_started_at = (
+            datetime.now(timezone.utc)
+        )
 
 
 def active_question_count():
@@ -530,7 +639,7 @@ def show_results():
             )
 
         else:
-            reset_quiz(questions)
+            start_persisted_quiz(questions)
 
             st.session_state.quiz_retry_mode = False
 
@@ -575,6 +684,26 @@ def finish_quiz(reason="time_expired"):
             deadline,
             tz=timezone.utc
         )
+
+
+    if not st.session_state.get("quiz_retry_mode"):
+
+        updated = finish_attempt(
+            st.session_state.quiz_attempt_id,
+            st.session_state.browser_id,
+            "quiz",
+            st.session_state.quiz_answers,
+            (
+                "expired"
+                if reason == "time_expired"
+                else "submitted"
+            ),
+        )
+
+        if not updated:
+            raise RuntimeError(
+                "Unable to finalize the saved quiz."
+            )
 
     st.session_state.quiz_finished_at = finished_at
     st.session_state.quiz_finished = True
@@ -664,6 +793,7 @@ def select_answer(question_id, answer):
                 current + 1
             )
 
+    persist_quiz_progress()
     st.rerun()
 
 
@@ -684,6 +814,7 @@ def go_to_question(index):
 
     if 0 <= index < active_question_count():
         st.session_state.quiz_question_index = index
+        persist_quiz_progress()
         st.rerun()
 
 
@@ -979,39 +1110,68 @@ def show_completion_dialog():
             st.rerun()
 
 
-
-
 # =========================================
 # MAIN QUIZ PAGE
 # =========================================
 
+@st.fragment(run_every="1s")
+def wait_for_quiz_browser_identity():
+    """
+    Wait for browser identity automatically.
+    Do not create a new quiz while waiting.
+    """
+
+    browser_id = get_browser_id()
+
+    if browser_id:
+        st.session_state.browser_id = browser_id
+        st.rerun(scope="app")
+
+    st.info("Restoring your saved quiz...")
+
+
 def show_quiz():
-    """Display the Translate Mode quiz page."""
+    """
+    Display Translate Mode and restore the
+    existing PostgreSQL quiz attempt.
+    """
+
+    # =====================================
+    # BROWSER IDENTITY
+    # =====================================
+
+    browser_id = get_browser_id()
+
+    if not browser_id:
+        wait_for_quiz_browser_identity()
+        return
+
+    st.session_state.browser_id = browser_id
+
+    # =====================================
+    # INITIALIZE OR RESTORE QUIZ
+    # =====================================
 
     try:
         initialize_quiz()
 
     except Exception as exc:
-
         st.error(
-            "Unable to load quiz questions "
-            "from PostgreSQL."
+            "Unable to load quiz questions from PostgreSQL."
         )
-
-        st.caption(
-            f"Database error: {exc}"
-        )
+        st.caption(f"Database error: {exc}")
         return
 
-    
-    # Check time expiration for normal exams only.
+    # =====================================
+    # CHECK QUIZ TIMER
+    # =====================================
+
     if (
         not st.session_state.quiz_finished
         and not st.session_state.quiz_retry_mode
         and get_remaining_seconds() == 0
     ):
         finish_quiz("time_expired")
-
 
     # =====================================
     # FINISHED QUIZ
@@ -1025,26 +1185,27 @@ def show_quiz():
     if st.session_state.quiz_show_completion_dialog:
         show_completion_dialog()
 
-    # Current question.
+    # =====================================
+    # CURRENT QUESTION
+    # =====================================
+
     index = st.session_state.quiz_question_index
     question_number = index + 1
 
-    question = (
-        st.session_state.quiz_questions[index]
-    )
-
+    question = st.session_state.quiz_questions[index]
     question_id = question["id"]
 
-    # Live timer.
+    # =====================================
+    # LIVE TIMER
+    # =====================================
+
     show_live_timer()
 
     # =====================================
     # PROGRESS
     # =====================================
 
-    answered = len(
-        st.session_state.quiz_answers
-    )
+    answered = len(st.session_state.quiz_answers)
 
     st.write(
         f"Question {question_number} "
@@ -1071,11 +1232,8 @@ def show_quiz():
     )
 
     # =====================================
-    # RESPONSIVE ANSWER / NAVIGATION BUTTONS
+    # RESPONSIVE ANSWER BUTTONS
     # =====================================
-
-    # Desktop: Previous | VERO | FALSO | Next
-    # Mobile: VERO | FALSO, then Previous | Next
 
     st.markdown("""
     <style>
@@ -1122,15 +1280,11 @@ def show_quiz():
     </style>
     """, unsafe_allow_html=True)
 
-    selected = (
-        st.session_state.quiz_answers.get(
-            question_id
-        )
+    selected = st.session_state.quiz_answers.get(
+        question_id
     )
 
-    with st.container(
-        key="quiz_controls_row"
-    ):
+    with st.container(key="quiz_controls_row"):
 
         previous_col, vero_col, falso_col, next_col = (
             st.columns(
@@ -1139,26 +1293,26 @@ def show_quiz():
             )
         )
 
-        with previous_col:
+        # =================================
+        # PREVIOUS BUTTON
+        # =================================
 
-            with st.container(
-                key="quiz_previous"
-            ):
+        with previous_col:
+            with st.container(key="quiz_previous"):
 
                 if st.button(
                     "← Previous",
                     disabled=index == 0,
                     use_container_width=True,
                 ):
-                    go_to_question(
-                        index - 1
-                    )
+                    go_to_question(index - 1)
+
+        # =================================
+        # VERO BUTTON
+        # =================================
 
         with vero_col:
-
-            with st.container(
-                key="quiz_vero"
-            ):
+            with st.container(key="quiz_vero"):
 
                 label = (
                     "✓ VERO"
@@ -1173,14 +1327,15 @@ def show_quiz():
                 ):
                     select_answer(
                         question_id,
-                        True
+                        True,
                     )
 
-        with falso_col:
+        # =================================
+        # FALSO BUTTON
+        # =================================
 
-            with st.container(
-                key="quiz_falso"
-            ):
+        with falso_col:
+            with st.container(key="quiz_falso"):
 
                 label = (
                     "✕ FALSO"
@@ -1195,14 +1350,15 @@ def show_quiz():
                 ):
                     select_answer(
                         question_id,
-                        False
+                        False,
                     )
 
-        with next_col:
+        # =================================
+        # NEXT BUTTON
+        # =================================
 
-            with st.container(
-                key="quiz_next"
-            ):
+        with next_col:
+            with st.container(key="quiz_next"):
 
                 if st.button(
                     "Next →",
@@ -1211,11 +1367,12 @@ def show_quiz():
                     ),
                     use_container_width=True,
                 ):
-                    go_to_question(
-                        index + 1
-                    )
+                    go_to_question(index + 1)
 
-    # Existing pagination remains unchanged.
+    # =====================================
+    # QUESTION PAGINATION
+    # =====================================
+
     show_pagination()
 
     # =====================================
@@ -1237,3 +1394,5 @@ def show_quiz():
         ):
             st.session_state.quiz_show_completion_dialog = True
             st.rerun()
+
+

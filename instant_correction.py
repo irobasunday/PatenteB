@@ -7,6 +7,43 @@ import streamlit as st
 
 from database import fetch_quiz_questions
 
+from browser_identity import get_browser_id
+from quiz_question_recovery import fetch_questions_by_ids
+from quiz_attempt_storage import (
+    load_active_attempt,
+    start_attempt,
+    save_progress,
+    finish_attempt,
+)
+
+def normalize_instant_answer(value):
+    """
+    Convert a stored quiz answer into True or False.
+    """
+
+    if isinstance(value, bool):
+        return value
+
+    if value is None:
+        return None
+
+    if isinstance(value, (int, float)):
+        if value == 1:
+            return True
+        if value == 0:
+            return False
+        return None
+
+    text = str(value).strip().lower()
+
+    if text in ("vero", "true", "1", "v"):
+        return True
+
+    if text in ("falso", "false", "0", "f"):
+        return False
+
+    return None
+
 
 # =========================================
 # SETTINGS
@@ -61,33 +98,160 @@ def initialize_instant_quiz():
 # NORMALIZE ANSWERS
 # =========================================
 
-def normalize_instant_answer(value):
 
-    if isinstance(value, bool):
-        return value
+def clear_instant_session():
+    """Clear only Instant Correction quiz state."""
 
-    if isinstance(value, str):
-
-        mapping = {
-            "t": True,
-            "true": True,
-            "vero": True,
-            "f": False,
-            "false": False,
-            "falso": False,
-        }
-
-        normalized = value.strip().lower()
-
-        if normalized in mapping:
-            return mapping[normalized]
-
-    if value in (0, 1):
-        return bool(value)
-
-    raise ValueError(
-        f"Unexpected correct answer: {value!r}"
+    keys = (
+        "instant_questions",
+        "instant_attempt_id",
+        "instant_question_index",
+        "instant_answers",
+        "instant_started_at",
+        "instant_finished",
+        "instant_finish_reason",
+        "instant_finished_at",
     )
+
+    for key in keys:
+        st.session_state.pop(key, None)
+
+
+def save_instant_progress():
+    """Save Instant Correction progress to PostgreSQL."""
+
+    saved = save_progress(
+        st.session_state.instant_attempt_id,
+        st.session_state.browser_id,
+        "instant_correction",
+        st.session_state.instant_answers,
+        st.session_state.instant_question_index,
+    )
+
+    if not saved:
+        raise RuntimeError(
+            "Instant Correction progress could not be saved."
+        )
+
+
+def start_new_instant_quiz():
+    """Create a new saved Instant Correction attempt."""
+
+    browser_id = get_browser_id()
+
+    if not browser_id:
+        raise RuntimeError(
+            "Browser identifier is not ready."
+        )
+
+    questions = fetch_quiz_questions()
+
+    if (
+        len(questions) != TOTAL_QUESTIONS
+        or len({q["id"] for q in questions}) != TOTAL_QUESTIONS
+        or len({q["chapter_id"] for q in questions}) != 25
+    ):
+        raise ValueError(
+            "Expected 30 unique questions covering 25 chapters."
+        )
+
+    started_at = datetime.now(timezone.utc)
+
+    attempt_id = start_attempt(
+        browser_id,
+        "instant_correction",
+        [question["id"] for question in questions],
+        started_at,
+    )
+
+    clear_instant_session()
+
+    st.session_state.browser_id = browser_id
+    st.session_state.instant_questions = questions
+    st.session_state.instant_attempt_id = attempt_id
+    st.session_state.instant_question_index = 0
+    st.session_state.instant_answers = {}
+    st.session_state.instant_started_at = started_at
+    st.session_state.instant_finished = False
+    st.session_state.instant_finish_reason = None
+    st.session_state.instant_finished_at = None
+
+
+def initialize_instant_quiz():
+    """Restore unfinished quiz or create a saved attempt."""
+
+    if "instant_questions" not in st.session_state:
+
+        browser_id = get_browser_id()
+
+        if not browser_id:
+            raise RuntimeError(
+                "Browser identifier is not ready."
+            )
+
+        st.session_state.browser_id = browser_id
+
+        attempt = load_active_attempt(
+            browser_id,
+            "instant_correction",
+        )
+
+        if attempt is None:
+            start_new_instant_quiz()
+
+        else:
+            questions = fetch_questions_by_ids(
+                attempt["question_ids"]
+            )
+
+            if len(questions) != TOTAL_QUESTIONS:
+                raise ValueError(
+                    "Saved quiz does not contain 30 questions."
+                )
+
+            valid_ids = {q["id"] for q in questions}
+
+            answers = {
+                int(key): value
+                for key, value in
+                (attempt["answers"] or {}).items()
+                if int(key) in valid_ids
+                and isinstance(value, bool)
+            }
+
+            st.session_state.instant_questions = questions
+            st.session_state.instant_attempt_id = attempt["id"]
+            st.session_state.instant_answers = answers
+            st.session_state.instant_question_index = max(
+                0,
+                min(
+                    int(attempt["question_index"]),
+                    len(questions) - 1,
+                ),
+            )
+            st.session_state.instant_started_at = (
+                attempt["started_at"]
+            )
+            st.session_state.instant_finished = False
+            st.session_state.instant_finish_reason = None
+            st.session_state.instant_finished_at = None
+
+    defaults = {
+        "instant_question_index": 0,
+        "instant_answers": {},
+        "instant_finished": False,
+        "instant_finish_reason": None,
+        "instant_finished_at": None,
+    }
+
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+    if "instant_started_at" not in st.session_state:
+        st.session_state.instant_started_at = (
+            datetime.now(timezone.utc)
+        )
 
 
 # =========================================
@@ -123,6 +287,23 @@ def finish_instant_quiz(reason):
 
     else:
         finished_at = datetime.now(timezone.utc)
+
+    updated = finish_attempt(
+        st.session_state.instant_attempt_id,
+        st.session_state.browser_id,
+        "instant_correction",
+        st.session_state.instant_answers,
+        (
+            "expired"
+            if reason == "time_expired"
+            else "submitted"
+        ),
+    )
+
+    if not updated:
+        raise RuntimeError(
+            "Unable to finalize Instant Correction quiz."
+        )
 
     st.session_state.instant_finished = True
     st.session_state.instant_finish_reason = reason
@@ -228,9 +409,11 @@ def select_instant_answer(question_id, answer):
                 next_index = index
                 break
 
+    
     if next_index is not None:
         st.session_state.instant_question_index = next_index
 
+    save_instant_progress()
     st.rerun()
 
 
@@ -251,7 +434,9 @@ def go_to_instant_question(index):
 
     if 0 <= index < len(questions):
 
+        
         st.session_state.instant_question_index = index
+        save_instant_progress()
         st.rerun()
 
 
@@ -497,7 +682,7 @@ def show_instant_question():
             question["question"]
         )
 
-        from quiz import get_question_image
+        from quiz_backup import get_question_image
         from audio_player import show_italian_audio
 
         image_file = get_question_image(
@@ -834,11 +1019,92 @@ def show_instant_results():
             )
 
 
+@st.fragment(run_every="1s")
+def wait_for_instant_browser_identity():
+    """
+    Wait automatically for browser identity
+    without creating a new quiz.
+    """
+
+    browser_id = get_browser_id()
+
+    if browser_id:
+        st.session_state.browser_id = browser_id
+        st.rerun(scope="app")
+
+    st.info("Restoring your Instant Correction quiz...")
+
 # =========================================
 # MAIN INSTANT CORRECTION PAGE
 # =========================================
 
+
 def show_instant_correction():
+    """
+    Display Instant Correction and automatically
+    restore an unfinished quiz after refresh.
+    """
+
+    # =====================================
+    # RESTORE BROWSER IDENTITY FIRST
+    # =====================================
+
+    browser_id = get_browser_id()
+
+    if not browser_id:
+        wait_for_instant_browser_identity()
+        return
+
+    st.session_state.browser_id = browser_id
+
+    # =====================================
+    # RESTORE SAVED QUIZ
+    # =====================================
+
+    try:
+        initialize_instant_quiz()
+
+    except Exception as exc:
+        st.error(
+            "Unable to restore Instant Correction quiz."
+        )
+        st.caption(
+            f"Recovery error: {exc}"
+        )
+        return
+
+    # =====================================
+    # EXISTING STYLING
+    # =====================================
+
+    load_instant_styles()
+    load_instant_pagination_css()
+
+    # =====================================
+    # TIMER
+    # =====================================
+
+    if (
+        not st.session_state.instant_finished
+        and get_instant_remaining_seconds() == 0
+    ):
+        finish_instant_quiz("time_expired")
+
+    # =====================================
+    # RESULTS
+    # =====================================
+
+    if st.session_state.instant_finished:
+        show_instant_results()
+        return
+
+    # =====================================
+    # ACTIVE QUIZ
+    # =====================================
+
+    show_instant_timer()
+    show_instant_question()
+
 
     initialize_instant_quiz()
 
@@ -864,8 +1130,5 @@ def show_instant_correction():
         show_instant_results()
         return
 
-    # Live countdown.
-    show_instant_timer()
-
     # Question, answers, and pagination.
-    show_instant_question()
+   
