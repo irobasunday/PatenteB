@@ -1221,7 +1221,12 @@ def show_quiz():
         f"{active_question_count()} "
         "questions answered"
     )
+  # =====================================
+    # QUESTION PAGINATION
+    # =====================================
 
+    show_pagination()
+    
     # =====================================
     # QUESTION CARD
     # =====================================
@@ -1369,11 +1374,7 @@ def show_quiz():
                 ):
                     go_to_question(index + 1)
 
-    # =====================================
-    # QUESTION PAGINATION
-    # =====================================
-
-    show_pagination()
+  
 
     # =====================================
     # SUBMIT QUIZ

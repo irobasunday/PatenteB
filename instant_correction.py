@@ -667,7 +667,7 @@ def show_instant_question():
     st.progress(
         len(answers) / len(questions)
     )
-
+    show_instant_pagination()
     # =====================================
     # ITALIAN QUESTION CARD
     # =====================================
@@ -821,7 +821,7 @@ def show_instant_question():
     # HORIZONTAL QUESTION PAGINATION
     # =====================================
 
-    show_instant_pagination()
+    
 
 
 # =========================================

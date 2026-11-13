@@ -13,10 +13,6 @@ from argomenti import show_argomenti
 from browser_identity import get_browser_id
 
 
-# =========================================
-# STREAMLIT CONFIGURATION
-# =========================================
-
 st.set_page_config(
     page_title="Patente B",
     page_icon="🚗",
@@ -33,27 +29,7 @@ load_css()
 
 
 # =========================================
-# BROWSER RECOVERY
-# =========================================
-
-@st.fragment(run_every="1s")
-def wait_for_browser_recovery():
-    """
-    Automatically wait for the browser ID
-    before loading either quiz mode.
-    """
-
-    browser_id = get_browser_id()
-
-    if browser_id:
-        st.session_state.browser_id = browser_id
-        st.rerun(scope="app")
-
-    st.info("Restoring your saved quiz...")
-
-
-# =========================================
-# VALID APP PAGES
+# PAGE CONFIGURATION
 # =========================================
 
 VALID_PAGES = {
@@ -72,80 +48,129 @@ QUIZ_PAGES = {
 
 
 # =========================================
-# BROWSER URL MANAGEMENT
-# =========================================
-
-def get_page_from_url():
-    """
-    Recover the active page from the URL.
-    """
-
-    saved_page = st.query_params.get(
-        "page",
-        "welcome",
-    )
-
-    if saved_page in VALID_PAGES:
-        return saved_page
-
-    return "welcome"
-
-
-def sync_page_to_url(page):
-    """
-    Preserve quiz page URLs for refresh.
-    """
-
-    if page in QUIZ_PAGES:
-
-        if st.query_params.get("page") != page:
-            st.query_params["page"] = page
-
-    else:
-
-        if "page" in st.query_params:
-            del st.query_params["page"]
-
-
-# =========================================
-# INITIAL PAGE RECOVERY
-# =========================================
-
-if "page" not in st.session_state:
-    st.session_state.page = get_page_from_url()
-
-
-# =========================================
 # SESSION DEFAULTS
 # =========================================
 
-if "open_quiz_modal" not in st.session_state:
-    st.session_state.open_quiz_modal = False
+defaults = {
+    "open_quiz_modal": False,
+    "quiz_translation": False,
+    "quiz_auto_correction": False,
+    "quiz_mode": None,
+    "recovery_handled": False,
+    "argomenti_category_id": None,
+    "argomenti_subtopic_id": None,
+}
 
-if "quiz_translation" not in st.session_state:
-    st.session_state.quiz_translation = False
-
-if "quiz_auto_correction" not in st.session_state:
-    st.session_state.quiz_auto_correction = False
-
-if "quiz_mode" not in st.session_state:
-    st.session_state.quiz_mode = None
-
-if "recovery_handled" not in st.session_state:
-    st.session_state.recovery_handled = False
+for key, value in defaults.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 
 # =========================================
-# PAGE NAVIGATION
+# URL HELPERS
 # =========================================
 
-def navigate_to(page):
-    """
-    Navigate while preserving quiz URLs.
-    """
+def valid_id(value):
+    if value is None:
+        return None
+
+    try:
+        number = int(value)
+        if number > 0:
+            return number
+    except (TypeError, ValueError):
+        pass
+
+    return None
+
+
+def read_url_location():
+    page = st.query_params.get("page", "welcome")
 
     if page not in VALID_PAGES:
         page = "welcome"
+
+    category_id = None
+    subtopic_id = None
+
+    if page == "argomenti":
+        category_id = valid_id(
+            st.query_params.get("category")
+        )
+
+        if category_id is not None:
+            subtopic_id = valid_id(
+                st.query_params.get("subtopic")
+            )
+
+    return page, category_id, subtopic_id
+
+
+def update_url(
+    page,
+    category_id=None,
+    subtopic_id=None,
+):
+    params = {}
+
+    if page != "dashboard":
+        params["page"] = page
+
+    if page == "argomenti":
+        if category_id is not None:
+            params["category"] = str(category_id)
+
+            if subtopic_id is not None:
+                params["subtopic"] = str(subtopic_id)
+
+    if dict(st.query_params) != params:
+        st.query_params.clear()
+        st.query_params.update(params)
+
+
+# =========================================
+# RESTORE LOCATION FROM URL
+# =========================================
+
+url_page, url_category, url_subtopic = (
+    read_url_location()
+)
+
+current_url_signature = (
+    url_page,
+    url_category,
+    url_subtopic,
+)
+
+previous_url_signature = st.session_state.get(
+    "_last_url_signature"
+)
+
+if previous_url_signature != current_url_signature:
+    st.session_state.page = url_page
+
+    st.session_state.argomenti_category_id = (
+        url_category
+    )
+
+    st.session_state.argomenti_subtopic_id = (
+        url_subtopic
+    )
+
+    st.session_state._last_url_signature = (
+        current_url_signature
+    )
+
+
+# =========================================
+# NAVIGATION
+# =========================================
+
+def navigate_to(page):
+    if page not in VALID_PAGES:
+        page = "welcome"
+
+    st.session_state.page = page
 
     if page == "dashboard":
         st.session_state.recovery_handled = False
@@ -154,26 +179,36 @@ def navigate_to(page):
         st.session_state.quiz_mode = "translate"
 
     elif page == "instant_correction":
-        st.session_state.quiz_mode = "instant_correction"
+        st.session_state.quiz_mode = (
+            "instant_correction"
+        )
 
-    st.session_state.page = page
+    st.session_state.argomenti_category_id = None
+    st.session_state.argomenti_subtopic_id = None
 
-    sync_page_to_url(page)
+    update_url(page)
+
+    st.session_state._last_url_signature = (
+        read_url_location()
+    )
 
     st.rerun()
 
 
 # =========================================
-# SYNCHRONIZE PAGE CHANGES
+# QUIZ BROWSER ID RECOVERY
 # =========================================
 
-current_page = st.session_state.page
+@st.fragment(run_every="1s")
+def wait_for_browser_recovery():
+    browser_id = get_browser_id()
 
-if current_page not in VALID_PAGES:
-    current_page = "welcome"
-    st.session_state.page = current_page
+    if browser_id:
+        st.session_state.browser_id = browser_id
+        st.rerun(scope="app")
+        return
 
-sync_page_to_url(current_page)
+    st.info("Restoring your saved quiz...")
 
 
 # =========================================
@@ -181,7 +216,6 @@ sync_page_to_url(current_page)
 # =========================================
 
 def show_welcome():
-
     st.title("Welcome to Patente B")
 
     st.write(
@@ -196,10 +230,18 @@ def show_welcome():
 
 
 # =========================================
-# SHARED HEADER
+# PAGE ROUTING
 # =========================================
 
-if st.session_state.page not in (
+current_page = st.session_state.page
+
+if current_page not in VALID_PAGES:
+    current_page = "welcome"
+    st.session_state.page = current_page
+
+
+# Shared header
+if current_page not in (
     "quiz",
     "instant_correction",
     "argomenti",
@@ -207,31 +249,19 @@ if st.session_state.page not in (
     show_header()
 
 
-# =========================================
-# PAGE ROUTING
-# =========================================
-
-if st.session_state.page == "welcome":
-
+if current_page == "welcome":
     show_welcome()
 
 
-elif st.session_state.page == "dashboard":
-
+elif current_page == "dashboard":
     show_dashboard()
 
 
-elif st.session_state.page == "argomenti":
-
+elif current_page == "argomenti":
     show_argomenti()
 
 
-# =========================================
-# TRANSLATE MODE
-# =========================================
-
-elif st.session_state.page == "quiz":
-
+elif current_page == "quiz":
     st.session_state.quiz_mode = "translate"
 
     if st.button(
@@ -242,24 +272,17 @@ elif st.session_state.page == "quiz":
 
     browser_id = get_browser_id()
 
-    if not browser_id:
-
+    if browser_id:
+        st.session_state.browser_id = browser_id
+        show_quiz()
+    else:
         wait_for_browser_recovery()
 
-    else:
 
-        st.session_state.browser_id = browser_id
-
-        show_quiz()
-
-
-# =========================================
-# INSTANT CORRECTION MODE
-# =========================================
-
-elif st.session_state.page == "instant_correction":
-
-    st.session_state.quiz_mode = "instant_correction"
+elif current_page == "instant_correction":
+    st.session_state.quiz_mode = (
+        "instant_correction"
+    )
 
     if st.button(
         "‹‹ Instant Correction Mode",
@@ -269,23 +292,14 @@ elif st.session_state.page == "instant_correction":
 
     browser_id = get_browser_id()
 
-    if not browser_id:
-
+    if browser_id:
+        st.session_state.browser_id = browser_id
+        show_instant_correction()
+    else:
         wait_for_browser_recovery()
 
-    else:
 
-        st.session_state.browser_id = browser_id
-
-        show_instant_correction()
-
-
-# =========================================
-# COMING SOON
-# =========================================
-
-elif st.session_state.page == "coming_soon":
-
+elif current_page == "coming_soon":
     st.title("🚧 Coming Soon")
 
     st.info(
@@ -312,7 +326,5 @@ show_footer()
 # =========================================
 
 if st.session_state.open_quiz_modal:
-
     st.session_state.open_quiz_modal = False
-
     show_quiz_modal()

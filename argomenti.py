@@ -135,12 +135,7 @@ def safe_text(value):
 
 
 def get_category_number(category_id, categories=None):
-    """
-    Return a chapter's display number.
-
-    Chapter numbering is based on the original
-    category order, not the database ID itself.
-    """
+    """Get the chapter display number."""
 
     if categories is None:
         categories = get_categories()
@@ -153,11 +148,7 @@ def get_category_number(category_id, categories=None):
 
 
 def get_subtopic_number(subtopic_id, subtopics):
-    """
-    Return a subtopic's position within its chapter.
-
-    Searching does not change the original number.
-    """
+    """Get the original subtopic number."""
 
     for number, subtopic in enumerate(subtopics, start=1):
         if subtopic["id"] == subtopic_id:
@@ -167,7 +158,7 @@ def get_subtopic_number(subtopic_id, subtopics):
 
 
 def get_numbered_subtopics(subtopics):
-    """Keep the original numbering for all subtopics."""
+    """Keep original numbering when searching."""
 
     return list(enumerate(subtopics, start=1))
 
@@ -192,10 +183,6 @@ def load_argomenti_css():
     st.html(
         """
         <style>
-
-        /* ==========================================
-           SUBTOPIC NUMBER STYLING
-           ========================================== */
 
         .argomenti-card-content
         .argomenti-subtopic-number {
@@ -270,7 +257,7 @@ CATEGORY_IMAGES = {
 # ==========================================
 
 def get_category_icon(category_id):
-    """Return the default icon when no image exists."""
+    """Return a fallback icon when no image exists."""
 
     icons = {
         1: "ℹ",
@@ -287,14 +274,16 @@ def get_category_icon(category_id):
 # ==========================================
 
 def get_category_image(category_id):
-    """Return the existing chapter image if available."""
+    """Return the existing chapter image."""
 
     filename = CATEGORY_IMAGES.get(category_id)
 
     if not filename:
         return None
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(
+        os.path.abspath(__file__)
+    )
 
     if filename.startswith("img_sign/"):
         image_path = os.path.join(
@@ -316,35 +305,113 @@ def get_category_image(category_id):
 
 
 # ==========================================
-# NAVIGATION
+# URL NAVIGATION
 # ==========================================
 
+def update_argomenti_url(
+    category_id=None,
+    subtopic_id=None,
+):
+    """
+    Save the current Argomenti location in the URL.
+
+    Examples:
+    ?page=argomenti
+    ?page=argomenti&category=5
+    ?page=argomenti&category=5&subtopic=42
+    """
+
+    params = {
+        "page": "argomenti",
+    }
+
+    if category_id is not None:
+        params["category"] = str(category_id)
+
+        if subtopic_id is not None:
+            params["subtopic"] = str(subtopic_id)
+
+    if dict(st.query_params) != params:
+        st.query_params.clear()
+        st.query_params.update(params)
+
+    st.session_state._last_url_signature = (
+        "argomenti",
+        category_id,
+        subtopic_id,
+    )
+
+
 def open_category(category_id):
+    """Open a chapter and update the URL."""
+
     st.session_state.argomenti_category_id = category_id
     st.session_state.argomenti_subtopic_id = None
+
+    update_argomenti_url(
+        category_id=category_id,
+    )
+
     st.rerun()
 
 
 def open_subtopic(subtopic_id):
+    """Open a Learning Page and update the URL."""
+
+    category_id = st.session_state.argomenti_category_id
+
     st.session_state.argomenti_subtopic_id = subtopic_id
+
+    update_argomenti_url(
+        category_id=category_id,
+        subtopic_id=subtopic_id,
+    )
+
     st.rerun()
 
 
 def back_to_categories():
+    """Return to the chapter list."""
+
     st.session_state.argomenti_category_id = None
     st.session_state.argomenti_subtopic_id = None
+
+    update_argomenti_url()
+
     st.rerun()
 
 
 def back_to_subtopics():
+    """Return to the current chapter's subtopics."""
+
+    category_id = st.session_state.argomenti_category_id
+
     st.session_state.argomenti_subtopic_id = None
+
+    update_argomenti_url(
+        category_id=category_id,
+    )
+
     st.rerun()
 
 
 def back_to_dashboard():
+    """Leave Argomenti and return to Dashboard."""
+
     st.session_state.argomenti_category_id = None
     st.session_state.argomenti_subtopic_id = None
+
     st.session_state.page = "dashboard"
+    st.session_state.recovery_handled = False
+
+    st.query_params.clear()
+
+    st.session_state._last_url_signature = (
+        "dashboard",
+        None,
+        None,
+    )
+
     st.rerun()
 
 
@@ -353,7 +420,7 @@ def back_to_dashboard():
 # ==========================================
 
 def show_page_heading(title, back_action):
-    """Show back button and title on the same line."""
+    """Show the back button and title."""
 
     page_key = (
         f"argomenti_page_heading_"
@@ -392,15 +459,7 @@ def show_page_heading(title, back_action):
 # ==========================================
 
 def show_category_card(category, category_number):
-    """
-    Display a numbered chapter using the existing card.
-
-    Example:
-        1 - Definizioni Generali Doveri Strada
-        2 - Next chapter
-
-    The entire card remains clickable.
-    """
+    """Display a numbered chapter card."""
 
     category_id = category["id"]
     category_name = category["name"]
@@ -498,19 +557,15 @@ def show_category_card(category, category_number):
 
 
 # ==========================================
-# SUBTOPIC CARD — HIERARCHICAL NUMBERING
+# SUBTOPIC CARD
 # ==========================================
 
-def show_subtopic_card(subtopic, number, category_number):
-    """
-    Display a subtopic with automatic numbering.
-
-    Examples:
-        Chapter 1: 1.1, 1.2, 1.3
-        Chapter 2: 2.1, 2.2, 2.3
-
-    The entire card remains clickable.
-    """
+def show_subtopic_card(
+    subtopic,
+    number,
+    category_number,
+):
+    """Display a numbered subtopic card."""
 
     subtopic_id = subtopic["id"]
     subtopic_name = subtopic["name"]
@@ -609,7 +664,6 @@ def show_categories():
         st.exception(error)
         return
 
-    # Number all chapters before filtering.
     numbered_categories = list(
         enumerate(categories, start=1)
     )
@@ -638,7 +692,7 @@ def show_categories():
 # ==========================================
 
 def show_subtopics(category_id):
-    """Display numbered subtopics for the selected chapter."""
+    """Display numbered subtopics for a chapter."""
 
     try:
         categories = get_categories()
@@ -674,13 +728,11 @@ def show_subtopics(category_id):
         categories,
     )
 
-    # Numbered chapter heading.
     show_page_heading(
         f'{category_number} - {category["name"]}',
         back_to_categories,
     )
 
-    # Preserve original subtopic numbering.
     numbered_subtopics = get_numbered_subtopics(
         subtopics
     )
@@ -692,7 +744,6 @@ def show_subtopics(category_id):
         label_visibility="collapsed",
     )
 
-    # Filter without renumbering.
     if search:
         numbered_subtopics = [
             (number, subtopic)
@@ -719,13 +770,10 @@ def show_subtopics(category_id):
 
 def show_learning_page(category_id, subtopic_id):
     """
-    Display the selected Learning Page with
-    automatic hierarchical numbering.
+    Display the selected Learning Page.
 
-    Examples:
-        1.1 Carreggiata Doppio Senso
-        1.2 Next subtopic
-        2.1 First subtopic of Chapter 2
+    Preserve original numbering, translations,
+    images, audio, and PostgreSQL integration.
     """
 
     try:
@@ -760,12 +808,10 @@ def show_learning_page(category_id, subtopic_id):
         subtopics,
     )
 
-    # Build the same number shown on the subtopic card.
     heading_number = (
         f"{category_number}.{subtopic_number}"
     )
 
-    # Display the numbered heading.
     show_page_heading(
         f'{heading_number} {subtopic["name"]}',
         back_to_subtopics,
@@ -776,8 +822,6 @@ def show_learning_page(category_id, subtopic_id):
         show_learning_page as render_learning_content
     )
 
-    # Display real PostgreSQL questions, images,
-    # English translations and Italian audio.
     render_learning_content(
         subtopic_id,
         subtopic["name"],
@@ -799,8 +843,13 @@ def show_argomenti():
     if "argomenti_subtopic_id" not in st.session_state:
         st.session_state.argomenti_subtopic_id = None
 
-    category_id = st.session_state.argomenti_category_id
-    subtopic_id = st.session_state.argomenti_subtopic_id
+    category_id = (
+        st.session_state.argomenti_category_id
+    )
+
+    subtopic_id = (
+        st.session_state.argomenti_subtopic_id
+    )
 
     if category_id is None:
         show_categories()
