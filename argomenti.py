@@ -1,7 +1,10 @@
 
+"""Patente B — Argomenti navigation and learning topics."""
+
 import os
 import html
 import base64
+
 import streamlit as st
 import psycopg
 from psycopg.rows import dict_row
@@ -39,7 +42,7 @@ def get_connection():
 
 @st.cache_data(ttl=300)
 def get_categories():
-    """Load categories from the existing database."""
+    """Load chapters in their original database order."""
 
     connection = get_connection()
 
@@ -60,7 +63,7 @@ def get_categories():
 
 @st.cache_data(ttl=300)
 def get_subtopics(category_id):
-    """Load subtopics for the selected category."""
+    """Load subtopics in their original database order."""
 
     connection = get_connection()
 
@@ -86,16 +89,12 @@ def get_subtopics(category_id):
 # ==========================================
 
 def get_category_progress(category_id):
-    """
-    Placeholder for future PostgreSQL progress tracking.
-    """
+    """Placeholder for future PostgreSQL progress tracking."""
     return 0
 
 
 def get_subtopic_completed(subtopic_id):
-    """
-    Placeholder for future lesson completion tracking.
-    """
+    """Placeholder for future lesson completion tracking."""
     return False
 
 
@@ -118,9 +117,8 @@ def short_description(definition):
 
 
 def get_definition_preview(subtopic):
-    """
-    Definitions are not connected yet.
-    """
+    """Definitions are not connected yet."""
+
     return short_description(
         subtopic.get("definition", "")
     )
@@ -132,8 +130,51 @@ def get_definition_preview(subtopic):
 
 def safe_text(value):
     """Escape database text before inserting into HTML."""
+
     return html.escape(str(value or ""), quote=True)
 
+
+def get_category_number(category_id, categories=None):
+    """
+    Return a chapter's display number.
+
+    Chapter numbering is based on the original
+    category order, not the database ID itself.
+    """
+
+    if categories is None:
+        categories = get_categories()
+
+    for number, category in enumerate(categories, start=1):
+        if category["id"] == category_id:
+            return number
+
+    return None
+
+
+def get_subtopic_number(subtopic_id, subtopics):
+    """
+    Return a subtopic's position within its chapter.
+
+    Searching does not change the original number.
+    """
+
+    for number, subtopic in enumerate(subtopics, start=1):
+        if subtopic["id"] == subtopic_id:
+            return number
+
+    return None
+
+
+def get_numbered_subtopics(subtopics):
+    """Keep the original numbering for all subtopics."""
+
+    return list(enumerate(subtopics, start=1))
+
+
+# ==========================================
+# LOAD ARGOMENTI CSS
+# ==========================================
 
 def load_argomenti_css():
     """Load the existing Argomenti stylesheet."""
@@ -148,34 +189,32 @@ def load_argomenti_css():
         with open(css_path, "r", encoding="utf-8") as file:
             st.html(f"<style>{file.read()}</style>")
 
-    # Number styling is scoped to subtopic cards.
-    # It does not modify the existing category cards.
     st.html(
         """
         <style>
+
+        /* ==========================================
+           SUBTOPIC NUMBER STYLING
+           ========================================== */
+
         .argomenti-card-content
         .argomenti-subtopic-number {
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-
             flex: 0 0 auto !important;
             width: auto !important;
             min-width: 48px !important;
             height: 34px !important;
             padding: 0 8px !important;
-
             border: 1px solid #52647d !important;
             border-radius: 10px !important;
-
             background: #253650 !important;
             color: #ffffff !important;
-
             font-size: 14px !important;
             font-weight: 700 !important;
             line-height: 1 !important;
             white-space: nowrap !important;
-
             box-sizing: border-box !important;
             visibility: visible !important;
             opacity: 1 !important;
@@ -187,6 +226,7 @@ def load_argomenti_css():
             background: #204638 !important;
             color: #ffffff !important;
         }
+
         </style>
         """
     )
@@ -194,17 +234,6 @@ def load_argomenti_css():
 
 # ==========================================
 # MANUAL ROAD SIGN IMAGE MAPPING
-# ==========================================
-#
-# Left: PostgreSQL category ID
-# Right: Exact SVG filename inside assets/road_signs/
-#
-# You can change the filenames whenever you want.
-# If a file is missing, the default icon will appear.
-#
-# Example:
-# 4: "segnale_obbligo.svg",
-#
 # ==========================================
 
 CATEGORY_IMAGES = {
@@ -233,8 +262,6 @@ CATEGORY_IMAGES = {
     23: "chapter_23.png",
     24: "chapter_24.png",
     25: "chapter_25.png",
-     
-    
 }
 
 
@@ -243,7 +270,7 @@ CATEGORY_IMAGES = {
 # ==========================================
 
 def get_category_icon(category_id):
-    """Return the default icon when no SVG image exists."""
+    """Return the default icon when no image exists."""
 
     icons = {
         1: "ℹ",
@@ -256,10 +283,12 @@ def get_category_icon(category_id):
 
 
 # ==========================================
-# GET MANUALLY ASSIGNED SVG IMAGE
+# GET CATEGORY IMAGE
 # ==========================================
 
 def get_category_image(category_id):
+    """Return the existing chapter image if available."""
+
     filename = CATEGORY_IMAGES.get(category_id)
 
     if not filename:
@@ -267,36 +296,18 @@ def get_category_image(category_id):
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # Images from the existing PostgreSQL question bank
     if filename.startswith("img_sign/"):
-        image_path = os.path.join(base_dir, filename)
-
-    # Existing chapter SVG and PNG images
+        image_path = os.path.join(
+            base_dir,
+            filename,
+        )
     else:
         image_path = os.path.join(
             base_dir,
             "assets",
             "road_signs",
-            filename
+            filename,
         )
-
-    if os.path.isfile(image_path):
-        return image_path
-
-    return None
-    """Return the SVG image assigned to a chapter."""
-
-    filename = CATEGORY_IMAGES.get(category_id)
-
-    if not filename:
-        return None
-
-    image_path = os.path.join(
-        os.path.dirname(__file__),
-        "assets",
-        "road_signs",
-        filename,
-    )
 
     if os.path.isfile(image_path):
         return image_path
@@ -344,7 +355,19 @@ def back_to_dashboard():
 def show_page_heading(title, back_action):
     """Show back button and title on the same line."""
 
-    with st.container(key="argomenti_page_heading"):
+    page_key = (
+        f"argomenti_page_heading_"
+        f"{st.session_state.get('argomenti_category_id')}_"
+        f"{st.session_state.get('argomenti_subtopic_id')}"
+    )
+
+    back_key = (
+        f"argomenti_page_back_"
+        f"{st.session_state.get('argomenti_category_id')}_"
+        f"{st.session_state.get('argomenti_subtopic_id')}"
+    )
+
+    with st.container(key=page_key):
         with st.container(
             horizontal=True,
             vertical_alignment="center",
@@ -352,7 +375,7 @@ def show_page_heading(title, back_action):
 
             if st.button(
                 "❮",
-                key="argomenti_page_back",
+                key=back_key,
                 help="Back to previous page",
             ):
                 back_action()
@@ -368,12 +391,15 @@ def show_page_heading(title, back_action):
 # CATEGORY CARD
 # ==========================================
 
-def show_category_card(category):
+def show_category_card(category, category_number):
     """
-    Display a category using the existing Flexbox card.
+    Display a numbered chapter using the existing card.
 
-    Show the manually assigned SVG image when available.
-    Otherwise, show the original category icon.
+    Example:
+        1 - Definizioni Generali Doveri Strada
+        2 - Next chapter
+
+    The entire card remains clickable.
     """
 
     category_id = category["id"]
@@ -382,15 +408,10 @@ def show_category_card(category):
     progress = get_category_progress(category_id)
     progress = max(0, min(100, int(progress)))
 
-    # Get the original fallback icon.
     icon = get_category_icon(category_id)
-
-    # Look for a manually assigned SVG image.
     image_path = get_category_image(category_id)
 
-    
     if image_path:
-        # Read either an SVG or PNG image.
         with open(image_path, "rb") as file:
             image_bytes = file.read()
 
@@ -398,13 +419,11 @@ def show_category_card(category):
             image_bytes
         ).decode("ascii")
 
-        # Detect the correct image format.
         if image_path.lower().endswith(".png"):
             mime_type = "image/png"
         else:
             mime_type = "image/svg+xml"
 
-        # Display the image using the existing card design.
         icon_html = (
             '<img '
             f'src="data:{mime_type};base64,{encoded_image}" '
@@ -413,13 +432,9 @@ def show_category_card(category):
             'style="display:block;object-fit:contain;">'
         )
 
-
     else:
-        # No SVG assigned, or the image file is missing.
-        # Keep the original icon.
         icon_html = safe_text(icon)
 
-    # Preserve the existing category card HTML.
     card_html = f"""
     <div class="argomenti-card-content">
 
@@ -430,7 +445,7 @@ def show_category_card(category):
         <div class="argomenti-card-details">
 
             <div class="argomenti-category-name">
-                {category_id} - {safe_text(category_name)}
+                {category_number} - {safe_text(category_name)}
             </div>
 
             <div class="argomenti-progress-row">
@@ -471,30 +486,30 @@ def show_category_card(category):
         border=False,
         key=f"argomenti_category_{category_id}",
     ):
-
         st.html(card_html)
 
         if st.button(
-            "›",
+            "Open chapter",
             key=f"open_category_{category_id}",
             help=f"Open {category_name}",
+            use_container_width=True,
         ):
             open_category(category_id)
 
 
 # ==========================================
-# SUBTOPIC CARD - HIERARCHICAL NUMBERING
+# SUBTOPIC CARD — HIERARCHICAL NUMBERING
 # ==========================================
 
 def show_subtopic_card(subtopic, number, category_number):
     """
-    Display a subtopic with hierarchical numbering.
+    Display a subtopic with automatic numbering.
 
     Examples:
-        Category 1: 1.1, 1.2, 1.3
-        Category 2: 2.1, 2.2, 2.3
+        Chapter 1: 1.1, 1.2, 1.3
+        Chapter 2: 2.1, 2.2, 2.3
 
-    Preserve the existing card design and navigation.
+    The entire card remains clickable.
     """
 
     subtopic_id = subtopic["id"]
@@ -503,11 +518,8 @@ def show_subtopic_card(subtopic, number, category_number):
     completed = get_subtopic_completed(subtopic_id)
     preview = get_definition_preview(subtopic)
 
-    # Hierarchical number, e.g. 1.1 or 2.3
     status_symbol = f"{category_number}.{number}"
 
-    # Use a dedicated class instead of argomenti-status.
-    # The old class was designed for an empty circle.
     number_class = (
         "argomenti-subtopic-number completed"
         if completed
@@ -557,13 +569,13 @@ def show_subtopic_card(subtopic, number, category_number):
         border=False,
         key=f"argomenti_subtopic_{subtopic_id}",
     ):
-
         st.html(card_html)
 
         if st.button(
-            "›",
+            "Open subtopic",
             key=f"open_subtopic_{subtopic_id}",
             help=f"Open {subtopic_name}",
+            use_container_width=True,
         ):
             open_subtopic(subtopic_id)
 
@@ -573,13 +585,12 @@ def show_subtopic_card(subtopic, number, category_number):
 # ==========================================
 
 def show_categories():
+    """Display all numbered chapters."""
 
     show_page_heading(
         "Argomenti Manuale",
         back_to_dashboard,
     )
-    
-
 
     search = st.text_input(
         "Cerca l'argomento",
@@ -598,20 +609,28 @@ def show_categories():
         st.exception(error)
         return
 
+    # Number all chapters before filtering.
+    numbered_categories = list(
+        enumerate(categories, start=1)
+    )
+
     if search:
-        categories = [
-            category
-            for category in categories
+        numbered_categories = [
+            (number, category)
+            for number, category in numbered_categories
             if search.casefold()
             in category["name"].casefold()
         ]
 
-    if not categories:
+    if not numbered_categories:
         st.info("Nessun argomento trovato.")
         return
 
-    for category in categories:
-        show_category_card(category)
+    for category_number, category in numbered_categories:
+        show_category_card(
+            category,
+            category_number,
+        )
 
 
 # ==========================================
@@ -619,6 +638,7 @@ def show_categories():
 # ==========================================
 
 def show_subtopics(category_id):
+    """Display numbered subtopics for the selected chapter."""
 
     try:
         categories = get_categories()
@@ -649,16 +669,20 @@ def show_subtopics(category_id):
 
         return
 
-    # Show category number in the heading.
+    category_number = get_category_number(
+        category_id,
+        categories,
+    )
+
+    # Numbered chapter heading.
     show_page_heading(
-        f'{category_id}. {category["name"]}',
+        f'{category_number} - {category["name"]}',
         back_to_categories,
     )
 
-    # Number subtopics before filtering.
-    # Searching must not change their original numbers.
-    numbered_subtopics = list(
-        enumerate(subtopics, start=1)
+    # Preserve original subtopic numbering.
+    numbered_subtopics = get_numbered_subtopics(
+        subtopics
     )
 
     search = st.text_input(
@@ -668,6 +692,7 @@ def show_subtopics(category_id):
         label_visibility="collapsed",
     )
 
+    # Filter without renumbering.
     if search:
         numbered_subtopics = [
             (number, subtopic)
@@ -680,28 +705,42 @@ def show_subtopics(category_id):
         st.info("Nessun sottoargomento trovato.")
         return
 
-    # Example: category 1, subtopic 3 = 1.3
     for number, subtopic in numbered_subtopics:
         show_subtopic_card(
             subtopic,
             number,
-            category_id,
+            category_number,
         )
 
 
 # ==========================================
-# LEARNING PAGE PLACEHOLDER
+# LEARNING PAGE
 # ==========================================
 
 def show_learning_page(category_id, subtopic_id):
+    """
+    Display the selected Learning Page with
+    automatic hierarchical numbering.
+
+    Examples:
+        1.1 Carreggiata Doppio Senso
+        1.2 Next subtopic
+        2.1 First subtopic of Chapter 2
+    """
 
     try:
+        categories = get_categories()
         subtopics = get_subtopics(category_id)
 
     except Exception as error:
         st.error("Unable to load learning topic.")
         st.exception(error)
         return
+
+    category_number = get_category_number(
+        category_id,
+        categories,
+    )
 
     subtopic = next(
         (
@@ -716,15 +755,32 @@ def show_learning_page(category_id, subtopic_id):
         st.warning("Subtopic not found.")
         return
 
+    subtopic_number = get_subtopic_number(
+        subtopic_id,
+        subtopics,
+    )
+
+    # Build the same number shown on the subtopic card.
+    heading_number = (
+        f"{category_number}.{subtopic_number}"
+    )
+
+    # Display the numbered heading.
     show_page_heading(
-        subtopic["name"],
+        f'{heading_number} {subtopic["name"]}',
         back_to_subtopics,
     )
 
-    st.info(
-        "The Italian definition, English explanation, "
-        "images, audio, and topic quiz will be "
-        "connected here in the next development stage."
+    # Keep the existing Learning Page integration.
+    from learning.learning_page import (
+        show_learning_page as render_learning_content
+    )
+
+    # Display real PostgreSQL questions, images,
+    # English translations and Italian audio.
+    render_learning_content(
+        subtopic_id,
+        subtopic["name"],
     )
 
 
@@ -733,6 +789,7 @@ def show_learning_page(category_id, subtopic_id):
 # ==========================================
 
 def show_argomenti():
+    """Main Argomenti navigation controller."""
 
     load_argomenti_css()
 
@@ -752,12 +809,7 @@ def show_argomenti():
         show_subtopics(category_id)
 
     else:
-        show_learning_page(category_id, subtopic_id)
-load_argomenti_css()
-image_path = get_category_image(3)
-
-# if image_path:
-    # st.success("Chapter 3 SVG image found on server!")
-   # st.write("Image location:", image_path)
-# else:
-    # st.error("divieto_di_accesso.svg NOT FOUND on server!")
+        show_learning_page(
+            category_id,
+            subtopic_id,
+        )

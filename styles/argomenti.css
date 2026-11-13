@@ -6,7 +6,7 @@
 
 /* PAGE WIDTH */
 
-.stApp:has(.st-key-argomenti_page_heading)
+.stApp:has([class*="st-key-argomenti_page_heading_"])
 [data-testid="stMainBlockContainer"] {
     width: 100% !important;
     max-width: 760px !important;
@@ -18,7 +18,7 @@
    HEADER
    ========================================== */
 
-.st-key-argomenti_page_heading {
+[class*="st-key-argomenti_page_heading_"] {
     position: relative !important;
     min-height: 54px !important;
     margin-bottom: 12px !important;
@@ -38,7 +38,7 @@
 
 /* Larger back arrow */
 
-.st-key-argomenti_page_heading
+[class*="st-key-argomenti_page_heading_"]
 [data-testid="stButton"] {
     position: absolute !important;
     left: 0 !important;
@@ -47,7 +47,7 @@
     z-index: 2 !important;
 }
 
-.st-key-argomenti_page_heading button {
+[class*="st-key-argomenti_page_heading_"] button {
     width: 48px !important;
     height: 48px !important;
     min-height: 48px !important;
@@ -66,7 +66,7 @@
     box-shadow: none !important;
 }
 
-.st-key-argomenti_page_heading button:hover {
+[class*="st-key-argomenti_page_heading_"] button:hover {
     background: #344b6a !important;
     border-color: #93c5fd !important;
 }
@@ -75,13 +75,13 @@
    SEARCH BAR
    ========================================== */
 
-.stApp:has(.st-key-argomenti_page_heading)
+.stApp:has([class*="st-key-argomenti_page_heading_"])
 [data-testid="stTextInput"] {
     width: 100% !important;
     min-width: 0 !important;
 }
 
-.stApp:has(.st-key-argomenti_page_heading)
+.stApp:has([class*="st-key-argomenti_page_heading_"])
 [data-testid="stTextInput"] input {
     width: 100% !important;
     min-height: 44px !important;
@@ -233,79 +233,6 @@
     line-height: 1;
 }
 
-
-/* ==========================================
-   CLICKABLE ARGOMENTI CARDS
-   ========================================== */
-
-/* ==========================================
-   ARGOMENTI CARD NAVIGATION
-   ========================================== */
-
-/* Each card is the positioning container */
-
-[class*="st-key-argomenti_category_"],
-[class*="st-key-argomenti_subtopic_"] {
-    position: relative !important;
-}
-
-/* Place the real Streamlit button over the card */
-
-[class*="st-key-argomenti_category_"]
-[class*="st-key-open_category_"],
-[class*="st-key-argomenti_subtopic_"]
-[class*="st-key-open_subtopic_"] {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: 10 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* Make the button cover the entire card */
-
-[class*="st-key-open_category_"] button,
-[class*="st-key-open_subtopic_"] button {
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-
-    background: transparent !important;
-    border: none !important;
-    border-radius: 14px !important;
-    box-shadow: none !important;
-
-    color: transparent !important;
-    cursor: pointer !important;
-}
-
-/* Hide the duplicate arrow inside the button */
-
-[class*="st-key-open_category_"] button p,
-[class*="st-key-open_subtopic_"] button p {
-    visibility: hidden !important;
-}
-
-/* Hover effect */
-
-[class*="st-key-open_category_"] button:hover,
-[class*="st-key-open_subtopic_"] button:hover {
-    background: rgba(147, 197, 253, 0.06) !important;
-}
-
-/* Keyboard focus */
-
-[class*="st-key-open_category_"] button:focus-visible,
-[class*="st-key-open_subtopic_"] button:focus-visible {
-    outline: 2px solid #93c5fd !important;
-    outline-offset: -2px !important;
-}
-
-
 /* ==========================================
    SUBTOPIC CARDS
    ========================================== */
@@ -358,14 +285,14 @@
 
 @media (max-width: 640px) {
 
-    .stApp:has(.st-key-argomenti_page_heading)
+    .stApp:has([class*="st-key-argomenti_page_heading_"])
     [data-testid="stMainBlockContainer"] {
         max-width: 100% !important;
         padding-left: 10px !important;
         padding-right: 10px !important;
     }
 
-    .st-key-argomenti_page_heading {
+    [class*="st-key-argomenti_page_heading_"] {
         padding-left: 56px !important;
     }
 
@@ -373,7 +300,7 @@
         font-size: 1.08rem;
     }
 
-    .st-key-argomenti_page_heading button {
+    [class*="st-key-argomenti_page_heading_"] button {
         width: 44px !important;
         height: 44px !important;
         min-height: 44px !important;
@@ -426,7 +353,7 @@
    Back button + title on one line
    ========================================== */
 
-.st-key-argomenti_page_heading {
+[class*="st-key-argomenti_page_heading_"] {
     position: relative !important;
     padding: 0 !important;
     margin-bottom: 12px !important;
@@ -435,7 +362,7 @@
 
 /* Arrange header elements horizontally */
 
-.st-key-argomenti_page_heading
+[class*="st-key-argomenti_page_heading_"]
 [data-testid="stVerticalBlock"] {
     display: flex !important;
     flex-direction: row !important;
@@ -446,10 +373,10 @@
 
 /* Reset old absolute positioning */
 
-.st-key-argomenti_page_heading
+[class*="st-key-argomenti_page_heading_"]
 [data-testid="stButton"],
-.st-key-argomenti_page_heading
-.st-key-argomenti_page_back {
+[class*="st-key-argomenti_page_heading_"]
+[class*="st-key-argomenti_page_back_"] {
     position: static !important;
     transform: none !important;
     inset: auto !important;
@@ -460,7 +387,7 @@
 
 /* Bigger, visible back button */
 
-.st-key-argomenti_page_heading button {
+[class*="st-key-argomenti_page_heading_"] button {
     width: 46px !important;
     height: 46px !important;
     min-height: 46px !important;
@@ -493,13 +420,13 @@
 
 @media (max-width: 640px) {
 
-    .st-key-argomenti_page_heading
+    [class*="st-key-argomenti_page_heading_"]
     [data-testid="stVerticalBlock"] {
         flex-direction: row !important;
         flex-wrap: nowrap !important;
     }
 
-    .st-key-argomenti_page_heading button {
+    [class*="st-key-argomenti_page_heading_"] button {
         width: 44px !important;
         height: 44px !important;
         min-height: 44px !important;
@@ -515,7 +442,7 @@
    Back button + title on one line
    ========================================== */
 
-.st-key-argomenti_page_heading {
+[class*="st-key-argomenti_page_heading_"] {
     position: relative !important;
     padding: 0 !important;
     margin-bottom: 12px !important;
@@ -524,7 +451,7 @@
 
 /* Arrange header elements horizontally */
 
-.st-key-argomenti_page_heading
+[class*="st-key-argomenti_page_heading_"]
 [data-testid="stVerticalBlock"] {
     display: flex !important;
     flex-direction: row !important;
@@ -535,10 +462,10 @@
 
 /* Reset old absolute positioning */
 
-.st-key-argomenti_page_heading
+[class*="st-key-argomenti_page_heading_"]
 [data-testid="stButton"],
-.st-key-argomenti_page_heading
-.st-key-argomenti_page_back {
+[class*="st-key-argomenti_page_heading_"]
+[class*="st-key-argomenti_page_back_"] {
     position: static !important;
     transform: none !important;
     inset: auto !important;
@@ -549,7 +476,7 @@
 
 /* Bigger, visible back button */
 
-.st-key-argomenti_page_heading button {
+[class*="st-key-argomenti_page_heading_"] button {
     width: 46px !important;
     height: 46px !important;
     min-height: 46px !important;
@@ -582,13 +509,13 @@
 
 @media (max-width: 640px) {
 
-    .st-key-argomenti_page_heading
+    [class*="st-key-argomenti_page_heading_"]
     [data-testid="stVerticalBlock"] {
         flex-direction: row !important;
         flex-wrap: nowrap !important;
     }
 
-    .st-key-argomenti_page_heading button {
+    [class*="st-key-argomenti_page_heading_"] button {
         width: 44px !important;
         height: 44px !important;
         min-height: 44px !important;
@@ -598,16 +525,17 @@
         font-size: 1.08rem !important;
     }
 }
+
 /* ARGOMENTI HEADER — FINAL ALIGNMENT */
 
-.st-key-argomenti_page_heading {
+[class*="st-key-argomenti_page_heading_"] {
     position: relative !important;
     padding: 0 !important;
     min-height: 0 !important;
     margin-bottom: 12px !important;
 }
 
-.st-key-argomenti_page_heading
+[class*="st-key-argomenti_page_heading_"]
 [data-testid="stHorizontalBlock"] {
     display: flex !important;
     flex-direction: row !important;
@@ -617,9 +545,9 @@
     width: 100% !important;
 }
 
-.st-key-argomenti_page_heading
-.st-key-argomenti_page_back,
-.st-key-argomenti_page_heading
+[class*="st-key-argomenti_page_heading_"]
+[class*="st-key-argomenti_page_back_"],
+[class*="st-key-argomenti_page_heading_"]
 [data-testid="stButton"] {
     position: static !important;
     transform: none !important;
@@ -629,7 +557,7 @@
     height: auto !important;
 }
 
-.st-key-argomenti_page_heading button {
+[class*="st-key-argomenti_page_heading_"] button {
     width: 46px !important;
     height: 46px !important;
     min-height: 46px !important;
@@ -652,7 +580,7 @@
 }
 
 @media (max-width: 640px) {
-    .st-key-argomenti_page_heading button {
+    [class*="st-key-argomenti_page_heading_"] button {
         width: 44px !important;
         height: 44px !important;
         min-height: 44px !important;
@@ -661,4 +589,130 @@
     .argomenti-heading-title {
         font-size: 1.08rem !important;
     }
+}
+
+/* ==========================================
+   ONE FULL-CARD CLICK TARGET
+   Chapters and subtopics share the same rules.
+   The Streamlit button stays a real button,
+   while its widget fills the visual card.
+   ========================================== */
+
+[class*="st-key-argomenti_category_"],
+[class*="st-key-argomenti_subtopic_"] {
+    position: relative !important;
+    cursor: pointer !important;
+}
+
+/* The keyed Streamlit button widget is the overlay.
+   stElementContainer holds the button on recent Streamlit versions. */
+[class*="st-key-argomenti_category_"]
+[data-testid="stElementContainer"]:has([class*="st-key-open_category_"]),
+[class*="st-key-argomenti_subtopic_"]
+[data-testid="stElementContainer"]:has([class*="st-key-open_subtopic_"]),
+[class*="st-key-argomenti_category_"]
+[data-testid="stElementContainer"][class*="st-key-open_category_"],
+[class*="st-key-argomenti_subtopic_"]
+[data-testid="stElementContainer"][class*="st-key-open_subtopic_"] {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 20 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Cover the entire card, including icon, text and arrow. */
+[class*="st-key-argomenti_category_"]
+[data-testid="stButton"],
+[class*="st-key-argomenti_subtopic_"]
+[data-testid="stButton"],
+[class*="st-key-argomenti_category_"]
+[data-testid="stButton"] > button,
+[class*="st-key-argomenti_subtopic_"]
+[data-testid="stButton"] > button {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+[class*="st-key-argomenti_category_"]
+[data-testid="stButton"] > button,
+[class*="st-key-argomenti_subtopic_"]
+[data-testid="stButton"] > button {
+    position: absolute !important;
+    inset: 0 !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
+    border-radius: 14px !important;
+}
+
+[class*="st-key-argomenti_category_"]:has(button:focus-visible),
+[class*="st-key-argomenti_subtopic_"]:has(button:focus-visible) {
+    outline: 2px solid #93c5fd !important;
+    outline-offset: 2px;
+}
+
+[class*="st-key-argomenti_category_"]:hover,
+[class*="st-key-argomenti_subtopic_"]:hover {
+    border-color: #6483a8 !important;
+    background: #1e2d44 !important;
+}
+
+@media (max-width: 768px) {
+    [class*="st-key-argomenti_category_"] button,
+    [class*="st-key-argomenti_subtopic_"] button {
+        touch-action: manipulation;
+    }
+}
+
+/* ==========================================
+   ARGOMENTI — HIDE BUTTON OVERLAY
+   Keep entire chapter/subtopic clickable
+   ========================================== */
+
+/* Keep the cards as positioning containers */
+[class*="st-key-argomenti_category_"],
+[class*="st-key-argomenti_subtopic_"] {
+    position: relative !important;
+    cursor: pointer !important;
+}
+
+/* Make the actual Streamlit button transparent */
+[class*="st-key-argomenti_category_"] button,
+[class*="st-key-argomenti_subtopic_"] button {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: transparent !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
+}
+
+/* Hide the button label */
+[class*="st-key-argomenti_category_"] button *,
+[class*="st-key-argomenti_subtopic_"] button * {
+    visibility: hidden !important;
+}
+
+/* Prevent button hover from becoming visible */
+[class*="st-key-argomenti_category_"] button:hover,
+[class*="st-key-argomenti_subtopic_"] button:hover,
+[class*="st-key-argomenti_category_"] button:focus,
+[class*="st-key-argomenti_subtopic_"] button:focus {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: transparent !important;
+}
+
+/* Preserve visible keyboard focus on the card */
+[class*="st-key-argomenti_category_"]:has(button:focus-visible),
+[class*="st-key-argomenti_subtopic_"]:has(button:focus-visible) {
+    outline: 2px solid #93c5fd !important;
+    outline-offset: 2px;
 }
