@@ -255,8 +255,53 @@ def show_welcome():
 # =========================================
 # STUDENT IDENTITY RECOVERY
 # =========================================
+
+
+# =========================================
+# STUDENT IDENTITY RECOVERY
+# =========================================
 @st.fragment(run_every="1s")
 def wait_for_browser_recovery():
+
+    browser_id = initialize_student()
+
+    if browser_id:
+        st.rerun(scope="app")
+        return
+
+    if st.session_state.get(
+        "identity_recovery_needed",
+        False
+    ):
+        st.warning(
+            "Your saved student identity "
+            "could not be verified."
+        )
+
+        st.info(
+            "If you have previous learning progress, "
+            "do not start a new account until "
+            "your identity has been checked."
+        )
+
+        if st.button(
+            "Start as a New Student",
+            key="start_new_student_button"
+        ):
+            new_id = start_new_student()
+
+            if new_id:
+                st.rerun(scope="app")
+            else:
+                st.error(
+                    "Unable to register student. "
+                    "Please try again."
+                )
+
+        return
+
+    st.info("Preparing your student account...")
+
     """
     Diagnose student identity recovery
     on Streamlit Community Cloud.
