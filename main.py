@@ -1,7 +1,10 @@
 
 import streamlit as st
 
-from browser_identity import initialize_browser_identity
+from browser_identity import (
+    initialize_browser_identity,
+    start_new_student,
+)
 from student_tracking import register_student
 
 from dashboard import show_dashboard
