@@ -5,7 +5,7 @@ import random
 import time
 
 import streamlit as st
-
+import requests
 from browser_identity import (
     get_browser_id,
     validate_browser_id,
@@ -599,6 +599,82 @@ def show_answer_buttons(
                     total,
                 )
 
+# ==========================================
+# ITALIAN TO ENGLISH TRANSLATION
+# ==========================================
+
+@st.cache_data(show_spinner=False, ttl=86400)
+def translate_learning_question(question_text):
+    """Translate an Italian question into English."""
+
+    try:
+        response = requests.get(
+            "https://api.mymemory.translated.net/get",
+            params={
+                "q": question_text,
+                "langpair": "it|en",
+            },
+            timeout=12,
+        )
+
+        response.raise_for_status()
+        data = response.json()
+
+        if data.get("responseStatus") != 200:
+            return None
+
+        translated = data.get(
+            "responseData", {}
+        ).get("translatedText", "")
+
+        if not isinstance(translated, str):
+            return None
+
+        translated = translated.strip()
+
+        if not translated:
+            return None
+
+        return translated
+
+    except (requests.RequestException, ValueError):
+        return None
+
+
+def show_question_translation(
+    subtopic_id,
+    question_id,
+    question_text,
+):
+    """Show English translation when requested."""
+
+    translation_key = quiz_key(
+        subtopic_id,
+        f"translation_visible_{question_id}",
+    )
+
+    if st.button(
+        "🌐 Translate to English",
+        key=quiz_key(
+            subtopic_id,
+            f"translate_{question_id}",
+        ),
+    ):
+        st.session_state[translation_key] = True
+
+    if st.session_state.get(translation_key, False):
+        with st.spinner("Translating..."):
+            translation = translate_learning_question(
+                question_text
+            )
+
+        if translation:
+            st.info(f"🇬🇧 {translation}")
+        else:
+            st.warning(
+                "Translation is temporarily unavailable."
+            )
+
 
 # ==========================================
 # MAIN QUIZ
@@ -959,6 +1035,7 @@ def show_subtopic_quiz(
             question["question"]
         )
 
+        
         show_learning_audio(
             question_text=str(
                 question["question"]
@@ -966,7 +1043,15 @@ def show_subtopic_quiz(
             question_id=question_id,
         )
 
+        # Italian-to-English translation
+        show_question_translation(
+            subtopic_id=subtopic_id,
+            question_id=question_id,
+            question_text=str(question["question"]),
+        )
+
         st.divider()
+
 
         show_answer_buttons(
             subtopic_id,
