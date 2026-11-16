@@ -1,39 +1,37 @@
 
-"""Patente B — Argomenti navigation and learning topics."""
+"""
+Patente B — Argomenti navigation and learning topics.
 
+Optimized:
+- Shared PostgreSQL connection pool
+- Cached chapters and subtopics
+- Batch chapter progress queries
+- Batch subtopic completion queries
+
+Preserves:
+- Existing dark design and CSS
+- Chapter images and numbering
+- Search and navigation
+- Saved learning progress
+- Learning page integration
+"""
+import time
 import os
 import html
 import base64
 
 import streamlit as st
-import psycopg
 from psycopg.rows import dict_row
 
+from database import get_connection
+from browser_identity import get_browser_id
 
-# ==========================================
-# DATABASE CONNECTION
-# ==========================================
-
-def get_connection():
-    """Connect to the existing PostgreSQL database."""
-
-    database_url = None
-
-    try:
-        database_url = st.secrets.get("DATABASE_URL")
-    except Exception:
-        pass
-
-    if not database_url:
-        database_url = os.getenv("DATABASE_URL")
-
-    if not database_url:
-        raise RuntimeError(
-            "DATABASE_URL is missing from Streamlit secrets "
-            "or environment variables."
-        )
-
-    return psycopg.connect(database_url)
+from learning.learning_progress import (
+    get_category_progress as db_category_progress,
+    get_subtopic_completed as db_subtopic_completed,
+    get_all_category_progress,
+    get_all_subtopic_completed,
+)
 
 
 # ==========================================
@@ -42,12 +40,10 @@ def get_connection():
 
 @st.cache_data(ttl=300)
 def get_categories():
-    """Load chapters in their original database order."""
+    """Load chapters using the existing connection pool."""
 
-    connection = get_connection()
-
-    try:
-        with connection.cursor(row_factory=dict_row) as cursor:
+    with get_connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cursor:
             cursor.execute(
                 """
                 SELECT id, name, slug
@@ -55,20 +51,18 @@ def get_categories():
                 ORDER BY id
                 """
             )
-            return [dict(row) for row in cursor.fetchall()]
-
-    finally:
-        connection.close()
+            return [
+                dict(row)
+                for row in cursor.fetchall()
+            ]
 
 
 @st.cache_data(ttl=300)
 def get_subtopics(category_id):
-    """Load subtopics in their original database order."""
+    """Load subtopics using the existing connection pool."""
 
-    connection = get_connection()
-
-    try:
-        with connection.cursor(row_factory=dict_row) as cursor:
+    with get_connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cursor:
             cursor.execute(
                 """
                 SELECT id, category_id, name, slug
@@ -78,24 +72,42 @@ def get_subtopics(category_id):
                 """,
                 (category_id,),
             )
-            return [dict(row) for row in cursor.fetchall()]
-
-    finally:
-        connection.close()
+            return [
+                dict(row)
+                for row in cursor.fetchall()
+            ]
 
 
 # ==========================================
-# FUTURE STUDENT PROGRESS
+# PERSISTENT ARGOMENTI PROGRESS
 # ==========================================
 
 def get_category_progress(category_id):
-    """Placeholder for future PostgreSQL progress tracking."""
-    return 0
+    """Compatibility helper for chapter progress."""
+
+    browser_id = get_browser_id()
+
+    if not browser_id:
+        return 0
+
+    return db_category_progress(
+        browser_id,
+        category_id,
+    )
 
 
 def get_subtopic_completed(subtopic_id):
-    """Placeholder for future lesson completion tracking."""
-    return False
+    """Compatibility helper for subtopic completion."""
+
+    browser_id = get_browser_id()
+
+    if not browser_id:
+        return False
+
+    return db_subtopic_completed(
+        browser_id,
+        subtopic_id,
+    )
 
 
 # ==========================================
@@ -131,7 +143,10 @@ def get_definition_preview(subtopic):
 def safe_text(value):
     """Escape database text before inserting into HTML."""
 
-    return html.escape(str(value or ""), quote=True)
+    return html.escape(
+        str(value or ""),
+        quote=True,
+    )
 
 
 def get_category_number(category_id, categories=None):
@@ -167,8 +182,9 @@ def get_numbered_subtopics(subtopics):
 # LOAD ARGOMENTI CSS
 # ==========================================
 
-def load_argomenti_css():
-    """Load the existing Argomenti stylesheet."""
+@st.cache_data
+def read_argomenti_css():
+    """Read the existing stylesheet once."""
 
     css_path = os.path.join(
         os.path.dirname(__file__),
@@ -177,8 +193,23 @@ def load_argomenti_css():
     )
 
     if os.path.exists(css_path):
-        with open(css_path, "r", encoding="utf-8") as file:
-            st.html(f"<style>{file.read()}</style>")
+        with open(
+            css_path,
+            "r",
+            encoding="utf-8",
+        ) as file:
+            return file.read()
+
+    return ""
+
+
+def load_argomenti_css():
+    """Load the existing Argomenti stylesheet."""
+
+    css = read_argomenti_css()
+
+    if css:
+        st.html(f"<style>{css}</style>")
 
     st.html(
         """
@@ -253,7 +284,7 @@ CATEGORY_IMAGES = {
 
 
 # ==========================================
-# DEFAULT CATEGORY ICONS
+# CATEGORY ICONS
 # ==========================================
 
 def get_category_icon(category_id):
@@ -270,11 +301,11 @@ def get_category_icon(category_id):
 
 
 # ==========================================
-# GET CATEGORY IMAGE
+# CATEGORY IMAGES
 # ==========================================
 
 def get_category_image(category_id):
-    """Return the existing chapter image."""
+    """Return the existing chapter image path."""
 
     filename = CATEGORY_IMAGES.get(category_id)
 
@@ -304,6 +335,32 @@ def get_category_image(category_id):
     return None
 
 
+@st.cache_data
+def get_encoded_category_image(image_path):
+    """
+    Cache image encoding so images are not
+    repeatedly read and converted on reruns.
+    """
+
+    if not image_path:
+        return None
+
+    with open(image_path, "rb") as file:
+        image_bytes = file.read()
+
+    encoded_image = base64.b64encode(
+        image_bytes
+    ).decode("ascii")
+
+    mime_type = (
+        "image/png"
+        if image_path.lower().endswith(".png")
+        else "image/svg+xml"
+    )
+
+    return mime_type, encoded_image
+
+
 # ==========================================
 # URL NAVIGATION
 # ==========================================
@@ -312,14 +369,7 @@ def update_argomenti_url(
     category_id=None,
     subtopic_id=None,
 ):
-    """
-    Save the current Argomenti location in the URL.
-
-    Examples:
-    ?page=argomenti
-    ?page=argomenti&category=5
-    ?page=argomenti&category=5&subtopic=42
-    """
+    """Save the current Argomenti location in the URL."""
 
     params = {
         "page": "argomenti",
@@ -458,39 +508,51 @@ def show_page_heading(title, back_action):
 # CATEGORY CARD
 # ==========================================
 
-def show_category_card(category, category_number):
+def show_category_card(
+    category,
+    category_number,
+    progress_by_category=None,
+):
     """Display a numbered chapter card."""
 
     category_id = category["id"]
     category_name = category["name"]
 
-    progress = get_category_progress(category_id)
-    progress = max(0, min(100, int(progress)))
+    # Use batch progress instead of a separate
+    # PostgreSQL query for every chapter.
+    if progress_by_category is not None:
+        progress = progress_by_category.get(
+            category_id,
+            0,
+        )
+    else:
+        progress = get_category_progress(category_id)
+
+    progress = max(
+        0,
+        min(100, int(progress)),
+    )
 
     icon = get_category_icon(category_id)
     image_path = get_category_image(category_id)
 
     if image_path:
-        with open(image_path, "rb") as file:
-            image_bytes = file.read()
-
-        encoded_image = base64.b64encode(
-            image_bytes
-        ).decode("ascii")
-
-        if image_path.lower().endswith(".png"):
-            mime_type = "image/png"
-        else:
-            mime_type = "image/svg+xml"
-
-        icon_html = (
-            '<img '
-            f'src="data:{mime_type};base64,{encoded_image}" '
-            f'alt="{safe_text(category_name)}" '
-            'width="44" height="44" '
-            'style="display:block;object-fit:contain;">'
+        image_data = get_encoded_category_image(
+            image_path
         )
 
+        if image_data:
+            mime_type, encoded_image = image_data
+
+            icon_html = (
+                '<img '
+                f'src="data:{mime_type};base64,{encoded_image}" '
+                f'alt="{safe_text(category_name)}" '
+                'width="44" height="44" '
+                'style="display:block;object-fit:contain;">'
+            )
+        else:
+            icon_html = safe_text(icon)
     else:
         icon_html = safe_text(icon)
 
@@ -564,13 +626,24 @@ def show_subtopic_card(
     subtopic,
     number,
     category_number,
+    completed_by_subtopic=None,
 ):
     """Display a numbered subtopic card."""
 
     subtopic_id = subtopic["id"]
     subtopic_name = subtopic["name"]
 
-    completed = get_subtopic_completed(subtopic_id)
+    # Use batch completion results.
+    if completed_by_subtopic is not None:
+        completed = completed_by_subtopic.get(
+            subtopic_id,
+            False,
+        )
+    else:
+        completed = get_subtopic_completed(
+            subtopic_id
+        )
+
     preview = get_definition_preview(subtopic)
 
     status_symbol = f"{category_number}.{number}"
@@ -640,7 +713,9 @@ def show_subtopic_card(
 # ==========================================
 
 def show_categories():
-    """Display all numbered chapters."""
+    """Display all numbered chapters with loading-time diagnostics."""
+
+    total_start = time.perf_counter()
 
     show_page_heading(
         "Argomenti Manuale",
@@ -655,14 +730,57 @@ def show_categories():
     )
 
     try:
+        # ==========================================
+        # 1. MEASURE CHAPTER LOADING
+        # ==========================================
+
+        chapters_start = time.perf_counter()
+
         categories = get_categories()
+
+        chapters_time = (
+            time.perf_counter() - chapters_start
+        )
+
+        # ==========================================
+        # 2. MEASURE BROWSER ID
+        # ==========================================
+
+        identity_start = time.perf_counter()
+
+        browser_id = get_browser_id()
+
+        identity_time = (
+            time.perf_counter() - identity_start
+        )
+
+        # ==========================================
+        # 3. MEASURE POSTGRESQL PROGRESS
+        # ==========================================
+
+        progress_start = time.perf_counter()
+
+        progress_by_category = (
+            get_all_category_progress(browser_id)
+            if browser_id
+            else {}
+        )
+
+        progress_time = (
+            time.perf_counter() - progress_start
+        )
 
     except Exception as error:
         st.error(
-            "Unable to load categories from PostgreSQL."
+            "Unable to load categories or progress "
+            "from PostgreSQL."
         )
         st.exception(error)
         return
+
+    # ==========================================
+    # FILTER CHAPTERS
+    # ==========================================
 
     numbered_categories = list(
         enumerate(categories, start=1)
@@ -680,11 +798,69 @@ def show_categories():
         st.info("Nessun argomento trovato.")
         return
 
+    # ==========================================
+    # 4. MEASURE CARD RENDERING
+    # ==========================================
+
+    rendering_start = time.perf_counter()
+
     for category_number, category in numbered_categories:
         show_category_card(
             category,
             category_number,
+            progress_by_category,
         )
+
+    rendering_time = (
+        time.perf_counter() - rendering_start
+    )
+
+    # ==========================================
+    # 5. TOTAL LOADING TIME
+    # ==========================================
+
+    total_time = (
+        time.perf_counter() - total_start
+    )
+
+    # ==========================================
+    # PERFORMANCE DIAGNOSTICS
+    # ==========================================
+
+    st.divider()
+
+    st.markdown("#### ⚡ Argomenti Performance Test")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric(
+            "Chapters",
+            f"{chapters_time:.2f}s",
+        )
+
+    with col2:
+        st.metric(
+            "Browser ID",
+            f"{identity_time:.2f}s",
+        )
+
+    with col3:
+        st.metric(
+            "Progress",
+            f"{progress_time:.2f}s",
+        )
+
+    with col4:
+        st.metric(
+            "Rendering",
+            f"{rendering_time:.2f}s",
+        )
+
+    st.caption(
+        f"Total Python execution: {total_time:.2f}s "
+        f"| Chapters displayed: {len(numbered_categories)}"
+    )
 
 
 # ==========================================
@@ -708,9 +884,23 @@ def show_subtopics(category_id):
 
         subtopics = get_subtopics(category_id)
 
+        browser_id = get_browser_id()
+
+        # One PostgreSQL query checks all
+        # subtopics in the selected chapter.
+        completed_by_subtopic = (
+            get_all_subtopic_completed(
+                browser_id,
+                category_id,
+            )
+            if browser_id
+            else {}
+        )
+
     except Exception as error:
         st.error(
-            "Unable to load subtopics from PostgreSQL."
+            "Unable to load subtopics or progress "
+            "from PostgreSQL."
         )
         st.exception(error)
         return
@@ -761,6 +951,7 @@ def show_subtopics(category_id):
             subtopic,
             number,
             category_number,
+            completed_by_subtopic,
         )
 
 
@@ -817,7 +1008,7 @@ def show_learning_page(category_id, subtopic_id):
         back_to_subtopics,
     )
 
-    # Keep the existing Learning Page integration.
+    # Preserve existing Learning Page integration.
     from learning.learning_page import (
         show_learning_page as render_learning_content
     )
@@ -835,7 +1026,7 @@ def show_learning_page(category_id, subtopic_id):
 def show_argomenti():
     """Main Argomenti navigation controller."""
 
-    load_argomenti_css()
+    
 
     if "argomenti_category_id" not in st.session_state:
         st.session_state.argomenti_category_id = None

@@ -1,18 +1,22 @@
 
 import streamlit as st
 
+from browser_identity import initialize_browser_identity
+from student_tracking import register_student
+
 from dashboard import show_dashboard
 from styles_loader import load_css
 from components.header import show_header
 from components.footer import show_footer
 from components.quiz_modal import show_quiz_modal
-
 from quiz import show_quiz
 from instant_correction import show_instant_correction
 from argomenti import show_argomenti
-from browser_identity import get_browser_id
 
 
+# =========================================
+# STREAMLIT CONFIGURATION
+# =========================================
 st.set_page_config(
     page_title="Patente B",
     page_icon="🚗",
@@ -31,7 +35,6 @@ load_css()
 # =========================================
 # PAGE CONFIGURATION
 # =========================================
-
 VALID_PAGES = {
     "welcome",
     "dashboard",
@@ -41,16 +44,12 @@ VALID_PAGES = {
     "coming_soon",
 }
 
-QUIZ_PAGES = {
-    "quiz",
-    "instant_correction",
-}
+QUIZ_PAGES = {"quiz", "instant_correction"}
 
 
 # =========================================
 # SESSION DEFAULTS
 # =========================================
-
 defaults = {
     "open_quiz_modal": False,
     "quiz_translation": False,
@@ -67,17 +66,52 @@ for key, value in defaults.items():
 
 
 # =========================================
+# AUTOMATIC STUDENT IDENTIFICATION
+# =========================================
+def initialize_student():
+    """
+    Resolve one student ID and confirm
+    that it exists in PostgreSQL.
+    """
+
+    browser_id = initialize_browser_identity()
+
+    if not browser_id:
+        return None
+
+    if st.session_state.get(
+        "registered_student_id"
+    ) != browser_id:
+
+        if not register_student(browser_id):
+            return None
+
+        st.session_state.registered_student_id = (
+            browser_id
+        )
+
+    st.session_state.browser_id = browser_id
+
+    return browser_id
+
+
+# Initialize the student once during app execution
+student_browser_id = initialize_student()
+
+
+# =========================================
 # URL HELPERS
 # =========================================
-
 def valid_id(value):
     if value is None:
         return None
 
     try:
         number = int(value)
+
         if number > 0:
             return number
+
     except (TypeError, ValueError):
         pass
 
@@ -131,7 +165,6 @@ def update_url(
 # =========================================
 # RESTORE LOCATION FROM URL
 # =========================================
-
 url_page, url_category, url_subtopic = (
     read_url_location()
 )
@@ -147,6 +180,7 @@ previous_url_signature = st.session_state.get(
 )
 
 if previous_url_signature != current_url_signature:
+
     st.session_state.page = url_page
 
     st.session_state.argomenti_category_id = (
@@ -165,7 +199,6 @@ if previous_url_signature != current_url_signature:
 # =========================================
 # NAVIGATION
 # =========================================
-
 def navigate_to(page):
     if page not in VALID_PAGES:
         page = "welcome"
@@ -196,25 +229,8 @@ def navigate_to(page):
 
 
 # =========================================
-# QUIZ BROWSER ID RECOVERY
-# =========================================
-
-@st.fragment(run_every="1s")
-def wait_for_browser_recovery():
-    browser_id = get_browser_id()
-
-    if browser_id:
-        st.session_state.browser_id = browser_id
-        st.rerun(scope="app")
-        return
-
-    st.info("Restoring your saved quiz...")
-
-
-# =========================================
 # WELCOME PAGE
 # =========================================
-
 def show_welcome():
     st.title("Welcome to Patente B")
 
@@ -230,9 +246,25 @@ def show_welcome():
 
 
 # =========================================
+# STUDENT IDENTITY RECOVERY
+# =========================================
+@st.fragment(run_every="1s")
+def wait_for_browser_recovery():
+
+    # Attempt to recover the student ID
+    # from browser storage and PostgreSQL.
+    browser_id = initialize_student()
+
+    if browser_id:
+        st.rerun(scope="app")
+        return
+
+    st.info("Restoring your student identity...")
+
+
+# =========================================
 # PAGE ROUTING
 # =========================================
-
 current_page = st.session_state.page
 
 if current_page not in VALID_PAGES:
@@ -240,28 +272,44 @@ if current_page not in VALID_PAGES:
     st.session_state.page = current_page
 
 
-# Shared header
-if current_page not in (
-    "quiz",
-    "instant_correction",
-    "argomenti",
-):
+# =========================================
+# SHARED HEADER
+# =========================================
+if current_page not in QUIZ_PAGES | {"argomenti"}:
     show_header()
 
 
+# =========================================
+# WELCOME
+# =========================================
 if current_page == "welcome":
     show_welcome()
 
 
+# =========================================
+# DASHBOARD
+# =========================================
 elif current_page == "dashboard":
     show_dashboard()
 
 
+# =========================================
+# ARGOMENTI
+# =========================================
 elif current_page == "argomenti":
-    show_argomenti()
+
+    if student_browser_id:
+        show_argomenti()
+
+    else:
+        wait_for_browser_recovery()
 
 
+# =========================================
+# QUIZ TRANSLATE MODE
+# =========================================
 elif current_page == "quiz":
+
     st.session_state.quiz_mode = "translate"
 
     if st.button(
@@ -270,16 +318,18 @@ elif current_page == "quiz":
     ):
         navigate_to("dashboard")
 
-    browser_id = get_browser_id()
-
-    if browser_id:
-        st.session_state.browser_id = browser_id
+    if student_browser_id:
         show_quiz()
+
     else:
         wait_for_browser_recovery()
 
 
+# =========================================
+# INSTANT CORRECTION
+# =========================================
 elif current_page == "instant_correction":
+
     st.session_state.quiz_mode = (
         "instant_correction"
     )
@@ -290,16 +340,18 @@ elif current_page == "instant_correction":
     ):
         navigate_to("dashboard")
 
-    browser_id = get_browser_id()
-
-    if browser_id:
-        st.session_state.browser_id = browser_id
+    if student_browser_id:
         show_instant_correction()
+
     else:
         wait_for_browser_recovery()
 
 
+# =========================================
+# COMING SOON
+# =========================================
 elif current_page == "coming_soon":
+
     st.title("🚧 Coming Soon")
 
     st.info(
@@ -317,14 +369,12 @@ elif current_page == "coming_soon":
 # =========================================
 # SHARED FOOTER
 # =========================================
-
 show_footer()
 
 
 # =========================================
 # QUIZ MODAL
 # =========================================
-
 if st.session_state.open_quiz_modal:
     st.session_state.open_quiz_modal = False
     show_quiz_modal()

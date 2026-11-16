@@ -122,3 +122,48 @@
         font-size: 0.95rem !important;
     }
 }
+
+/* =========================================
+   MOBILE QUIZ SCROLLING FIX
+   ========================================= */
+
+@media (max-width: 768px) {
+
+    /* Allow the entire page to scroll */
+    html,
+    body {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+
+    /* Streamlit main container */
+    [data-testid="stAppViewContainer"] {
+        height: 100dvh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Main quiz content */
+    [data-testid="stMain"] {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow: visible !important;
+    }
+
+    [data-testid="stMainBlockContainer"] {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow: visible !important;
+        padding-bottom: 100px !important;
+    }
+
+    /* Prevent quiz containers from clipping content */
+    .st-key-quiz_container {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+}

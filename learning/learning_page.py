@@ -47,10 +47,6 @@ def get_question_image(image_path):
     if not relative_path:
         return None
 
-    # Support both:
-    # 123.png
-    # img_sign/123.png
-
     relative_path = relative_path.lstrip("/")
 
     if relative_path.startswith("img_sign/"):
@@ -59,7 +55,6 @@ def get_question_image(image_path):
     image_root = IMAGE_DIR.resolve()
     image_file = (image_root / relative_path).resolve()
 
-    # Prevent access outside the image folder.
     if not image_file.is_relative_to(image_root):
         return None
 
@@ -91,44 +86,30 @@ def show_question(question, number, answer_type):
         key=f"learning_question_{question_id}",
         border=True,
     ):
-
-        # VERO / FALSO label
         if answer_type == "VERO":
             st.markdown(f"**🟢 VERO — {number}**")
         else:
             st.markdown(f"**🔴 FALSO — {number}**")
 
-        # ==================================
-        # IMAGE ABOVE QUESTION
-        # ==================================
-
         image_file = get_question_image(
             question.get("image_path")
         )
+
         if image_file is not None:
             left, center, right = st.columns([1, 2, 1])
 
             with center:
                 st.image(
-            str(image_file),
-            use_container_width=True
-        )
-
-        
-
-        # ==================================
-        # ORIGINAL ITALIAN QUESTION
-        # ==================================
+                    str(image_file),
+                    use_container_width=True,
+                )
 
         st.write(italian_text)
-        show_learning_audio(
-        question_text=italian_text,
-        question_id=question_id,
-        )
 
-        # ==================================
-        # ENGLISH TRANSLATION
-        # ==================================
+        show_learning_audio(
+            question_text=italian_text,
+            question_id=question_id,
+        )
 
         expanded = st.session_state.get(
             expanded_key,
@@ -146,9 +127,7 @@ def show_question(question, number, answer_type):
             st.session_state[expanded_key] = expanded
 
         if expanded:
-
             if translation_key not in st.session_state:
-
                 with st.spinner("Loading translation..."):
                     try:
                         translation = get_or_create_translation(
@@ -179,18 +158,28 @@ def show_question(question, number, answer_type):
 # ==========================================
 
 def show_learning_page(subtopic_id, subtopic_name):
-    """
-    Display all questions belonging to a subtopic.
-
-    VERO questions appear first.
-    FALSO questions appear afterward.
-    """
+    """Display learning questions or the subtopic quiz."""
 
     load_learning_css()
 
-    # ==================================
+    active_key = f"subtopic_quiz_{subtopic_id}_active"
+
+    # ======================================
+    # DISPLAY ACTIVE SUBTOPIC QUIZ
+    # ======================================
+
+    if st.session_state.get(active_key, False):
+        from learning.learning_quiz import show_subtopic_quiz
+
+        show_subtopic_quiz(
+            subtopic_id,
+            subtopic_name,
+        )
+        return
+
+    # ======================================
     # FETCH QUESTIONS FROM POSTGRESQL
-    # ==================================
+    # ======================================
 
     try:
         vero_questions, falso_questions = (
@@ -212,9 +201,9 @@ def show_learning_page(subtopic_id, subtopic_name):
         )
         return
 
-    # ==================================
+    # ======================================
     # VERO QUESTIONS
-    # ==================================
+    # ======================================
 
     st.markdown(
         f"### 🟢 Domande VERO ({len(vero_questions)})"
@@ -230,9 +219,9 @@ def show_learning_page(subtopic_id, subtopic_name):
             "VERO",
         )
 
-    # ==================================
+    # ======================================
     # FALSO QUESTIONS
-    # ==================================
+    # ======================================
 
     st.markdown(
         f"### 🔴 Domande FALSO ({len(falso_questions)})"
@@ -248,9 +237,9 @@ def show_learning_page(subtopic_id, subtopic_name):
             "FALSO",
         )
 
-    # ==================================
+    # ======================================
     # TAKE QUIZ BUTTON
-    # ==================================
+    # ======================================
 
     st.divider()
 
@@ -264,7 +253,18 @@ def show_learning_page(subtopic_id, subtopic_name):
         use_container_width=True,
         type="primary",
     ):
-        st.info(
-            "The subtopic quiz will be connected "
-            "in the next development step."
-        )
+        from learning.learning_quiz import start_subtopic_quiz
+
+        try:
+            started = start_subtopic_quiz(subtopic_id)
+
+            if started:
+                st.rerun()
+            else:
+                st.warning(
+                    "No quiz questions are available."
+                )
+
+        except Exception as error:
+            st.error("Unable to start subtopic quiz.")
+            st.exception(error)

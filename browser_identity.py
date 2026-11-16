@@ -1,178 +1,162 @@
 
-import time
+"""
+Patente B - Recover existing anonymous student identity.
+
+PostgreSQL owns student IDs.
+Chrome stores the student ID reference.
+
+RECOVERY TEST:
+New student creation is temporarily disabled.
+"""
+
+import json
+import logging
 import uuid
 
 import streamlit as st
 from streamlit_local_storage import LocalStorage
 
+from student_tracking import resolve_student
 
-# =========================================
-# BROWSER IDENTITY SETTINGS
-# =========================================
 
 BROWSER_ID_KEY = "patenteb_browser_id"
 
-BROWSER_RECOVERY_WAIT_SECONDS = 3
+# Use the same component key as the original app.
+STORAGE_KEY = "storage_init"
 
-
-# =========================================
-# VALIDATE BROWSER ID
-# =========================================
 
 def validate_browser_id(value):
-    """
-    Accept only valid UUID strings.
-    """
+    """Read UUIDs from strings or JSON objects."""
 
-    if not isinstance(value, str):
-        return None
+    if isinstance(value, dict):
+        value = value.get(BROWSER_ID_KEY)
+
+    if isinstance(value, str):
+        try:
+            decoded = json.loads(value)
+
+            if isinstance(decoded, dict):
+                value = decoded.get(BROWSER_ID_KEY)
+            elif isinstance(decoded, str):
+                value = decoded
+
+        except (ValueError, TypeError):
+            pass
 
     try:
-        return str(uuid.UUID(value))
-
+        return str(uuid.UUID(str(value)))
     except (ValueError, TypeError, AttributeError):
         return None
 
 
-# =========================================
-# SHARED BROWSER STORAGE
-# =========================================
-
 def get_browser_storage():
     """
-    Reuse the LocalStorage instance shared
-    with argomenti_storage.py.
+    Construct the browser-storage component once.
     """
 
     if "browser_local_storage" not in st.session_state:
-
-        st.session_state.browser_local_storage = (
-            LocalStorage()
+        st.session_state.browser_local_storage = LocalStorage(
+            key=STORAGE_KEY
         )
 
     return st.session_state.browser_local_storage
 
 
-# =========================================
-# RECOVER BROWSER IDENTITY
-# =========================================
-
 def get_browser_id():
-    """
-    Recover the browser identity used for
-    PostgreSQL quiz progress.
+    """Return the resolved session student ID."""
 
-    An unconfirmed new ID must never be
-    returned for quiz recovery.
-    """
+    if not st.session_state.get("identity_resolved"):
+        return None
 
-    storage = get_browser_storage()
-
-    # -------------------------------------
-    # 1. Check confirmed session identity
-    # -------------------------------------
-
-    existing_id = validate_browser_id(
+    return validate_browser_id(
         st.session_state.get("browser_id")
     )
 
-    if existing_id:
-        return existing_id
 
-    # -------------------------------------
-    # 2. Read saved browser identity
-    # -------------------------------------
+def initialize_browser_identity():
+    """
+    Recover the saved Chrome identity from PostgreSQL.
 
-    saved_id = validate_browser_id(
-        storage.getItem(BROWSER_ID_KEY)
-    )
+    Do not create any new database records during
+    this recovery test.
+    """
 
-    if saved_id:
+    existing = get_browser_id()
 
-        st.session_state.browser_id = saved_id
+    if existing:
+        return existing
 
-        st.session_state.pop(
-            "pending_browser_id",
-            None,
+    try:
+        storage = get_browser_storage()
+
+        # The storage component's Python cache.
+        stored_items = getattr(
+            storage,
+            "storedItems",
+            None
         )
 
-        st.session_state.pop(
-            "browser_id_write_started",
-            None,
+        if not isinstance(stored_items, dict):
+            return None
+
+        # Read the specific browser storage key.
+        stored_value = storage.getItem(
+            BROWSER_ID_KEY
         )
 
-        st.session_state.pop(
-            "browser_identity_check_started",
-            None,
+        stored_id = validate_browser_id(
+            stored_value
         )
 
-        return saved_id
+        # Some versions expose the initial data
+        # through Streamlit session state.
+        if not stored_id:
+            initial_items = st.session_state.get(
+                STORAGE_KEY
+            )
 
-    # -------------------------------------
-    # 3. Wait for browser storage
-    # -------------------------------------
+            if isinstance(initial_items, dict):
+                stored_id = validate_browser_id(
+                    initial_items.get(BROWSER_ID_KEY)
+                )
 
-    if "browser_identity_check_started" not in st.session_state:
+        # Do not create a new ID if the browser
+        # has not returned a recognizable ID.
+        if not stored_id:
+            logging.warning(
+                "Chrome student ID not recovered"
+            )
+            return None
 
-        st.session_state.browser_identity_check_started = (
-            time.monotonic()
+        # Check that this ID exists in PostgreSQL.
+        selected_id, created_new = resolve_student(
+            [stored_id],
+            allow_create=False
         )
 
-    elapsed = (
-        time.monotonic()
-        - st.session_state.browser_identity_check_started
-    )
+        if not selected_id:
+            logging.warning(
+                "Chrome ID not found in PostgreSQL: %s",
+                stored_id
+            )
+            return None
 
-    if elapsed < BROWSER_RECOVERY_WAIT_SECONDS:
+        # Keep the recovered identity in this session.
+        st.session_state.browser_id = selected_id
+        st.session_state.identity_resolved = True
+
+        return selected_id
+
+    except Exception:
+        logging.exception(
+            "Unable to recover Chrome student identity"
+        )
         return None
 
-    # -------------------------------------
-    # 4. Prepare first-time browser identity
-    # -------------------------------------
-
-    pending_id = validate_browser_id(
-        st.session_state.get("pending_browser_id")
-    )
-
-    if not pending_id:
-
-        pending_id = str(uuid.uuid4())
-
-        st.session_state.pending_browser_id = (
-            pending_id
-        )
-
-    # -------------------------------------
-    # 5. Save pending identity once
-    # -------------------------------------
-
-    if not st.session_state.get(
-        "browser_id_write_started",
-        False,
-    ):
-
-        st.session_state.browser_id_write_started = True
-
-        storage.setItem(
-            BROWSER_ID_KEY,
-            pending_id,
-        )
-
-    # -------------------------------------
-    # 6. Wait for storage confirmation
-    # -------------------------------------
-
-    return None
-
-
-# =========================================
-# COMPATIBILITY FUNCTION
-# =========================================
 
 def create_browser_id():
-    """
-    Preserve compatibility with existing
-    modules that call create_browser_id().
-    """
+    return initialize_browser_identity()
 
+
+def ensure_session_browser_id():
     return get_browser_id()

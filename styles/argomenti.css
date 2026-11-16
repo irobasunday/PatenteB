@@ -716,3 +716,41 @@
     outline: 2px solid #93c5fd !important;
     outline-offset: 2px;
 }
+
+/* =========================================
+   COMPLETED SUBTOPIC - PREMIUM GREEN BADGE
+   ========================================= */
+
+.argomenti-card-content
+.argomenti-subtopic-number.completed {
+    background: linear-gradient(
+        135deg,
+        #059669 0%,
+        #047857 100%
+    ) !important;
+
+    border: 2px solid #4ade80 !important;
+    color: #ffffff !important;
+
+    font-weight: 800 !important;
+    font-size: 15px !important;
+
+    box-shadow:
+        0 0 0 3px rgba(74, 222, 128, 0.12),
+        0 0 16px rgba(16, 185, 129, 0.45) !important;
+
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    transition: box-shadow 0.2s ease;
+}
+
+/* Completed badge checkmark */
+
+.argomenti-card-content
+.argomenti-subtopic-number.completed::after {
+    content: "✓";
+    display: inline-block;
+    margin-left: 7px;
+    font-size: 14px;
+    font-weight: 900;
+    color: #ffffff;
+}
