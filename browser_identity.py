@@ -1,12 +1,9 @@
 
 """
-Patente B - Recover existing anonymous student identity.
+Patente B - Anonymous student identity.
 
-PostgreSQL owns student IDs.
-Chrome stores the student ID reference.
-
-RECOVERY TEST:
-New student creation is temporarily disabled.
+PostgreSQL creates and owns student IDs.
+Chrome Local Storage remembers the ID.
 """
 
 import json
@@ -20,8 +17,6 @@ from student_tracking import resolve_student
 
 
 BROWSER_ID_KEY = "patenteb_browser_id"
-
-# Use the same component key as the original app.
 STORAGE_KEY = "storage_init"
 
 
@@ -50,9 +45,7 @@ def validate_browser_id(value):
 
 
 def get_browser_storage():
-    """
-    Construct the browser-storage component once.
-    """
+    """Construct browser storage once per session."""
 
     if "browser_local_storage" not in st.session_state:
         st.session_state.browser_local_storage = LocalStorage(
@@ -73,33 +66,40 @@ def get_browser_id():
     )
 
 
+
 def initialize_browser_identity():
     """
-    Recover the saved Chrome identity from PostgreSQL.
+    Recover an existing student or register a new one.
 
-    Do not create any new database records during
-    this recovery test.
+    PostgreSQL generates student IDs.
+    Chrome Local Storage remembers the student ID.
+
+    Never create a new student while browser
+    storage is still loading.
     """
 
+    # 1. Return an identity already resolved
+    # during this Streamlit session.
     existing = get_browser_id()
 
     if existing:
         return existing
 
     try:
+        # 2. Initialize Chrome Local Storage.
         storage = get_browser_storage()
 
-        # The storage component's Python cache.
         stored_items = getattr(
             storage,
             "storedItems",
             None
         )
 
+        # Wait until browser storage is loaded.
         if not isinstance(stored_items, dict):
             return None
 
-        # Read the specific browser storage key.
+        # 3. Read the existing student ID.
         stored_value = storage.getItem(
             BROWSER_ID_KEY
         )
@@ -108,8 +108,7 @@ def initialize_browser_identity():
             stored_value
         )
 
-        # Some versions expose the initial data
-        # through Streamlit session state.
+        # Check the alternative storage location.
         if not stored_id:
             initial_items = st.session_state.get(
                 STORAGE_KEY
@@ -120,38 +119,82 @@ def initialize_browser_identity():
                     initial_items.get(BROWSER_ID_KEY)
                 )
 
-        # Do not create a new ID if the browser
-        # has not returned a recognizable ID.
-        if not stored_id:
-            logging.warning(
-                "Chrome student ID not recovered"
-            )
-            return None
+        # 4. Recover an existing student.
+        if stored_id:
 
-        # Check that this ID exists in PostgreSQL.
-        selected_id, created_new = resolve_student(
-            [stored_id],
-            allow_create=False
+            selected_id, created_new = resolve_student(
+                [stored_id],
+                allow_create=False
+            )
+
+            if not selected_id:
+                logging.warning(
+                    "Existing student ID could not "
+                    "be verified in PostgreSQL: %s",
+                    stored_id
+                )
+                return None
+
+        # 5. Register a new student only if
+        # Chrome has no existing student ID.
+        else:
+
+            # Reuse a student ID created earlier
+            # in this Streamlit session.
+            selected_id = validate_browser_id(
+                st.session_state.get(
+                    "pending_student_id"
+                )
+            )
+
+            if not selected_id:
+
+                # PostgreSQL creates the UUID.
+                selected_id, created_new = (
+                    resolve_student(
+                        [],
+                        allow_create=True
+                    )
+                )
+
+                if not selected_id:
+                    logging.error(
+                        "Unable to register new student"
+                    )
+                    return None
+
+                # Save immediately in session state
+                # to avoid duplicate registration
+                # during retries.
+                st.session_state.pending_student_id = (
+                    selected_id
+                )
+
+        # 6. Save the verified or newly created
+        # student ID in Chrome Local Storage.
+        storage.setItem(
+            BROWSER_ID_KEY,
+            selected_id
         )
 
-        if not selected_id:
-            logging.warning(
-                "Chrome ID not found in PostgreSQL: %s",
-                stored_id
-            )
-            return None
-
-        # Keep the recovered identity in this session.
+        # 7. Mark the student as identified.
         st.session_state.browser_id = selected_id
         st.session_state.identity_resolved = True
+
+        # Registration/recovery is complete.
+        st.session_state.pop(
+            "pending_student_id",
+            None
+        )
 
         return selected_id
 
     except Exception:
         logging.exception(
-            "Unable to recover Chrome student identity"
+            "Unable to initialize student identity"
         )
         return None
+
 
 
 def create_browser_id():
