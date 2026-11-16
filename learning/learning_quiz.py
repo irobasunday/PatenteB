@@ -3,7 +3,7 @@
 
 import random
 import time
-
+from database import get_or_create_translation
 import streamlit as st
 import requests
 from browser_identity import (
@@ -604,7 +604,18 @@ def show_answer_buttons(
 # ==========================================
 
 @st.cache_data(show_spinner=False, ttl=86400)
-def translate_learning_question(question_text):
+
+def translate_learning_question(question_id, question_text):
+    """
+    Retrieve a saved translation from PostgreSQL.
+    If missing, translate and save it using
+    the existing database function.
+    """
+    return get_or_create_translation(
+        question_id,
+        question_text,
+    )
+
     """Translate an Italian question into English."""
 
     try:
@@ -665,8 +676,9 @@ def show_question_translation(
     if st.session_state.get(translation_key, False):
         with st.spinner("Translating..."):
             translation = translate_learning_question(
-                question_text
-            )
+                question_id,
+                 question_text,
+)
 
         if translation:
             st.info(f"🇬🇧 {translation}")
@@ -1042,6 +1054,11 @@ def show_subtopic_quiz(
             ),
             question_id=question_id,
         )
+        show_question_translation(
+    subtopic_id=subtopic_id,
+    question_id=question_id,
+    question_text=str(question["question"]),
+)
 
         # Italian-to-English translation
         show_question_translation(
