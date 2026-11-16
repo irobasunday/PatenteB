@@ -652,6 +652,7 @@ def translate_learning_question(question_id, question_text):
         return None
 
 
+
 def show_question_translation(
     subtopic_id,
     question_id,
@@ -666,10 +667,7 @@ def show_question_translation(
 
     if st.button(
         "🌐 Translate to English",
-        key=quiz_key(
-            subtopic_id,
-            f"translate_{question_id}",
-        ),
+        key=f"argomenti_translate_button_{subtopic_id}_{question_id}",
     ):
         st.session_state[translation_key] = True
 
@@ -677,8 +675,8 @@ def show_question_translation(
         with st.spinner("Translating..."):
             translation = translate_learning_question(
                 question_id,
-                 question_text,
-)
+                question_text,
+            )
 
         if translation:
             st.info(f"🇬🇧 {translation}")
