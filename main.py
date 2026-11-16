@@ -248,18 +248,83 @@ def show_welcome():
 # =========================================
 # STUDENT IDENTITY RECOVERY
 # =========================================
+
+# =========================================
+# STUDENT IDENTITY RECOVERY
+# =========================================
 @st.fragment(run_every="1s")
 def wait_for_browser_recovery():
+    """
+    Diagnose student identity recovery
+    on Streamlit Community Cloud.
+    """
 
-    # Attempt to recover the student ID
-    # from browser storage and PostgreSQL.
     browser_id = initialize_student()
 
+    # Student successfully identified.
     if browser_id:
         st.rerun(scope="app")
         return
 
-    st.info("Restoring your student identity...")
+    st.warning(
+        "Student identity not yet resolved."
+    )
+
+    # Check whether browser storage exists.
+    storage = st.session_state.get(
+        "browser_local_storage"
+    )
+
+    if storage is None:
+        st.error(
+            "DIAGNOSTIC: Browser storage "
+            "has not been initialized."
+        )
+
+    else:
+        stored_items = getattr(
+            storage,
+            "storedItems",
+            None
+        )
+
+        st.write(
+            "DIAGNOSTIC - Storage type:",
+            type(stored_items).__name__
+        )
+
+        st.write(
+            "DIAGNOSTIC - Storage ready:",
+            isinstance(stored_items, dict)
+        )
+
+    # Check identity session state.
+    st.write(
+        "DIAGNOSTIC - Identity resolved:",
+        st.session_state.get(
+            "identity_resolved",
+            False
+        )
+    )
+
+    st.write(
+        "DIAGNOSTIC - Pending student:",
+        bool(
+            st.session_state.get(
+                "pending_student_id"
+            )
+        )
+    )
+
+    st.write(
+        "DIAGNOSTIC - Student registered:",
+        bool(
+            st.session_state.get(
+                "registered_student_id"
+            )
+        )
+    )
+
 
 
 # =========================================
