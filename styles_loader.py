@@ -18,7 +18,8 @@ def load_css():
     "variables.css",
     "base.css",
     "components.css",
-    "layout.css"
+    "layout.css",  
+    "argomenti.css",
 ]
 
 
