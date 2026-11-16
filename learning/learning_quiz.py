@@ -1058,12 +1058,7 @@ def show_subtopic_quiz(
     question_text=str(question["question"]),
 )
 
-        # Italian-to-English translation
-        show_question_translation(
-            subtopic_id=subtopic_id,
-            question_id=question_id,
-            question_text=str(question["question"]),
-        )
+        
 
         st.divider()
 
