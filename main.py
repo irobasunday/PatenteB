@@ -1,10 +1,7 @@
 
 import streamlit as st
 
-from browser_identity import (
-    initialize_browser_identity,
-    start_new_student,
-)
+from browser_identity import initialize_browser_identity
 from student_tracking import register_student
 
 from dashboard import show_dashboard
@@ -261,7 +258,29 @@ def show_welcome():
 # STUDENT IDENTITY RECOVERY
 # =========================================
 @st.fragment(run_every="1s")
+
+# =========================================
+# AUTOMATIC STUDENT IDENTITY
+# =========================================
+@st.fragment(run_every="1s")
 def wait_for_browser_recovery():
+    """
+    Automatically recover or register students.
+
+    No registration button.
+    No diagnostic interface.
+    """
+
+    browser_id = initialize_student()
+
+    if browser_id:
+        st.rerun(scope="app")
+        return
+
+    st.info(
+        "Preparing your student account..."
+    )
+
 
     browser_id = initialize_student()
 
