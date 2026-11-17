@@ -346,3 +346,47 @@ def get_or_create_translation(question_id, italian_text):
     )
 
     return english_text
+
+# =========================================
+# SAVED ENGLISH EXPLANATIONS
+# =========================================
+
+def get_saved_explanation(question_id):
+    """Retrieve an explanation saved in PostgreSQL."""
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT english_explanation
+                FROM question_explanations
+                WHERE question_id = %s
+                """,
+                (question_id,),
+            )
+
+            row = cur.fetchone()
+
+    return row[0] if row else None
+
+
+def save_explanation(question_id, explanation):
+    """Save a successful explanation permanently."""
+
+    if not explanation or not explanation.strip():
+        return
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO question_explanations
+                    (question_id, english_explanation)
+                VALUES (%s, %s)
+                ON CONFLICT (question_id) DO NOTHING
+                """,
+                (
+                    question_id,
+                    explanation.strip(),
+                ),
+            )

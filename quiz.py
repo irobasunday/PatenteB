@@ -6,8 +6,14 @@ from pathlib import Path
 
 import streamlit as st
 
-from database import fetch_quiz_questions, get_or_create_translation
-from ai_explanations import generate_question_explanation
+from database import (
+    fetch_quiz_questions,
+    get_or_create_translation,
+    get_saved_explanation,
+    save_explanation,
+)
+
+from ai_explanations import start_explanation_task
 from audio_player import show_italian_audio
 
 from browser_identity import get_browser_id, create_browser_id
@@ -277,7 +283,119 @@ def reset_quiz(questions):
     st.session_state.quiz_started_at = datetime.now(timezone.utc)
     st.session_state.quiz_finished_at = None
 
+# =========================================
+# NONBLOCKING ENGLISH EXPLANATION
+# =========================================
 
+@st.fragment(run_every="2s")
+def show_async_explanation(
+    question_id,
+    italian_text,
+    english_text,
+    correct_answer,
+    image_file=None,
+):
+    """
+    Show saved explanations or monitor Gemini.
+
+    Only this small section refreshes while waiting.
+    """
+
+    cache = st.session_state.setdefault(
+        "quiz_explanation_cache", {}
+    )
+
+    # Check PostgreSQL only once per session/question.
+    checked = st.session_state.setdefault(
+        "quiz_explanation_db_checked", set()
+    )
+
+    if question_id not in cache and question_id not in checked:
+        try:
+            saved = get_saved_explanation(question_id)
+
+            if saved:
+                cache[question_id] = saved
+
+            checked.add(question_id)
+
+        except Exception:
+            st.caption(
+                "Explanation storage is temporarily unavailable."
+            )
+            return
+
+    explanation = cache.get(question_id)
+
+    if explanation:
+        st.markdown("**💡 Explanation in English**")
+        st.info(explanation)
+        st.caption(
+            "AI-generated study guidance; "
+            "verify important driving rules."
+        )
+        return
+
+    tasks = st.session_state.setdefault(
+        "quiz_explanation_tasks", {}
+    )
+
+    if question_id not in tasks:
+        try:
+            correct_text = (
+                "VERO" if correct_answer else "FALSO"
+            )
+
+            tasks[question_id] = start_explanation_task(
+                question_id=question_id,
+                italian_question=italian_text,
+                english_translation=english_text,
+                correct_answer=correct_text,
+                image_file=image_file,
+            )
+
+        except Exception:
+            st.caption(
+                "Explanation is temporarily unavailable."
+            )
+            return
+
+    future = tasks[question_id]
+
+    if not future.done():
+        st.caption(
+            "💡 Preparing explanation... "
+            "You can continue studying."
+        )
+        return
+
+    try:
+        explanation = future.result()
+
+        if not explanation:
+            raise ValueError("Empty explanation.")
+
+        cache[question_id] = explanation
+
+        try:
+            save_explanation(question_id, explanation)
+        except Exception:
+            # Explanation can still be displayed.
+            # Database saving can be retried separately.
+            pass
+
+        st.markdown("**💡 Explanation in English**")
+        st.info(explanation)
+        st.caption(
+            "AI-generated study guidance; "
+            "verify important driving rules."
+        )
+
+    except Exception:
+        st.caption(
+            "Explanation is temporarily unavailable. "
+            "The English translation is still available."
+        )
 # =========================================
 # STUDY FAILED QUESTION — QUIZ MODAL
 # =========================================
@@ -406,7 +524,7 @@ def show_quiz_failed_question_modal(question, number):
         visible = st.session_state[visibility_key]
 
         if st.button(
-            "Show Translation" if visible else "🌐Hide  Translate",
+            "Hide Translation" if visible else "🌐 Translate",
             key=f"quiz_study_modal_translate_{question_id}",
             use_container_width=True,
         ):
@@ -437,6 +555,15 @@ def show_quiz_failed_question_modal(question, number):
                 if english_text:
                     st.markdown("**English Translation**")
                     st.info(english_text)
+                    show_async_explanation(
+                             question_id=question_id,
+                            italian_text=italian_text,
+                            english_text=english_text,
+                             correct_answer=normalize_correct_answer(
+                        question["correct_answer"]
+        ),
+        image_file=image_file,
+    )
                 else:
                     st.warning(
                         "Translation unavailable."
@@ -1190,6 +1317,7 @@ def show_question_card(question, question_number):
                     st.session_state.quiz_translation_cache
                 )
 
+ 
                 if question_id in translation_cache:
                     english_text = (
                         translation_cache[question_id]
@@ -1211,55 +1339,23 @@ def show_question_card(question, question_number):
                             english_text
                         )
 
-               
                 if english_text:
                     st.markdown("**English Translation**")
                     st.info(english_text)
 
                     # =====================================
-                    # AI EXPLANATION
+                    # NONBLOCKING AI EXPLANATION
                     # =====================================
 
-                    explanation_cache = st.session_state.setdefault(
-                        "quiz_explanation_cache", {}
+                    show_async_explanation(
+                        question_id=question_id,
+                        italian_text=italian_text,
+                        english_text=english_text,
+                        correct_answer=normalize_correct_answer(
+                            question["correct_answer"]
+                        ),
+                        image_file=image_file,
                     )
-
-                    if question_id not in explanation_cache:
-                        with st.spinner("Preparing explanation..."):
-                            try:
-                                correct_answer = normalize_correct_answer(
-                                    question["correct_answer"]
-                                )
-
-                                correct_text = (
-                                    "VERO" if correct_answer else "FALSO"
-                                )
-
-                                explanation = generate_question_explanation(
-                                    italian_question=italian_text,
-                                    english_translation=english_text,
-                                    correct_answer=correct_text,
-                                )
-
-                                explanation_cache[question_id] = explanation
-
-                            except Exception as exc:
-                                st.warning(
-                                    "Explanation is temporarily unavailable."
-                                )
-                                st.caption(
-                                    f"{type(exc).__name__}: {exc}"
-                                )
-
-                    explanation = explanation_cache.get(question_id)
-
-                    if explanation:
-                        st.markdown("**💡 Explanation in English**")
-                        st.info(explanation)
-                        st.caption(
-                            "AI-generated study guidance; verify important rules."
-                        )
-
 
                 else:
                     st.warning(
@@ -1289,7 +1385,7 @@ def show_question_card(question, question_number):
             with image_col:
 
                 with st.container(
-                     key=f"quiz_question_image_{question_id}"
+                    key=f"quiz_question_image_{question_id}"
                 ):
                     st.image(
                         str(image_file),
@@ -1301,7 +1397,6 @@ def show_question_card(question, question_number):
 
         else:
             display_question_text()
-
 
 # =========================================
 # SUBMIT / REVIEW MODAL
