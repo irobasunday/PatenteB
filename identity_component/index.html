@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Patente B Identity Test</title>
+</head>
+<body>
+<script>
+    const STORAGE_KEY = "patenteb_testing_browser_id";
+    const LOCK_NAME = "patenteb_testing_identity_lock";
+
+    function sendResult(value) {
+        window.parent.postMessage(
+            {
+                isStreamlitMessage: true,
+                type: "streamlit:setComponentValue",
+                value: value
+            },
+            "*"
+        );
+    }
+
+    function readId() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+
+        if (raw === null) {
+            return null;
+        }
+
+        try {
+            const parsed = JSON.parse(raw);
+
+            if (typeof parsed === "string") {
+                return parsed;
+            }
+
+            return null;
+        } catch {
+            return raw;
+        }
+    }
+
+    function getOrCreateId() {
+        let id = readId();
+
+        if (!id) {
+            id = crypto.randomUUID();
+
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(id)
+            );
+        }
+
+        return id;
+    }
+
+    async function initializeIdentity() {
+        try {
+            let browserId;
+
+            if (navigator.locks) {
+                browserId = await navigator.locks.request(
+                    LOCK_NAME,
+                    async function() {
+                        return getOrCreateId();
+                    }
+                );
+            } else {
+                // Fallback for browsers without Web Locks.
+                // This does not guarantee cross-tab atomicity.
+                browserId = getOrCreateId();
+            }
+
+            sendResult({
+                ready: true,
+                browser_id: browserId,
+                status: "existing"
+            });
+
+        } catch (error) {
+            sendResult({
+                ready: false,
+                browser_id: null,
+                status: "error",
+                message: error.message
+            });
+        }
+    }
+
+    window.addEventListener("message", function(event) {
+        if (
+            event.data &&
+            event.data.type === "streamlit:render"
+        ) {
+            initializeIdentity();
+        }
+    });
+
+    window.parent.postMessage(
+        {
+            isStreamlitMessage: true,
+            type: "streamlit:componentReady",
+            apiVersion: 1
+        },
+        "*"
+    );
+
+    window.parent.postMessage(
+        {
+            isStreamlitMessage: true,
+            type: "streamlit:setFrameHeight",
+            height: 0
+        },
+        "*"
+    );
+</script>
+</body>
+</html>

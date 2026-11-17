@@ -1,8 +1,22 @@
 
+"""
+Patente B - Main Application
+
+Includes:
+- Automatic anonymous student identification
+- Welcome page
+- Dashboard
+- Argomenti learning
+- Quiz Translate Mode
+- Instant Correction Mode
+- Shared header and footer
+- Quiz modal
+- URL navigation
+"""
+
 import streamlit as st
 
 from browser_identity import initialize_browser_identity
-from student_tracking import register_student
 
 from dashboard import show_dashboard
 from styles_loader import load_css
@@ -17,6 +31,7 @@ from argomenti import show_argomenti
 # =========================================
 # STREAMLIT CONFIGURATION
 # =========================================
+
 st.set_page_config(
     page_title="Patente B",
     page_icon="🚗",
@@ -35,6 +50,7 @@ load_css()
 # =========================================
 # PAGE CONFIGURATION
 # =========================================
+
 VALID_PAGES = {
     "welcome",
     "dashboard",
@@ -44,12 +60,16 @@ VALID_PAGES = {
     "coming_soon",
 }
 
-QUIZ_PAGES = {"quiz", "instant_correction"}
+QUIZ_PAGES = {
+    "quiz",
+    "instant_correction",
+}
 
 
 # =========================================
 # SESSION DEFAULTS
 # =========================================
+
 defaults = {
     "open_quiz_modal": False,
     "quiz_translation": False,
@@ -68,10 +88,16 @@ for key, value in defaults.items():
 # =========================================
 # AUTOMATIC STUDENT IDENTIFICATION
 # =========================================
+
 def initialize_student():
     """
-    Resolve one student ID and confirm
-    that it exists in PostgreSQL.
+    Recover the browser identity and confirm
+    its registration in PostgreSQL.
+
+    The browser component handles UUID
+    creation and persistence.
+
+    No login or registration buttons.
     """
 
     browser_id = initialize_browser_identity()
@@ -79,29 +105,22 @@ def initialize_student():
     if not browser_id:
         return None
 
-    if st.session_state.get(
-        "registered_student_id"
-    ) != browser_id:
-
-        if not register_student(browser_id):
-            return None
-
-        st.session_state.registered_student_id = (
-            browser_id
-        )
-
     st.session_state.browser_id = browser_id
 
     return browser_id
 
 
-# Initialize the student once during app execution
+# Initialize identity once per full app run.
+# The browser component triggers a rerun
+# when its JavaScript result becomes ready.
+
 student_browser_id = initialize_student()
 
 
 # =========================================
 # URL HELPERS
 # =========================================
+
 def valid_id(value):
     if value is None:
         return None
@@ -119,7 +138,11 @@ def valid_id(value):
 
 
 def read_url_location():
-    page = st.query_params.get("page", "welcome")
+
+    page = st.query_params.get(
+        "page",
+        "welcome"
+    )
 
     if page not in VALID_PAGES:
         page = "welcome"
@@ -128,11 +151,13 @@ def read_url_location():
     subtopic_id = None
 
     if page == "argomenti":
+
         category_id = valid_id(
             st.query_params.get("category")
         )
 
         if category_id is not None:
+
             subtopic_id = valid_id(
                 st.query_params.get("subtopic")
             )
@@ -145,19 +170,25 @@ def update_url(
     category_id=None,
     subtopic_id=None,
 ):
+
     params = {}
 
     if page != "dashboard":
         params["page"] = page
 
     if page == "argomenti":
+
         if category_id is not None:
+
             params["category"] = str(category_id)
 
             if subtopic_id is not None:
-                params["subtopic"] = str(subtopic_id)
+                params["subtopic"] = str(
+                    subtopic_id
+                )
 
     if dict(st.query_params) != params:
+
         st.query_params.clear()
         st.query_params.update(params)
 
@@ -165,6 +196,7 @@ def update_url(
 # =========================================
 # RESTORE LOCATION FROM URL
 # =========================================
+
 url_page, url_category, url_subtopic = (
     read_url_location()
 )
@@ -175,8 +207,10 @@ current_url_signature = (
     url_subtopic,
 )
 
-previous_url_signature = st.session_state.get(
-    "_last_url_signature"
+previous_url_signature = (
+    st.session_state.get(
+        "_last_url_signature"
+    )
 )
 
 if previous_url_signature != current_url_signature:
@@ -199,7 +233,9 @@ if previous_url_signature != current_url_signature:
 # =========================================
 # NAVIGATION
 # =========================================
+
 def navigate_to(page):
+
     if page not in VALID_PAGES:
         page = "welcome"
 
@@ -209,9 +245,13 @@ def navigate_to(page):
         st.session_state.recovery_handled = False
 
     if page == "quiz":
-        st.session_state.quiz_mode = "translate"
+
+        st.session_state.quiz_mode = (
+            "translate"
+        )
 
     elif page == "instant_correction":
+
         st.session_state.quiz_mode = (
             "instant_correction"
         )
@@ -231,11 +271,14 @@ def navigate_to(page):
 # =========================================
 # WELCOME PAGE
 # =========================================
+
 def show_welcome():
+
     st.title("Welcome to Patente B")
 
     st.write(
-        "Prepare for your Italian driving theory exam."
+        "Prepare for your Italian driving "
+        "theory exam."
     )
 
     if st.button(
@@ -246,200 +289,85 @@ def show_welcome():
 
 
 # =========================================
-# STUDENT IDENTITY RECOVERY
+# AUTOMATIC STUDENT IDENTITY RECOVERY
 # =========================================
 
-# =========================================
-# STUDENT IDENTITY RECOVERY
-# =========================================
-
-
-# =========================================
-# STUDENT IDENTITY RECOVERY
-# =========================================
-@st.fragment(run_every="1s")
-
-# =========================================
-# AUTOMATIC STUDENT IDENTITY
-# =========================================
 @st.fragment(run_every="1s")
 def wait_for_browser_recovery():
     """
-    Automatically recover or register students.
+    Display a waiting message while the
+    browser identity is being resolved.
 
-    No registration button.
-    No diagnostic interface.
+    The identity component is mounted in
+    the main app, not duplicated here.
+
+    Its response triggers a full app rerun.
     """
-
-    browser_id = initialize_student()
-
-    if browser_id:
-        st.rerun(scope="app")
-        return
 
     st.info(
         "Preparing your student account..."
     )
 
 
-    browser_id = initialize_student()
-
-    if browser_id:
-        st.rerun(scope="app")
-        return
-
-    if st.session_state.get(
-        "identity_recovery_needed",
-        False
-    ):
-        st.warning(
-            "Your saved student identity "
-            "could not be verified."
-        )
-
-        st.info(
-            "If you have previous learning progress, "
-            "do not start a new account until "
-            "your identity has been checked."
-        )
-
-        if st.button(
-            "Start as a New Student",
-            key="start_new_student_button"
-        ):
-            new_id = start_new_student()
-
-            if new_id:
-                st.rerun(scope="app")
-            else:
-                st.error(
-                    "Unable to register student. "
-                    "Please try again."
-                )
-
-        return
-
-    st.info("Preparing your student account...")
-
-    """
-    Diagnose student identity recovery
-    on Streamlit Community Cloud.
-    """
-
-    browser_id = initialize_student()
-
-    # Student successfully identified.
-    if browser_id:
-        st.rerun(scope="app")
-        return
-
-    st.warning(
-        "Student identity not yet resolved."
-    )
-
-    # Check whether browser storage exists.
-    storage = st.session_state.get(
-        "browser_local_storage"
-    )
-
-    if storage is None:
-        st.error(
-            "DIAGNOSTIC: Browser storage "
-            "has not been initialized."
-        )
-
-    else:
-        stored_items = getattr(
-            storage,
-            "storedItems",
-            None
-        )
-
-        st.write(
-            "DIAGNOSTIC - Storage type:",
-            type(stored_items).__name__
-        )
-
-        st.write(
-            "DIAGNOSTIC - Storage ready:",
-            isinstance(stored_items, dict)
-        )
-
-    # Check identity session state.
-    st.write(
-        "DIAGNOSTIC - Identity resolved:",
-        st.session_state.get(
-            "identity_resolved",
-            False
-        )
-    )
-
-    st.write(
-        "DIAGNOSTIC - Pending student:",
-        bool(
-            st.session_state.get(
-                "pending_student_id"
-            )
-        )
-    )
-
-    st.write(
-        "DIAGNOSTIC - Student registered:",
-        bool(
-            st.session_state.get(
-                "registered_student_id"
-            )
-        )
-    )
-
-
-
 # =========================================
 # PAGE ROUTING
 # =========================================
+
 current_page = st.session_state.page
 
 if current_page not in VALID_PAGES:
+
     current_page = "welcome"
+
     st.session_state.page = current_page
 
 
 # =========================================
 # SHARED HEADER
 # =========================================
+
 if current_page not in QUIZ_PAGES | {"argomenti"}:
+
     show_header()
 
 
 # =========================================
 # WELCOME
 # =========================================
+
 if current_page == "welcome":
+
     show_welcome()
 
 
 # =========================================
 # DASHBOARD
 # =========================================
+
 elif current_page == "dashboard":
+
     show_dashboard()
 
 
 # =========================================
 # ARGOMENTI
 # =========================================
+
 elif current_page == "argomenti":
 
     if student_browser_id:
+
         show_argomenti()
 
     else:
+
         wait_for_browser_recovery()
 
 
 # =========================================
 # QUIZ TRANSLATE MODE
 # =========================================
+
 elif current_page == "quiz":
 
     st.session_state.quiz_mode = "translate"
@@ -451,15 +379,18 @@ elif current_page == "quiz":
         navigate_to("dashboard")
 
     if student_browser_id:
+
         show_quiz()
 
     else:
+
         wait_for_browser_recovery()
 
 
 # =========================================
 # INSTANT CORRECTION
 # =========================================
+
 elif current_page == "instant_correction":
 
     st.session_state.quiz_mode = (
@@ -473,15 +404,18 @@ elif current_page == "instant_correction":
         navigate_to("dashboard")
 
     if student_browser_id:
+
         show_instant_correction()
 
     else:
+
         wait_for_browser_recovery()
 
 
 # =========================================
 # COMING SOON
 # =========================================
+
 elif current_page == "coming_soon":
 
     st.title("🚧 Coming Soon")
@@ -501,12 +435,16 @@ elif current_page == "coming_soon":
 # =========================================
 # SHARED FOOTER
 # =========================================
+
 show_footer()
 
 
 # =========================================
 # QUIZ MODAL
 # =========================================
+
 if st.session_state.open_quiz_modal:
+
     st.session_state.open_quiz_modal = False
+
     show_quiz_modal()
