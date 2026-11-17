@@ -729,7 +729,7 @@ def show_results():
 
             
             border_color = "#22c55e" if is_correct else "#ef4444"
-            status = "Ô£ô Correct" if is_correct else "Incorrect"
+            status = "Correct" if is_correct else "Incorrect"
 
             # Apply the border to the entire review container.
             st.markdown(
