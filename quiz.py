@@ -1549,7 +1549,7 @@ def show_quiz():
             with st.container(key="quiz_vero"):
 
                 label = (
-                    "Ô£ô VERO"
+                    " VERO"
                     if selected is True
                     else "VERO"
                 )
@@ -1595,7 +1595,7 @@ def show_quiz():
             with st.container(key="quiz_next"):
 
                 if st.button(
-                    "Next-->",
+                    "Next -->",
                     disabled=(
                         index == active_question_count() - 1
                     ),
