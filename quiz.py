@@ -455,7 +455,7 @@ def show_results():
 
         with st.container(key="result_duration"):
             st.metric(
-                "ÔÅ▒ Time Taken",
+                " Time Taken",
                 f"{minutes}m {seconds:02d}s"
             )
 
@@ -575,30 +575,20 @@ def show_results():
                     f"Related topic: {topic_name}"
                 )
 
-                # LINK TO THE EXACT ARGOMENTI LESSON
-                category_id = question.get("chapter_id")
-                subtopic_id = question.get("subtopic_id")
 
-                
-                # Show lesson link only for failed questions
-                
-                # Show direct question link only for failed questions
+                # =====================================
+                # STUDY FAILED QUESTION — QUIZ MODAL
+                # =====================================
+
                 if not is_correct:
-                    category_id = question.get("chapter_id")
-                    subtopic_id = question.get("subtopic_id")
-
-                    if category_id and subtopic_id:
-                        question_url = (
-                            "https://patenteb.streamlit.app/"
-                            "?page=argomenti"
-                            f"&category={int(category_id)}"
-                            f"&subtopic={int(subtopic_id)}"
-                            f"&question={int(question_id)}"
-                        )
-
-                        st.link_button(
-                            "­ƒôû Study this question Ôåù",
-                            question_url,
+                    if st.button(
+                        "📖 Study This Question",
+                        key=f"study_failed_question_{question_id}",
+                        use_container_width=True,
+                    ):
+                        show_quiz_failed_question_modal(
+                            question,
+                            number,
                         )
 
 
@@ -763,13 +753,13 @@ def show_live_timer():
 
     elif remaining <= 300:
         st.error(
-            f"ÔÅ▒ Time Remaining: "
+            f" Time Remaining: "
             f"{minutes:02d}:{seconds:02d}"
         )
 
     else:
         st.info(
-            f"ÔÅ▒ Time Remaining: "
+            f"Time Remaining: "
             f"{minutes:02d}:{seconds:02d}"
         )
 
