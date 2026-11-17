@@ -466,7 +466,13 @@ def back_to_dashboard():
     st.rerun()
 
 
+def back_to_categories():
+    """Return to the Argomenti chapter list."""
 
+    st.session_state.argomenti_category_id = None
+    st.session_state.argomenti_subtopic_id = None
+
+    st.rerun()
 # ==========================================
 # PAGE HEADER
 # ==========================================
@@ -921,9 +927,9 @@ def show_subtopics(category_id):
     )
 
     show_page_heading(
-        f'{category_number} - {category["name"]}',
+                f'{category_number} - {category["name"]}',
         back_to_categories,
-    )
+        )
 
     numbered_subtopics = get_numbered_subtopics(
         subtopics
