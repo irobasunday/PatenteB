@@ -361,8 +361,22 @@ def show_quiz_failed_question_modal(question, number):
         )
 
         if image_file:
-            st.image(str(image_file), width=170)
+            st.markdown(
+                """
+                <style>
+                [data-testid="stDialog"] [data-testid="stImage"] {
+                    display: flex;
+                    justify-content: center;
+                }
+                </style>
+                """,
+                unsafe_allow_html=True,
+            )
 
+            st.image(
+                str(image_file),
+                width=170,
+            )
         st.markdown("**🔊 Italian Audio**")
 
         show_italian_audio(
@@ -372,7 +386,50 @@ def show_quiz_failed_question_modal(question, number):
 
         st.divider()
 
+       
+        # =====================================
+        # TRANSLATION — OPEN / CLOSE
+        # =====================================
+
         visibility_key = f"quiz_study_visible_{question_id}"
+
+        if visibility_key not in st.session_state:
+            st.session_state[visibility_key] = False
+
+        visible = st.session_state[visibility_key]
+
+        if st.button(
+            "Hide Translation" if visible else "🌐 Translate",
+            key=f"quiz_study_translate_{question_id}",
+            use_container_width=True,
+        ):
+            st.session_state[visibility_key] = not visible
+            st.rerun()
+
+        if st.session_state[visibility_key]:
+            try:
+                cache = st.session_state.quiz_translation_cache
+
+                english_text = cache.get(question_id)
+
+                if not english_text:
+                    with st.spinner("Translating..."):
+                        english_text = get_or_create_translation(
+                            question_id,
+                            italian_text,
+                        )
+
+                    if english_text:
+                        cache[question_id] = english_text
+
+                if english_text:
+                    st.markdown("**English Translation**")
+                    st.info(english_text)
+                else:
+                    st.warning("Translation unavailable.")
+
+            except Exception as exc:
+                st.error(f"Translation failed: {exc}")
 
         if visibility_key not in st.session_state:
             st.session_state[visibility_key] = False
