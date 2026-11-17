@@ -1535,7 +1535,7 @@ def show_quiz():
             with st.container(key="quiz_previous"):
 
                 if st.button(
-                    "ÔåÉ Previous",
+                    "<-Previous",
                     disabled=index == 0,
                     use_container_width=True,
                 ):
@@ -1595,7 +1595,7 @@ def show_quiz():
             with st.container(key="quiz_next"):
 
                 if st.button(
-                    "Next ÔåÆ",
+                    "Next-->",
                     disabled=(
                         index == active_question_count() - 1
                     ),
