@@ -1165,9 +1165,9 @@ def show_question_card(question, question_number):
         )
 
         button_label = (
-            "Show Translation"
+            "Hide Translation"
             if is_visible
-            else "Hide Translation"
+            else "Show Translation"
         )
 
         if st.button(
