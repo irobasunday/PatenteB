@@ -579,20 +579,24 @@ def show_results():
                 category_id = question.get("chapter_id")
                 subtopic_id = question.get("subtopic_id")
 
-                if category_id and subtopic_id:
-                   
-                    lesson_url = (
-                        "https://patenteb.streamlit.app/"
-                        "?page=argomenti"
-                        f"&category={int(category_id)}"
-                        f"&subtopic={int(subtopic_id)}"
-                    )
+                
+                # Show lesson link only for failed questions
+                if not is_correct:
+                    category_id = question.get("chapter_id")
+                    subtopic_id = question.get("subtopic_id")
 
+                    if category_id and subtopic_id:
+                        lesson_url = (
+                            "https://patenteb.streamlit.app/"
+                            "?page=argomenti"
+                            f"&category={int(category_id)}"
+                            f"&subtopic={int(subtopic_id)}"
+                        )
 
-                    st.link_button(
-                        "📖 Study this lesson ↗",
-                        lesson_url,
-                    )
+                        st.link_button(
+                            "📖 Study this lesson ↗",
+                            lesson_url,
+                        )
 
 
                 st.divider()
