@@ -436,13 +436,7 @@ def show_quiz_failed_question_modal(question, number):
 
         visible = st.session_state[visibility_key]
 
-        if st.button(
-            "Hide Translation" if visible else "🌐 Translate",
-            key=f"quiz_study_translate_{question_id}",
-            use_container_width=True,
-        ):
-            st.session_state[visibility_key] = not visible
-            st.rerun()
+       
 
         if st.session_state[visibility_key]:
             try:
