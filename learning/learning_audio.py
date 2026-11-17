@@ -6,7 +6,7 @@ import streamlit.components.v1 as components
 
 
 def show_learning_audio(question_text, question_id):
-    """Display the Italian Play/Stop audio player."""
+    """Display a compact Italian Play/Pause audio button."""
 
     text_json = json.dumps(
         str(question_text),
@@ -18,34 +18,10 @@ def show_learning_audio(question_text, question_id):
     )
 
     html_code = r"""
-<div class="audio-player">
-
-  <div class="audio-heading">
-    🔊 Ascolta in italiano
-  </div>
-
-  <div class="audio-controls">
-
-    <button id="playButton" type="button">
-      ▶ Play
-    </button>
-
-    <label for="speedSelect">Speed</label>
-
-    <select id="speedSelect">
-      <option value="0.75">0.75×</option>
-      <option value="0.9" selected>0.9× Clear</option>
-      <option value="1">1× Normal</option>
-      <option value="1.25">1.25×</option>
-      <option value="1.5">1.5×</option>
-    </select>
-
-  </div>
-
-  <p id="audioStatus" aria-live="polite">
-    Tap Play to hear the Italian question.
-  </p>
-
+<div class="audio-controls">
+  <button id="playButton" type="button">
+    ▶ Ascolta in italiano
+  </button>
 </div>
 
 <style>
@@ -53,74 +29,42 @@ def show_learning_audio(question_text, question_id):
     box-sizing: border-box;
   }
 
-  body {
+  html, body {
     margin: 0;
+    padding: 0;
     background: transparent;
     font-family: system-ui, sans-serif;
-    color: #e5e7eb;
-  }
-
-  .audio-player {
-    background: #151c2d;
-    border: 1px solid #35425b;
-    border-radius: 12px;
-    padding: 12px;
-    width: 100%;
-  }
-
-  .audio-heading {
-    font-size: 14px;
-    font-weight: 650;
-    margin-bottom: 9px;
   }
 
   .audio-controls {
     display: flex;
+    justify-content: center;
     align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
+    width: 100%;
+    padding: 8px 0;
   }
 
-  button {
+  #playButton {
     background: #2563eb;
     color: white;
-    border: 0;
-    border-radius: 8px;
-    padding: 9px 15px;
-    min-height: 40px;
-    font: inherit;
-    font-size: 14px;
+    border: 1px solid #60a5fa;
+    border-radius: 12px;
+    padding: 12px 22px;
+    min-height: 48px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
+    transition: background 0.2s ease;
   }
 
-  button:hover {
+  #playButton:hover {
     background: #1d4ed8;
   }
 
-  button:disabled {
+  #playButton:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-
-  label {
-    font-size: 13px;
-  }
-
-  select {
-    background: #27344a;
-    color: white;
-    border: 1px solid #52627c;
-    border-radius: 8px;
-    padding: 9px 12px;
-    min-height: 40px;
-    font: inherit;
-    font-size: 14px;
-  }
-
-  #audioStatus {
-    font-size: 12px;
-    color: #b9c5d6;
-    margin: 9px 0 0;
   }
 </style>
 
@@ -132,54 +76,59 @@ def show_learning_audio(question_text, question_id):
   const playButton =
     document.getElementById("playButton");
 
-  const speedSelect =
-    document.getElementById("speedSelect");
-
-  const statusText =
-    document.getElementById("audioStatus");
-
   const supported =
     "speechSynthesis" in window &&
     "SpeechSynthesisUtterance" in window;
 
-  const synth = supported
-    ? window.speechSynthesis
-    : null;
+  if (!supported) {
+    playButton.disabled = true;
+    playButton.textContent = "Audio unavailable";
+    return;
+  }
+
+  const synth = window.speechSynthesis;
 
   let playing = false;
+  let paused = false;
   let playToken = 0;
   let currentUtterance = null;
 
-   function chooseVoice() {
-      const voices = synth.getVoices();
-      const italian = voices.filter(v => /^it([_-]|$)/i.test(v.lang));
-      return italian.find(v => /google italiano/i.test(v.name)) ||
-             italian.find(v => /google/i.test(v.name)) ||
-             italian.find(v => v.localService) ||
-             italian[0] || null;
-    }
+  function chooseVoice() {
+    const voices = synth.getVoices();
+
+    const italian = voices.filter(
+      v => /^it([_-]|$)/i.test(v.lang)
+    );
+
+    return italian.find(
+      v => /google italiano/i.test(v.name)
+    ) ||
+    italian.find(
+      v => /google/i.test(v.name)
+    ) ||
+    italian.find(
+      v => v.localService
+    ) ||
+    italian[0] ||
+    null;
+  }
 
   function resetButton() {
     playing = false;
-    playButton.textContent = "▶ Play";
-  }
-
-  function stop() {
-
-    playToken += 1;
-
-    synth.cancel();
+    paused = false;
     currentUtterance = null;
-
-    resetButton();
-
-    statusText.textContent =
-      "Playback stopped.";
+    playButton.textContent = "▶ Ascolta in italiano";
   }
 
   function play() {
 
-    if (!supported) return;
+    if (paused && currentUtterance) {
+      synth.resume();
+      paused = false;
+      playing = true;
+      playButton.textContent = "⏸ Pause";
+      return;
+    }
 
     synth.cancel();
 
@@ -195,85 +144,69 @@ def show_learning_audio(question_text, question_id):
     }
 
     utterance.lang = "it-IT";
-    utterance.rate = Number(speedSelect.value);
+
+    // Fixed playback speed: 0.9x Clear
+    utterance.rate = 0.9;
+
     utterance.pitch = 1;
     utterance.volume = 1;
 
     currentUtterance = utterance;
 
-    utterance.onstart = () => {
-      if (token !== playToken) return;
-
-      statusText.textContent = voice
-        ? "Playing: " + voice.name
-        : "Playing Italian question...";
-    };
-
     utterance.onend = () => {
       if (token !== playToken) return;
-
-      currentUtterance = null;
       resetButton();
-
-      statusText.textContent =
-        "Playback finished.";
     };
 
     utterance.onerror = event => {
       if (token !== playToken) return;
 
-      currentUtterance = null;
       resetButton();
 
       if (
         event.error !== "canceled" &&
         event.error !== "interrupted"
       ) {
-        statusText.textContent =
-          "Italian audio unavailable on this device.";
+        playButton.textContent = "Audio unavailable";
       }
     };
 
     synth.speak(utterance);
 
     playing = true;
-    playButton.textContent = "■ Stop";
-
-    statusText.textContent =
-      "Starting Italian audio...";
+    paused = false;
+    playButton.textContent = "⏸ Pause";
   }
 
-  if (!supported) {
+  function pause() {
+    if (!playing) return;
 
-    playButton.disabled = true;
+    synth.pause();
 
-    statusText.textContent =
-      "Speech playback is not supported in this browser.";
+    playing = false;
+    paused = true;
 
-  } else {
-
-    synth.getVoices();
-
-    playButton.addEventListener("click", () => {
-      if (playing) {
-        stop();
-      } else {
-        play();
-      }
-    });
-
-    speedSelect.addEventListener("change", () => {
-      if (playing) {
-        play();
-      }
-    });
-
-    window.addEventListener("pagehide", () => {
-      if (playing) {
-        stop();
-      }
-    });
+    playButton.textContent = "▶ Resume";
   }
+
+  playButton.addEventListener("click", () => {
+
+    if (playing) {
+      pause();
+    } else {
+      play();
+    }
+
+  });
+
+  // Preserve browser voice initialization.
+  synth.getVoices();
+
+  // Stop audio when leaving the page.
+  window.addEventListener("pagehide", () => {
+    playToken += 1;
+    synth.cancel();
+  });
 
 })();
 </script>
@@ -286,6 +219,6 @@ def show_learning_audio(question_text, question_id):
 
     components.html(
         html_code,
-        height=125,
+        height=75,
         scrolling=False
     )
