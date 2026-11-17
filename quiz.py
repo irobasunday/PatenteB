@@ -281,14 +281,15 @@ def reset_quiz(questions):
 # STUDY FAILED QUESTION — QUIZ MODAL
 # =========================================
 
-
 @st.dialog("📖 Study This Question", width="large")
 def show_quiz_failed_question_modal(question, number):
     """Study a failed question without leaving Quiz Results."""
 
     question_id = question["id"]
     italian_text = str(question["question"])
-    image_file = get_question_image(question.get("image_path"))
+    image_file = get_question_image(
+        question.get("image_path")
+    )
 
     topic = (
         question.get("subtopic_name")
@@ -296,19 +297,15 @@ def show_quiz_failed_question_modal(question, number):
         or "Patente B"
     )
 
-    # Popup-specific styling
+    # =====================================
+    # POPUP STYLING
+    # =====================================
+
     st.markdown("""
     <style>
-    div[data-testid="stDialog"] div[data-testid="stVerticalBlockBorderWrapper"] {
+    div[data-testid="stDialog"]
+    div[data-testid="stVerticalBlockBorderWrapper"] {
         border-radius: 16px;
-    }
-
-    .pb-study-question {
-        background: #172236;
-        border: 1px solid #334155;
-        border-radius: 14px;
-        padding: 18px;
-        margin-bottom: 12px;
     }
 
     .pb-study-question-text {
@@ -342,8 +339,17 @@ def show_quiz_failed_question_modal(question, number):
     .pb-study-correct strong {
         color: #4ade80;
     }
+
+    [data-testid="stDialog"] [data-testid="stImage"] {
+        display: flex;
+        justify-content: center;
+    }
     </style>
     """, unsafe_allow_html=True)
+
+    # =====================================
+    # QUESTION TOPIC
+    # =====================================
 
     st.markdown(
         f'<span class="pb-study-topic">'
@@ -352,7 +358,12 @@ def show_quiz_failed_question_modal(question, number):
         unsafe_allow_html=True,
     )
 
+    # =====================================
+    # QUESTION CONTENT
+    # =====================================
+
     with st.container(border=True):
+
         st.markdown(
             '<div class="pb-study-question-text">'
             + html.escape(italian_text)
@@ -360,23 +371,17 @@ def show_quiz_failed_question_modal(question, number):
             unsafe_allow_html=True,
         )
 
+        # Center question image
         if image_file:
-            st.markdown(
-                """
-                <style>
-                [data-testid="stDialog"] [data-testid="stImage"] {
-                    display: flex;
-                    justify-content: center;
-                }
-                </style>
-                """,
-                unsafe_allow_html=True,
-            )
-
             st.image(
                 str(image_file),
                 width=170,
             )
+
+        # =====================================
+        # ITALIAN AUDIO
+        # =====================================
+
         st.markdown("**🔊 Italian Audio**")
 
         show_italian_audio(
@@ -386,12 +391,13 @@ def show_quiz_failed_question_modal(question, number):
 
         st.divider()
 
-       
         # =====================================
         # TRANSLATION — OPEN / CLOSE
         # =====================================
 
-        visibility_key = f"quiz_study_visible_{question_id}"
+        visibility_key = (
+            f"quiz_study_visible_{question_id}"
+        )
 
         if visibility_key not in st.session_state:
             st.session_state[visibility_key] = False
@@ -400,23 +406,28 @@ def show_quiz_failed_question_modal(question, number):
 
         if st.button(
             "Hide Translation" if visible else "🌐 Translate",
-            key=f"quiz_study_translate_{question_id}",
+            key=f"quiz_study_modal_translate_{question_id}",
             use_container_width=True,
         ):
-            st.session_state[visibility_key] = not visible
-            st.rerun()
+            visible = not visible
+            st.session_state[visibility_key] = visible
 
-        if st.session_state[visibility_key]:
+        # Display translation only when visible
+        if visible:
             try:
-                cache = st.session_state.quiz_translation_cache
+                cache = (
+                    st.session_state.quiz_translation_cache
+                )
 
                 english_text = cache.get(question_id)
 
                 if not english_text:
                     with st.spinner("Translating..."):
-                        english_text = get_or_create_translation(
-                            question_id,
-                            italian_text,
+                        english_text = (
+                            get_or_create_translation(
+                                question_id,
+                                italian_text,
+                            )
                         )
 
                     if english_text:
@@ -426,42 +437,18 @@ def show_quiz_failed_question_modal(question, number):
                     st.markdown("**English Translation**")
                     st.info(english_text)
                 else:
-                    st.warning("Translation unavailable.")
+                    st.warning(
+                        "Translation unavailable."
+                    )
 
             except Exception as exc:
-                st.error(f"Translation failed: {exc}")
+                st.error(
+                    f"Translation failed: {exc}"
+                )
 
-        if visibility_key not in st.session_state:
-            st.session_state[visibility_key] = False
-
-        visible = st.session_state[visibility_key]
-
-       
-
-        if st.session_state[visibility_key]:
-            try:
-                cache = st.session_state.quiz_translation_cache
-
-                if question_id not in cache:
-                    with st.spinner("Translating..."):
-                        translated = get_or_create_translation(
-                            question_id,
-                            italian_text,
-                        )
-
-                    if translated:
-                        cache[question_id] = translated
-
-                english_text = cache.get(question_id)
-
-                if english_text:
-                    st.markdown("**English Translation**")
-                    st.info(english_text)
-                else:
-                    st.warning("Translation unavailable.")
-
-            except Exception as exc:
-                st.error(f"Translation failed: {exc}")
+    # =====================================
+    # CORRECT ANSWER
+    # =====================================
 
     correct = normalize_correct_answer(
         question["correct_answer"]
@@ -475,6 +462,10 @@ def show_quiz_failed_question_modal(question, number):
         '</div>',
         unsafe_allow_html=True,
     )
+
+    # =====================================
+    # CLOSE POPUP
+    # =====================================
 
     if st.button(
         "Close",
