@@ -137,6 +137,7 @@ def valid_id(value):
     return None
 
 
+
 def read_url_location():
 
     page = st.query_params.get(
@@ -149,6 +150,7 @@ def read_url_location():
 
     category_id = None
     subtopic_id = None
+    question_id = None
 
     if page == "argomenti":
 
@@ -162,7 +164,13 @@ def read_url_location():
                 st.query_params.get("subtopic")
             )
 
-    return page, category_id, subtopic_id
+            if subtopic_id is not None:
+
+                question_id = valid_id(
+                    st.query_params.get("question")
+                )
+
+    return page, category_id, subtopic_id, question_id
 
 
 def update_url(
@@ -197,21 +205,27 @@ def update_url(
 # RESTORE LOCATION FROM URL
 # =========================================
 
-url_page, url_category, url_subtopic = (
+
+url_page, url_category, url_subtopic, url_question = (
     read_url_location()
 )
+
+
 
 current_url_signature = (
     url_page,
     url_category,
     url_subtopic,
+    url_question,
 )
+
 
 previous_url_signature = (
     st.session_state.get(
         "_last_url_signature"
     )
 )
+
 
 if previous_url_signature != current_url_signature:
 
@@ -225,6 +239,11 @@ if previous_url_signature != current_url_signature:
         url_subtopic
     )
 
+    # Store the exact question ID from the URL
+    st.session_state.argomenti_question_id = (
+        url_question
+    )
+
     st.session_state._last_url_signature = (
         current_url_signature
     )
@@ -233,6 +252,7 @@ if previous_url_signature != current_url_signature:
 # =========================================
 # NAVIGATION
 # =========================================
+
 
 def navigate_to(page):
 
@@ -256,8 +276,10 @@ def navigate_to(page):
             "instant_correction"
         )
 
+    # Clear previous Argomenti selections
     st.session_state.argomenti_category_id = None
     st.session_state.argomenti_subtopic_id = None
+    st.session_state.argomenti_question_id = None
 
     update_url(page)
 

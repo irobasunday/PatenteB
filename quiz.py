@@ -581,21 +581,24 @@ def show_results():
 
                 
                 # Show lesson link only for failed questions
+                
+                # Show direct question link only for failed questions
                 if not is_correct:
                     category_id = question.get("chapter_id")
                     subtopic_id = question.get("subtopic_id")
 
                     if category_id and subtopic_id:
-                        lesson_url = (
+                        question_url = (
                             "https://patenteb.streamlit.app/"
                             "?page=argomenti"
                             f"&category={int(category_id)}"
                             f"&subtopic={int(subtopic_id)}"
+                            f"&question={int(question_id)}"
                         )
 
                         st.link_button(
-                            "📖 Study this lesson ↗",
-                            lesson_url,
+                            "📖 Study this question ↗",
+                            question_url,
                         )
 
 

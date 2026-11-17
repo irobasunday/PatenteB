@@ -385,11 +385,15 @@ def update_argomenti_url(
         st.query_params.clear()
         st.query_params.update(params)
 
+    
     st.session_state._last_url_signature = (
         "argomenti",
         category_id,
         subtopic_id,
+        None,
     )
+
+
 
 
 def open_category(category_id):
@@ -397,6 +401,7 @@ def open_category(category_id):
 
     st.session_state.argomenti_category_id = category_id
     st.session_state.argomenti_subtopic_id = None
+    st.session_state.argomenti_question_id = None
 
     update_argomenti_url(
         category_id=category_id,
@@ -411,6 +416,7 @@ def open_subtopic(subtopic_id):
     category_id = st.session_state.argomenti_category_id
 
     st.session_state.argomenti_subtopic_id = subtopic_id
+    st.session_state.argomenti_question_id = None
 
     update_argomenti_url(
         category_id=category_id,
@@ -420,16 +426,6 @@ def open_subtopic(subtopic_id):
     st.rerun()
 
 
-def back_to_categories():
-    """Return to the chapter list."""
-
-    st.session_state.argomenti_category_id = None
-    st.session_state.argomenti_subtopic_id = None
-
-    update_argomenti_url()
-
-    st.rerun()
-
 
 def back_to_subtopics():
     """Return to the current chapter's subtopics."""
@@ -437,6 +433,7 @@ def back_to_subtopics():
     category_id = st.session_state.argomenti_category_id
 
     st.session_state.argomenti_subtopic_id = None
+    st.session_state.argomenti_question_id = None
 
     update_argomenti_url(
         category_id=category_id,
@@ -445,11 +442,14 @@ def back_to_subtopics():
     st.rerun()
 
 
+
+
 def back_to_dashboard():
     """Leave Argomenti and return to Dashboard."""
 
     st.session_state.argomenti_category_id = None
     st.session_state.argomenti_subtopic_id = None
+    st.session_state.argomenti_question_id = None
 
     st.session_state.page = "dashboard"
     st.session_state.recovery_handled = False
@@ -460,9 +460,11 @@ def back_to_dashboard():
         "dashboard",
         None,
         None,
+        None,
     )
 
     st.rerun()
+
 
 
 # ==========================================
