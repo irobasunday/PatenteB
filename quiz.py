@@ -1,4 +1,4 @@
-
+﻿
 import math
 import html
 from datetime import datetime, timezone
@@ -279,63 +279,270 @@ def reset_quiz(questions):
 
 # =========================================
 # QUIZ RESULTS
-
-# =========================================
-# QUIZ RESULTS
 # =========================================
 
-@st.dialog("📖 Study Failed Question", width="large")
-def show_quiz_failed_question_modal(question, number):
-    """
-    Display the exact failed question in a popup
-    without leaving Quiz Translate Mode.
-    """
+def show_results():
+    """Display results and failed-question review options."""
 
-    st.caption("Quiz Translate Mode — Question Review")
+    result = grade_quiz()
 
-    chapter_name = question.get("chapter_name")
-    subtopic_name = question.get("subtopic_name")
+    if st.session_state.quiz_finish_reason == "time_expired":
+        st.warning(
+            "Time expired. Your quiz was graded automatically."
+        )
 
-    if chapter_name:
-        st.caption(f"Chapter: {chapter_name}")
+    # Style only the results dashboard.
+    # Leave quiz controls and shared CSS intact.
+    st.markdown("""
+    <style>
+    [class*="st-key-results_dashboard"] {
+        background: #0f192b;
+        border: 1px solid #334155;
+        border-radius: 18px;
+        padding: clamp(14px, 3vw, 28px);
+        margin-bottom: 16px;
+    }
 
-    if subtopic_name:
-        st.caption(f"Subtopic: {subtopic_name}")
+    [class*="st-key-results_dashboard"] h2 {
+        margin-top: 0;
+    }
 
-    # Unique widget keys for the popup
-    show_question_card(
-        question,
-        number,
-        key_prefix="quiz_failed_modal",
+    [class*="st-key-result_answered"],
+    [class*="st-key-result_unanswered"],
+    [class*="st-key-result_correct"],
+    [class*="st-key-result_errors"],
+    [class*="st-key-result_duration"] {
+        background: #17253a;
+        border: 2px solid #475569;
+        border-radius: 14px;
+        padding: 14px 18px;
+        min-width: 0;
+    }
+
+    [class*="st-key-result_correct"] {
+        border-color: #22c55e;
+        background: #10271f;
+    }
+
+    [class*="st-key-result_errors"] {
+        border-color: #ef4444;
+        background: #301b25;
+    }
+
+    [class*="st-key-result_correct"] [data-testid="stMetricValue"] {
+        color: #4ade80;
+    }
+
+    [class*="st-key-result_errors"] [data-testid="stMetricValue"] {
+        color: #f87171;
+    }
+
+    [class*="st-key-result_duration"] {
+        border-color: #3b82f6;
+    }
+
+    [class*="st-key-result_status_pass"] {
+        background: #123326;
+        border: 1px solid #22c55e;
+        border-radius: 12px;
+        padding: 14px 18px;
+    }
+
+    [class*="st-key-result_status_fail"] {
+        background: #381e29;
+        border: 1px solid #ef4444;
+        border-radius: 12px;
+        padding: 14px 18px;
+    }
+
+    [class*="st-key-result_status_pass"] p,
+    [class*="st-key-result_status_fail"] p {
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    @media (max-width: 640px) {
+        [class*="st-key-results_dashboard"] {
+            padding: 12px;
+        }
+
+        [class*="st-key-result_answered"],
+        [class*="st-key-result_unanswered"],
+        [class*="st-key-result_correct"],
+        [class*="st-key-result_errors"] {
+            padding: 10px;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # =====================================
+    # CALCULATE COMPLETION TIME
+    # =====================================
+
+    finish_time = st.session_state.quiz_finished_at
+
+    if finish_time is None:
+        finish_time = datetime.now(timezone.utc)
+        st.session_state.quiz_finished_at = finish_time
+
+    elapsed_seconds = max(
+        0,
+        int(
+            (
+                finish_time
+                - st.session_state.quiz_started_at
+            ).total_seconds()
+        )
     )
 
-    correct_answer = normalize_correct_answer(
-        question["correct_answer"]
-    )
+    if st.session_state.quiz_finish_reason == "time_expired":
+        elapsed_seconds = min(
+            elapsed_seconds,
+            QUIZ_DURATION_MINUTES * 60
+        )
 
-    correct_text = "VERO" if correct_answer else "FALSO"
+    minutes, seconds = divmod(elapsed_seconds, 60)
 
-    st.markdown(
-        f"Correct answer: :green[**{correct_text}**]"
-    )
+    # =====================================
+    # RESULTS DASHBOARD
+    # =====================================
 
-    st.divider()
+    with st.container(key="results_dashboard"):
 
-    if st.button(
-        "Close",
-        key="close_quiz_failed_modal",
-        use_container_width=True,
-        type="primary",
-    ):
-        st.rerun()
-                # =====================================
-                # DISPLAY STUDENT ANSWER
-                # =====================================
+        heading = "Quiz Results"
+
+        if st.session_state.quiz_retry_mode:
+            heading += " ÔÇö Retry"
+
+        st.subheader(heading)
+        st.caption("PATENTE B ┬À TRANSLATE MODE")
+
+        top_left, top_right = st.columns(2, gap="small")
+
+        with top_left:
+            with st.container(key="result_answered"):
+                st.metric(
+                    "Answered",
+                    result["answered"]
+                )
+
+        with top_right:
+            with st.container(key="result_unanswered"):
+                st.metric(
+                    "Unanswered",
+                    result["unanswered"]
+                )
+
+        bottom_left, bottom_right = st.columns(
+            2,
+            gap="small"
+        )
+
+        with bottom_left:
+            with st.container(key="result_correct"):
+                st.metric(
+                    "Correct",
+                    result["correct"]
+                )
+
+        with bottom_right:
+            with st.container(key="result_errors"):
+                st.metric(
+                    "Errors",
+                    result["errors"]
+                )
+
+        with st.container(key="result_duration"):
+            st.metric(
+                "ÔÅ▒ Time Taken",
+                f"{minutes}m {seconds:02d}s"
+            )
+
+       
+        # Normal exam only: show PASS or FAIL.
+        # Retry mode is practice, so it has no PASS/FAIL card.
+        if not st.session_state.quiz_retry_mode:
+            if result["errors"] <= 3:
+                with st.container(key="result_status_pass"):
+                    st.markdown(
+                        "­ƒÄë **PASSED ÔÇö Congratulations!**"
+                    )
+            else:
+                with st.container(key="result_status_fail"):
+                    st.markdown(
+                        "­ƒÿó **FAILED ÔÇö Keep Practicing!**"
+                    )
+                    st.caption(
+                        "Maximum allowed: 3 errors"
+                    )
 
 
-                # =====================================
-                # DISPLAY STUDENT ANSWER
-                # =====================================
+
+        
+
+        st.caption(
+            "Unanswered questions count as errors."
+        )
+
+    
+    # =====================================
+    # REVIEW ALL QUIZ QUESTIONS
+    # =====================================
+
+    if st.session_state.quiz_results_view == "all_questions":
+
+        if st.button("ÔåÉ Back to Results"):
+            st.session_state.quiz_results_view = "summary"
+            st.rerun()
+
+        st.subheader("Review Quiz Questions")
+
+        questions = st.session_state.quiz_questions
+        answers = result["answers"]
+
+        for number, question in enumerate(questions, 1):
+
+            question_id = question["id"]
+            selected = answers.get(question_id)
+            expected = normalize_correct_answer(
+                question["correct_answer"]
+            )
+
+            is_correct = (
+                question_id in answers
+                and selected == expected
+            )
+
+            
+            border_color = "#22c55e" if is_correct else "#ef4444"
+            status = "Ô£ô Correct" if is_correct else "Ô£ò Incorrect"
+
+            # Apply the border to the entire review container.
+            st.markdown(
+                f"""
+                <style>
+                [class*="st-key-quiz_review_question_{question_id}"] {{
+                    border: 3px solid {border_color} !important;
+                    border-radius: 18px !important;
+                    padding: 20px !important;
+                    margin-bottom: 24px !important;
+                    background: #101827 !important;
+                }}
+                </style>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            with st.container(
+                key=f"quiz_review_question_{question_id}"
+            ):
+                st.markdown(
+                    f"**{status} ÔÇö Question {number}**"
+                )
+
+
+                show_question_card(question, number)
 
                 if question_id not in answers:
                     selected_text = "Not answered"
@@ -356,10 +563,8 @@ def show_quiz_failed_question_modal(question, number):
                     f"Correct answer: :green[**{correct_text}**]"
                 )
 
-                # =====================================
+               
                 # RELATED TOPIC
-                # =====================================
-
                 topic_name = (
                     question.get("subtopic_name")
                     or question.get("chapter_name")
@@ -370,29 +575,36 @@ def show_quiz_failed_question_modal(question, number):
                     f"Related topic: {topic_name}"
                 )
 
-                # =====================================
-                # STUDY FAILED QUESTION
-                # =====================================
+                # LINK TO THE EXACT ARGOMENTI LESSON
+                category_id = question.get("chapter_id")
+                subtopic_id = question.get("subtopic_id")
 
+                
+                # Show lesson link only for failed questions
+                
+                # Show direct question link only for failed questions
                 if not is_correct:
+                    category_id = question.get("chapter_id")
+                    subtopic_id = question.get("subtopic_id")
 
-                    if st.button(
-                        "📖 Study this question",
-                        key=f"study_failed_question_{question_id}",
-                        use_container_width=True,
-                    ):
-                        # Open the exact failed question
-                        # in a popup without navigation.
-
-                        show_quiz_failed_question_modal(
-                            question,
-                            number,
+                    if category_id and subtopic_id:
+                        question_url = (
+                            "https://patenteb.streamlit.app/"
+                            "?page=argomenti"
+                            f"&category={int(category_id)}"
+                            f"&subtopic={int(subtopic_id)}"
+                            f"&question={int(question_id)}"
                         )
+
+                        st.link_button(
+                            "­ƒôû Study this question Ôåù",
+                            question_url,
+                        )
+
 
                 st.divider()
 
     else:
-
         if st.button(
             f"View Quiz Questions ({len(st.session_state.quiz_questions)})",
             use_container_width=True,
@@ -400,10 +612,8 @@ def show_quiz_failed_question_modal(question, number):
             st.session_state.quiz_results_view = "all_questions"
             st.rerun()
 
-    # =====================================
-    # RETRY FAILED QUESTIONS
-    # =====================================
-    
+
+
     # =====================================
     # RETRY FAILED QUESTIONS
     # =====================================
@@ -439,8 +649,10 @@ def show_quiz_failed_question_modal(question, number):
 
             if (
                 len(questions) != TOTAL_QUESTIONS
-                or len({q["id"] for q in questions}) != TOTAL_QUESTIONS
-                or len({q["chapter_id"] for q in questions}) != 25
+                or len({q["id"] for q in questions})
+                != TOTAL_QUESTIONS
+                or len({q["chapter_id"] for q in questions})
+                != 25
             ):
                 raise ValueError(
                     "Expected 30 unique questions "
@@ -458,6 +670,7 @@ def show_quiz_failed_question_modal(question, number):
             st.session_state.quiz_retry_mode = False
 
             st.rerun()
+
 
 # =========================================
 # COUNTDOWN TIMER
@@ -550,13 +763,13 @@ def show_live_timer():
 
     elif remaining <= 300:
         st.error(
-            f"⏱ Time Remaining: "
+            f"ÔÅ▒ Time Remaining: "
             f"{minutes:02d}:{seconds:02d}"
         )
 
     else:
         st.info(
-            f"⏱ Time Remaining: "
+            f"ÔÅ▒ Time Remaining: "
             f"{minutes:02d}:{seconds:02d}"
         )
 
@@ -710,6 +923,217 @@ def get_question_image(image_path):
 # =========================================
 # QUESTION CARD WITH TRANSLATION
 # =========================================
+
+def show_question_card(question, question_number):
+    """
+    Display Italian question, image and translation.
+
+    Desktop:
+        Small image left, question text right.
+
+    Mobile:
+        Image above question text.
+
+    No image:
+        Full-width question text.
+    """
+
+    question_id = question["id"]
+
+    italian_text = str(
+        question["question"]
+    )
+
+    safe_text = html.escape(
+        italian_text
+    )
+
+    image_file = get_question_image(
+        question.get("image_path")
+    )
+
+    def display_question_text():
+        """Display Italian text, audio and translation."""
+
+        st.markdown(
+            f'<div class="quiz-question-text">'
+            f'{safe_text}</div>',
+            unsafe_allow_html=True,
+        )
+
+        # Italian-only audio player.
+        show_italian_audio(
+            question_text=italian_text,
+            question_id=question_id,
+        )
+
+        translations_visible = (
+            st.session_state.quiz_translations_visible
+        )
+
+        is_visible = translations_visible.get(
+            question_id,
+            False,
+        )
+
+        button_label = (
+            "Hide Translation"
+            if is_visible
+            else "Translate"
+        )
+
+        if st.button(
+            button_label,
+            key=f"translate_{question_id}",
+        ):
+            translations_visible[question_id] = (
+                not is_visible
+            )
+            st.rerun()
+
+        if translations_visible.get(
+            question_id,
+            False
+        ):
+
+            try:
+                translation_cache = (
+                    st.session_state.quiz_translation_cache
+                )
+
+                if question_id in translation_cache:
+                    english_text = (
+                        translation_cache[question_id]
+                    )
+
+                else:
+                    with st.spinner(
+                        "Translating into English..."
+                    ):
+                        english_text = (
+                            get_or_create_translation(
+                                question_id,
+                                italian_text,
+                            )
+                        )
+
+                    if english_text:
+                        translation_cache[question_id] = (
+                            english_text
+                        )
+
+                if english_text:
+                    st.markdown(
+                        "**English Translation**"
+                    )
+                    st.info(english_text)
+
+                else:
+                    st.warning(
+                        "No translation was returned."
+                    )
+
+            except Exception as e:
+                st.error("Translation failed.")
+                st.code(
+                    f"{type(e).__name__}: {e}"
+                )
+
+    with st.container(border=True):
+
+        st.markdown(
+            f"### DOMANDA {question_number}"
+        )
+
+        if image_file:
+
+            image_col, text_col = st.columns(
+                [1, 3],
+                gap="medium",
+                vertical_alignment="center",
+            )
+
+            with image_col:
+
+                with st.container(
+                     key=f"quiz_question_image_{question_id}"
+                ):
+                    st.image(
+                        str(image_file),
+                        width=150,
+                    )
+
+            with text_col:
+                display_question_text()
+
+        else:
+            display_question_text()
+
+
+# =========================================
+# SUBMIT / REVIEW MODAL
+# =========================================
+
+@st.dialog("Quiz Completed!")
+def show_completion_dialog():
+    """Show the Submit / Review modal."""
+
+   
+    if (
+        not st.session_state.quiz_retry_mode
+        and get_remaining_seconds() == 0
+    ):
+        finish_quiz("time_expired")
+        st.rerun(scope="app")
+
+
+    st.success(
+        f"All {active_question_count()} "
+        "questions have been answered."
+    )
+
+    st.write(
+        "Would you like to submit your answers "
+        "or review them before submitting?"
+    )
+
+    review_col, submit_col = st.columns(
+        2,
+        gap="small",
+    )
+
+    with review_col:
+
+        if st.button(
+            "Review",
+            key="completion_review",
+            use_container_width=True,
+        ):
+            st.session_state.quiz_show_completion_dialog = False
+            st.rerun()
+
+    with submit_col:
+
+        if st.button(
+            "Submit Quiz",
+            key="completion_submit",
+            type="primary",
+            use_container_width=True,
+        ):
+
+            
+            if (
+                not st.session_state.quiz_retry_mode
+                and get_remaining_seconds() == 0
+            ):
+                finish_quiz("time_expired")
+
+            
+            else:
+                st.session_state.quiz_submit_pending = True
+                finish_quiz("submitted")
+
+            st.rerun()
 
 
 # =========================================
@@ -908,7 +1332,7 @@ def show_quiz():
             with st.container(key="quiz_previous"):
 
                 if st.button(
-                    "← Previous",
+                    "ÔåÉ Previous",
                     disabled=index == 0,
                     use_container_width=True,
                 ):
@@ -922,7 +1346,7 @@ def show_quiz():
             with st.container(key="quiz_vero"):
 
                 label = (
-                    "✓ VERO"
+                    "Ô£ô VERO"
                     if selected is True
                     else "VERO"
                 )
@@ -945,7 +1369,7 @@ def show_quiz():
             with st.container(key="quiz_falso"):
 
                 label = (
-                    "✕ FALSO"
+                    "Ô£ò FALSO"
                     if selected is False
                     else "FALSO"
                 )
@@ -968,7 +1392,7 @@ def show_quiz():
             with st.container(key="quiz_next"):
 
                 if st.button(
-                    "Next →",
+                    "Next ÔåÆ",
                     disabled=(
                         index == active_question_count() - 1
                     ),
