@@ -2,6 +2,7 @@
 import streamlit as st
 
 from browser_identity import get_browser_id
+from learning.learning_progress import get_all_category_progress
 
 from quiz_attempt_storage import (
     load_latest_active_attempt,
@@ -373,8 +374,9 @@ def show_dashboard():
             ):
                 navigate("argomenti")
 
+    
     # =====================================
-    # LEARNING PROGRESS - UNCHANGED
+    # LEARNING PROGRESS - POSTGRESQL
     # =====================================
 
     with st.container(
@@ -384,12 +386,56 @@ def show_dashboard():
 
         st.markdown("#### Your Learning Progress")
 
-        st.progress(0)
+        browser_id = get_browser_id()
 
-        st.caption(
-            "Your progress will appear here "
-            "once you begin practicing."
-        )
+        if not browser_id:
+            st.info(
+                "Preparing your learning progress..."
+            )
+
+        else:
+            try:
+                # Reuse the same chapter progress
+                # calculations used by Argomenti.
+                progress_by_category = (
+                    get_all_category_progress(browser_id)
+                )
+
+                # The existing Argomenti course
+                # contains 25 chapters.
+                total_chapters = 25
+
+                total_progress = sum(
+                    max(0, min(100, float(value)))
+                    for value in progress_by_category.values()
+                )
+
+                overall_progress = min(
+                    100,
+                    total_progress / total_chapters
+                )
+
+                completed_chapters = sum(
+                    1
+                    for value in progress_by_category.values()
+                    if float(value) >= 100
+                )
+
+                st.progress(
+                    overall_progress / 100,
+                    text=f"{overall_progress:.1f}% completed",
+                )
+
+                st.caption(
+                    f"{completed_chapters} of "
+                    f"{total_chapters} chapters completed"
+                )
+
+            except Exception:
+                st.error(
+                    "Unable to load learning progress. "
+                    "Please try again."
+                )
 
     # Check once per Dashboard visit.
     check_recovery()
