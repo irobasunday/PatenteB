@@ -751,7 +751,7 @@ def show_results():
                 key=f"quiz_review_question_{question_id}"
             ):
                 st.markdown(
-                    f"**{status} ÔÇö Question {number}**"
+                    f"**{status}  Question {number}**"
                 )
 
 
