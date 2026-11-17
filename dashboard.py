@@ -15,6 +15,42 @@ from quiz_attempt_storage import (
 
 
 def navigate(page):
+    """
+    Navigate to a page while preserving
+    the URL-based refresh system.
+    """
+
+    if page == "dashboard":
+        st.session_state.recovery_handled = False
+
+    st.session_state.page = page
+
+    if page == "argomenti":
+        # Open the main Argomenti chapter list.
+        st.session_state.argomenti_category_id = None
+        st.session_state.argomenti_subtopic_id = None
+
+        # Keep the location in the browser URL.
+        st.query_params["page"] = "argomenti"
+        st.query_params.pop("category", None)
+        st.query_params.pop("subtopic", None)
+
+    elif page == "dashboard":
+        st.query_params.clear()
+
+    else:
+        st.query_params["page"] = page
+
+    # Record the URL state so main.py does not
+    # mistake this navigation for an older URL.
+    st.session_state._last_url_signature = (
+        page,
+        None,
+        None,
+    )
+
+    st.rerun()
+
     if page == "dashboard":
         st.session_state.recovery_handled = False
 
