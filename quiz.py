@@ -563,18 +563,37 @@ def show_results():
                     f"Correct answer: :green[**{correct_text}**]"
                 )
 
-                st.caption(
-                    "Related topic: "
-                    + str(
-                        question.get(
-                            "subtopic_name"
-                        )
-                        or question.get(
-                            "chapter_name",
-                            "Unknown"
-                        )
-                    )
+               
+                # RELATED TOPIC
+                topic_name = (
+                    question.get("subtopic_name")
+                    or question.get("chapter_name")
+                    or "Unknown"
                 )
+
+                st.caption(
+                    f"Related topic: {topic_name}"
+                )
+
+                # LINK TO THE EXACT ARGOMENTI LESSON
+                category_id = question.get("chapter_id")
+                subtopic_id = question.get("subtopic_id")
+
+                if category_id and subtopic_id:
+                   
+                    lesson_url = (
+                        "https://patenteb.streamlit.app/"
+                        "?page=argomenti"
+                        f"&category={int(category_id)}"
+                        f"&subtopic={int(subtopic_id)}"
+                    )
+
+
+                    st.link_button(
+                        "📖 Study this lesson ↗",
+                        lesson_url,
+                    )
+
 
                 st.divider()
 
