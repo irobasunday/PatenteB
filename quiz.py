@@ -281,57 +281,155 @@ def reset_quiz(questions):
 # STUDY FAILED QUESTION — QUIZ MODAL
 # =========================================
 
+
 @st.dialog("📖 Study This Question", width="large")
 def show_quiz_failed_question_modal(question, number):
-    """
-    Display the failed question in a popup
-    while remaining on the Quiz Results page.
-    """
+    """Study a failed question without leaving Quiz Results."""
 
     question_id = question["id"]
-
-    st.caption("Quiz Translate Mode — Question Review")
-
-    chapter_name = question.get("chapter_name")
-    subtopic_name = question.get("subtopic_name")
-
-    if chapter_name:
-        st.caption(f"Chapter: {chapter_name}")
-
-    if subtopic_name:
-        st.caption(f"Subtopic: {subtopic_name}")
-
-    st.markdown(f"### DOMANDA {number}")
-
     italian_text = str(question["question"])
-    st.write(italian_text)
+    image_file = get_question_image(question.get("image_path"))
 
-    image_file = get_question_image(
-        question.get("image_path")
+    topic = (
+        question.get("subtopic_name")
+        or question.get("chapter_name")
+        or "Patente B"
     )
 
-    if image_file:
-        st.image(str(image_file), width=180)
+    # Popup-specific styling
+    st.markdown("""
+    <style>
+    div[data-testid="stDialog"] div[data-testid="stVerticalBlockBorderWrapper"] {
+        border-radius: 16px;
+    }
 
-    correct_answer = normalize_correct_answer(
+    .pb-study-question {
+        background: #172236;
+        border: 1px solid #334155;
+        border-radius: 14px;
+        padding: 18px;
+        margin-bottom: 12px;
+    }
+
+    .pb-study-question-text {
+        color: #f8fafc;
+        font-size: 1.12rem;
+        font-weight: 600;
+        line-height: 1.65;
+        overflow-wrap: anywhere;
+    }
+
+    .pb-study-topic {
+        color: #bfdbfe;
+        background: #1e3050;
+        padding: 6px 12px;
+        border-radius: 20px;
+        display: inline-block;
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+    }
+
+    .pb-study-correct {
+        background: #12382d;
+        border: 1px solid #247a54;
+        border-radius: 12px;
+        padding: 15px;
+        color: #f8fafc;
+        margin-top: 12px;
+        margin-bottom: 12px;
+    }
+
+    .pb-study-correct strong {
+        color: #4ade80;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown(
+        f'<span class="pb-study-topic">'
+        f'Question {number} · {html.escape(str(topic))}'
+        f'</span>',
+        unsafe_allow_html=True,
+    )
+
+    with st.container(border=True):
+        st.markdown(
+            '<div class="pb-study-question-text">'
+            + html.escape(italian_text)
+            + '</div>',
+            unsafe_allow_html=True,
+        )
+
+        if image_file:
+            st.image(str(image_file), width=170)
+
+        st.markdown("**🔊 Italian Audio**")
+
+        show_italian_audio(
+            question_text=italian_text,
+            question_id=question_id,
+        )
+
+        st.divider()
+
+        visibility_key = f"quiz_study_visible_{question_id}"
+
+        if visibility_key not in st.session_state:
+            st.session_state[visibility_key] = False
+
+        visible = st.session_state[visibility_key]
+
+        if st.button(
+            "Hide Translation" if visible else "🌐 Translate",
+            key=f"quiz_study_translate_{question_id}",
+            use_container_width=True,
+        ):
+            st.session_state[visibility_key] = not visible
+            st.rerun()
+
+        if st.session_state[visibility_key]:
+            try:
+                cache = st.session_state.quiz_translation_cache
+
+                if question_id not in cache:
+                    with st.spinner("Translating..."):
+                        translated = get_or_create_translation(
+                            question_id,
+                            italian_text,
+                        )
+
+                    if translated:
+                        cache[question_id] = translated
+
+                english_text = cache.get(question_id)
+
+                if english_text:
+                    st.markdown("**English Translation**")
+                    st.info(english_text)
+                else:
+                    st.warning("Translation unavailable.")
+
+            except Exception as exc:
+                st.error(f"Translation failed: {exc}")
+
+    correct = normalize_correct_answer(
         question["correct_answer"]
     )
 
-    correct_text = (
-        "VERO" if correct_answer else "FALSO"
-    )
+    answer = "VERO" if correct else "FALSO"
 
     st.markdown(
-        f"**Correct answer:** :green[{correct_text}]"
+        '<div class="pb-study-correct">'
+        f'✓ Correct Answer: <strong>{answer}</strong>'
+        '</div>',
+        unsafe_allow_html=True,
     )
-
-    st.divider()
 
     if st.button(
         "Close",
-        key=f"close_failed_question_{question_id}",
-        use_container_width=True,
+        key=f"close_quiz_study_{question_id}",
         type="primary",
+        use_container_width=True,
     ):
         st.rerun()
 
