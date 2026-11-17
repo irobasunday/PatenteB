@@ -13,12 +13,33 @@ from quiz_attempt_storage import (
 # NAVIGATION
 # =========================================
 
+
 def navigate(page):
     if page == "dashboard":
         st.session_state.recovery_handled = False
 
     st.session_state.page = page
+
+    # Keep the browser URL synchronized
+    # with the selected page.
+    if page == "dashboard":
+        st.query_params.clear()
+        category_id = None
+        subtopic_id = None
+    else:
+        st.query_params["page"] = page
+        category_id = None
+        subtopic_id = None
+
+    # Match the URL signature used by main.py.
+    st.session_state._last_url_signature = (
+        page,
+        category_id,
+        subtopic_id,
+    )
+
     st.rerun()
+
 
 
 def open_quiz():
