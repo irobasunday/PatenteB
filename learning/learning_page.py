@@ -73,17 +73,22 @@ def get_question_image(image_path):
 # DISPLAY INDIVIDUAL QUESTION
 # ==========================================
 
-def show_question(question, number, answer_type):
+
+# ==========================================
+# DISPLAY INDIVIDUAL QUESTION
+# ==========================================
+
+def show_question(question, number, answer_type, key_prefix="learning"):
     """Display image, Italian question and translation."""
 
     question_id = question["id"]
     italian_text = str(question["question"])
 
-    translation_key = f"learning_translation_{question_id}"
-    expanded_key = f"learning_expanded_{question_id}"
+    translation_key = f"{key_prefix}_translation_{question_id}"
+    expanded_key = f"{key_prefix}_expanded_{question_id}"
 
     with st.container(
-        key=f"learning_question_{question_id}",
+        key=f"{key_prefix}_question_{question_id}",
         border=True,
     ):
         if answer_type == "VERO":
@@ -120,7 +125,7 @@ def show_question(question, number, answer_type):
 
         if st.button(
             f"{arrow}  🌐 English Translation",
-            key=f"learning_toggle_{question_id}",
+            key=f"{key_prefix}_toggle_{question_id}",
             use_container_width=True,
         ):
             expanded = not expanded
@@ -154,6 +159,45 @@ def show_question(question, number, answer_type):
 
 
 # ==========================================
+# FAILED QUIZ QUESTION MODAL
+# ==========================================
+
+@st.dialog("📖 Study Failed Question", width="large")
+def show_failed_question_modal(question, number, answer_type):
+    """Display only the linked failed quiz question."""
+
+    st.caption("Quiz Translate Mode — Question Review")
+
+    show_question(
+        question,
+        number,
+        answer_type,
+        key_prefix="failed_modal",
+    )
+
+    st.divider()
+
+    if st.button(
+        "Close",
+        key="close_failed_question_modal",
+        use_container_width=True,
+        type="primary",
+    ):
+        st.session_state.argomenti_question_id = None
+
+        st.query_params.pop("question", None)
+
+        st.session_state._last_url_signature = (
+            "argomenti",
+            st.session_state.get("argomenti_category_id"),
+            st.session_state.get("argomenti_subtopic_id"),
+            None,
+        )
+
+        st.rerun()
+
+
+# ==========================================
 # MAIN LEARNING PAGE
 # ==========================================
 
@@ -163,12 +207,22 @@ def show_learning_page(subtopic_id, subtopic_name):
     load_learning_css()
 
     active_key = f"subtopic_quiz_{subtopic_id}_active"
+    
+    target_question_id = st.session_state.get(
+        "argomenti_question_id"
+    )
+
 
     # ======================================
     # DISPLAY ACTIVE SUBTOPIC QUIZ
     # ======================================
 
-    if st.session_state.get(active_key, False):
+    
+    if (
+        target_question_id is None
+        and st.session_state.get(active_key, False)
+    ):
+
         from learning.learning_quiz import show_subtopic_quiz
 
         show_subtopic_quiz(
@@ -190,6 +244,35 @@ def show_learning_page(subtopic_id, subtopic_name):
         st.error("Unable to load learning questions.")
         st.exception(error)
         return
+    
+    # ======================================
+    # FIND THE EXACT FAILED QUESTION
+    # ======================================
+
+    linked_question = None
+
+    if target_question_id is not None:
+
+        for answer_type, questions in (
+            ("VERO", vero_questions),
+            ("FALSO", falso_questions),
+        ):
+            for number, question in enumerate(
+                questions,
+                start=1,
+            ):
+                if int(question["id"]) == int(target_question_id):
+
+                    linked_question = (
+                        question,
+                        number,
+                        answer_type,
+                    )
+                    break
+
+            if linked_question is not None:
+                break
+
 
     total_questions = (
         len(vero_questions) + len(falso_questions)
@@ -268,3 +351,28 @@ def show_learning_page(subtopic_id, subtopic_name):
         except Exception as error:
             st.error("Unable to start subtopic quiz.")
             st.exception(error)
+
+    
+    # ======================================
+    # OPEN FAILED QUESTION MODAL
+    # ======================================
+
+    if target_question_id is not None:
+
+        if linked_question is None:
+            st.warning(
+                "The linked question was not found "
+                "in this subtopic."
+            )
+
+        else:
+            question, number, answer_type = linked_question
+
+            show_failed_question_modal(
+                question,
+                number,
+                answer_type,
+            )
+
+
+   

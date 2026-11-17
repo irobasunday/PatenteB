@@ -1,14 +1,15 @@
-
 import streamlit as st
 
 from browser_identity import get_browser_id
-from learning.learning_progress import get_all_category_progress
+
+from learning.learning_progress import (
+    get_overall_learning_progress,
+)
 
 from quiz_attempt_storage import (
     load_latest_active_attempt,
     abandon_active_attempts,
 )
-
 
 # =========================================
 # NAVIGATION
@@ -375,6 +376,7 @@ def show_dashboard():
                 navigate("argomenti")
 
     
+    
     # =====================================
     # LEARNING PROGRESS - POSTGRESQL
     # =====================================
@@ -395,41 +397,28 @@ def show_dashboard():
 
         else:
             try:
-                # Reuse the same chapter progress
-                # calculations used by Argomenti.
-                progress_by_category = (
-                    get_all_category_progress(browser_id)
+                progress = get_overall_learning_progress(
+                    browser_id
                 )
 
-                # The existing Argomenti course
-                # contains 25 chapters.
-                total_chapters = 25
-
-                total_progress = sum(
-                    max(0, min(100, float(value)))
-                    for value in progress_by_category.values()
-                )
-
-                overall_progress = min(
-                    100,
-                    total_progress / total_chapters
-                )
-
-                completed_chapters = sum(
-                    1
-                    for value in progress_by_category.values()
-                    if float(value) >= 100
-                )
+                total = progress["total"]
+                mastered = progress["mastered"]
+                percentage = progress["percentage"]
 
                 st.progress(
-                    overall_progress / 100,
-                    text=f"{overall_progress:.1f}% completed",
+                    min(1.0, max(0.0, percentage / 100)),
+                    text=f"{percentage:.1f}% completed",
                 )
 
-                st.caption(
-                    f"{completed_chapters} of "
-                    f"{total_chapters} chapters completed"
-                )
+                if total > 0:
+                    st.caption(
+                        f"{mastered:,} of {total:,} "
+                        "questions mastered"
+                    )
+                else:
+                    st.caption(
+                        "No learning questions available."
+                    )
 
             except Exception:
                 st.error(

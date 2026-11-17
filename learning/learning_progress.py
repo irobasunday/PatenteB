@@ -316,3 +316,62 @@ def get_subtopic_completed(
         result["total"] > 0
         and result["mastered"] == result["total"]
     )
+
+# ==========================================
+# OVERALL STUDENT LEARNING PROGRESS
+# ==========================================
+
+def get_overall_learning_progress(browser_id):
+    """
+    Return overall Argomenti learning progress.
+
+    Counts unique mastered questions belonging
+    to the existing Argomenti subtopics.
+
+    Read-only: does not change PostgreSQL data.
+    """
+
+    if not browser_id:
+        return {
+            "total": 0,
+            "mastered": 0,
+            "percentage": 0.0,
+        }
+
+    with get_connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+
+            cur.execute(
+                """
+                SELECT
+                    COUNT(q.id) AS total,
+                    COUNT(p.question_id) AS mastered
+
+                FROM questions q
+
+                JOIN subtopics s
+                    ON s.id = q.subtopic_id
+
+                LEFT JOIN learning_question_progress p
+                    ON p.question_id = q.id
+                    AND p.browser_id = %s
+                """,
+                (browser_id,)
+            )
+
+            row = cur.fetchone()
+
+    total = int(row["total"] or 0)
+    mastered = int(row["mastered"] or 0)
+
+    percentage = (
+        mastered * 100 / total
+        if total > 0
+        else 0.0
+    )
+
+    return {
+        "total": total,
+        "mastered": mastered,
+        "percentage": percentage,
+    }
