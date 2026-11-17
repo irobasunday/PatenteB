@@ -705,7 +705,7 @@ def show_results():
 
     if st.session_state.quiz_results_view == "all_questions":
 
-        if st.button("ÔåÉ Back to Results"):
+        if st.button("Back to Results"):
             st.session_state.quiz_results_view = "summary"
             st.rerun()
 
