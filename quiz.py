@@ -7,6 +7,7 @@ from pathlib import Path
 import streamlit as st
 
 from database import fetch_quiz_questions, get_or_create_translation
+from ai_explanations import generate_question_explanation
 from audio_player import show_italian_audio
 
 from browser_identity import get_browser_id, create_browser_id
@@ -1210,11 +1211,55 @@ def show_question_card(question, question_number):
                             english_text
                         )
 
+               
                 if english_text:
-                    st.markdown(
-                        "**English Translation**"
-                    )
+                    st.markdown("**English Translation**")
                     st.info(english_text)
+
+                    # =====================================
+                    # AI EXPLANATION
+                    # =====================================
+
+                    explanation_cache = st.session_state.setdefault(
+                        "quiz_explanation_cache", {}
+                    )
+
+                    if question_id not in explanation_cache:
+                        with st.spinner("Preparing explanation..."):
+                            try:
+                                correct_answer = normalize_correct_answer(
+                                    question["correct_answer"]
+                                )
+
+                                correct_text = (
+                                    "VERO" if correct_answer else "FALSO"
+                                )
+
+                                explanation = generate_question_explanation(
+                                    italian_question=italian_text,
+                                    english_translation=english_text,
+                                    correct_answer=correct_text,
+                                )
+
+                                explanation_cache[question_id] = explanation
+
+                            except Exception as exc:
+                                st.warning(
+                                    "Explanation is temporarily unavailable."
+                                )
+                                st.caption(
+                                    f"{type(exc).__name__}: {exc}"
+                                )
+
+                    explanation = explanation_cache.get(question_id)
+
+                    if explanation:
+                        st.markdown("**💡 Explanation in English**")
+                        st.info(explanation)
+                        st.caption(
+                            "AI-generated study guidance; verify important rules."
+                        )
+
 
                 else:
                     st.warning(

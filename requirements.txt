@@ -4,3 +4,4 @@ psycopg[binary]>=3.2,<4
 python-dotenv
 psycopg_pool
 streamlit-local-storage
+google-genai
