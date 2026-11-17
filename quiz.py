@@ -684,7 +684,7 @@ def show_results():
             else:
                 with st.container(key="result_status_fail"):
                     st.markdown(
-                        "­ƒÿó **FAILED ÔÇö Keep Practicing!**"
+                        "­FAILED Keep Practicing!"
                     )
                     st.caption(
                         "Maximum allowed: 3 errors"
