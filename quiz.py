@@ -278,6 +278,64 @@ def reset_quiz(questions):
 
 
 # =========================================
+# STUDY FAILED QUESTION — QUIZ MODAL
+# =========================================
+
+@st.dialog("📖 Study This Question", width="large")
+def show_quiz_failed_question_modal(question, number):
+    """
+    Display the failed question in a popup
+    while remaining on the Quiz Results page.
+    """
+
+    question_id = question["id"]
+
+    st.caption("Quiz Translate Mode — Question Review")
+
+    chapter_name = question.get("chapter_name")
+    subtopic_name = question.get("subtopic_name")
+
+    if chapter_name:
+        st.caption(f"Chapter: {chapter_name}")
+
+    if subtopic_name:
+        st.caption(f"Subtopic: {subtopic_name}")
+
+    st.markdown(f"### DOMANDA {number}")
+
+    italian_text = str(question["question"])
+    st.write(italian_text)
+
+    image_file = get_question_image(
+        question.get("image_path")
+    )
+
+    if image_file:
+        st.image(str(image_file), width=180)
+
+    correct_answer = normalize_correct_answer(
+        question["correct_answer"]
+    )
+
+    correct_text = (
+        "VERO" if correct_answer else "FALSO"
+    )
+
+    st.markdown(
+        f"**Correct answer:** :green[{correct_text}]"
+    )
+
+    st.divider()
+
+    if st.button(
+        "Close",
+        key=f"close_failed_question_{question_id}",
+        use_container_width=True,
+        type="primary",
+    ):
+        st.rerun()
+
+# =========================================
 # QUIZ RESULTS
 # =========================================
 
